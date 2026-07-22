@@ -9,13 +9,17 @@
 ## 핵심 흐름
 
 ```
-인체 SVG 지도 (대분류 10계통)
+인체 3D 지도 (대분류 10계통 — 좌우 드래그 회전, GLB)
   → 중분류 카드 (부위/기능)
     → 증상 키워드 칩 (소분류)
       → 4-Tab 상세 패널 (특징 · 추천원료 · 기전원리 · 셀링포인트)
         → "이 원료로 상품 소싱" → 도매몰 3사 통합 검색
           → 썸네일 / 상품명·태그 / 마진 계산 프리셋
 ```
+
+> 인체 모델: Higgsfield(GPT-Image-2 → Meshy image-to-3D) 생성 GLB — `public/models/body.glb`.
+> 파일이 없으면 2D SVG 실루엣으로 자동 폴백됩니다. 계통 핫스팟은 `body_categories.svg_region` ↔
+> `src/components/body-map/anchors.ts` 매핑으로 데이터 기반 배치.
 
 분류 체계는 **대·중·소 3단 구조**(10계통 × 중분류 32종 × 증상 키워드)를 사용합니다 — `docs/UI-PLAN.md` §3 분류표가 시드 데이터 원본입니다.
 
