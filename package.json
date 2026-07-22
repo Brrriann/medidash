@@ -1,0 +1,35 @@
+{
+  "name": "medidash",
+  "version": "0.1.0",
+  "private": true,
+  "description": "건강기능식품 셀러 판매 보조 웹대시보드 — 인체 지도 → 원료 → 소싱 → AI 산출물 → 마진 계산",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "seed": "tsx scripts/seed.ts",
+    "seed:contents": "tsx scripts/seed-contents.ts",
+    "crawl": "echo '[W2에서 구현 예정] workers/crawl-wholesale.ts' && exit 1",
+    "crawl:broadcast": "echo '[W2에서 구현 예정] workers/crawl-broadcast.ts' && exit 1"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.52.0",
+    "next": "^15.4.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "^22.16.5",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "eslint": "^9.31.0",
+    "eslint-config-next": "^15.4.2",
+    "tailwindcss": "^4.1.11",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
