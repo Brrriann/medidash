@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { BodyCategory, SubcategoryDetail } from "@/lib/taxonomy/types";
-import { BodyMapSvg, MAPPED_REGIONS } from "./BodyMapSvg";
+import { MAPPED_REGIONS } from "./BodyMapSvg";
+import { BodyMapView } from "./BodyMapView";
 import { SubcategoryCards } from "./SubcategoryCards";
 import { SymptomChips } from "./SymptomChips";
 import { DetailPanel } from "./DetailPanel";
@@ -47,11 +48,13 @@ export function BodyMapExplorer({
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">인체 지도</h2>
-          <span className="text-[11px] text-slate-400">계통을 클릭하세요</span>
+          <span className="text-[11px] text-slate-400">
+            드래그로 회전 · 핫스팟 클릭
+          </span>
         </div>
 
         <div className="h-[440px]">
-          <BodyMapSvg
+          <BodyMapView
             categories={categories}
             selectedSlug={catSlug}
             onSelect={selectCategory}
