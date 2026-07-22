@@ -8,13 +8,13 @@ export const BODY_MODEL_URL = "/models/body.glb";
 
 export const REGION_ANCHORS: Record<string, [number, number, number]> = {
   hair: [0, 0.99, 0.02],
-  head: [0, 0.87, 0.11],
-  face: [0, 0.76, 0.12],
-  lungs: [0.15, 0.45, 0.11],
-  heart: [-0.05, 0.38, 0.13],
-  abdomen: [0, 0.12, 0.14],
-  pelvis: [0, -0.12, 0.13],
-  joints: [0.14, -0.52, 0.09],
+  head: [0, 0.9, 0.1],
+  face: [0, 0.8, 0.12],
+  lungs: [0.14, 0.52, 0.1],
+  heart: [-0.05, 0.45, 0.12],
+  abdomen: [0, 0.18, 0.13],
+  pelvis: [0, -0.04, 0.12],
+  joints: [0.13, -0.56, 0.08],
 };
 
 export const ANCHORED_REGIONS = Object.keys(REGION_ANCHORS);

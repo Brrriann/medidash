@@ -8,6 +8,7 @@ import { isMockMode } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { MOCK_CONTENTS } from "./mock-contents";
 import { SAMPLE_INGREDIENTS } from "./sample-ingredients";
+import { SAMPLE_PRODUCTS, type SampleProduct } from "./sample-products";
 
 /**
  * 데이터 저장소 (서버 전용).
@@ -121,6 +122,89 @@ export async function getRecentWorks(): Promise<
     .order("created_at", { ascending: false })
     .limit(5);
   return (data ?? []).map((w) => ({ kind: w.kind, createdAt: w.created_at }));
+}
+
+export interface MarginHistoryItem {
+  id: number;
+  cost: number;
+  price: number;
+  feeRate: number;
+  margin: number;
+  marginRate: number;
+  createdAt: string;
+}
+
+/** 마진 계산 히스토리 (본인 것만 — RLS) */
+export async function getMarginHistory(): Promise<MarginHistoryItem[]> {
+  if (isMockMode()) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("margin_calcs")
+    .select("id, inputs, results, created_at")
+    .order("created_at", { ascending: false })
+    .limit(10);
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    cost: row.inputs?.cost ?? 0,
+    price: row.inputs?.price ?? 0,
+    feeRate: row.inputs?.feeRate ?? 0,
+    margin: row.results?.margin ?? 0,
+    marginRate: row.results?.marginRate ?? 0,
+    createdAt: row.created_at,
+  }));
+}
+
+export type WholesaleProduct = SampleProduct & { isSample: boolean };
+
+/**
+ * 도매몰 상품 캐시 조회 (월 1회 크롤러 갱신분).
+ * DB가 비어 있으면 mock 샘플 폴백 — W2 크롤러 연결 시 자동으로 실데이터 사용.
+ */
+export async function getWholesaleProducts(): Promise<{
+  products: WholesaleProduct[];
+  crawledAt: string | null;
+  isSample: boolean;
+}> {
+  if (!isMockMode()) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("wholesale_products")
+      .select("id, source, source_url, name, price_wholesale, ingredient_ids, crawled_at")
+      .order("crawled_at", { ascending: false })
+      .limit(200);
+
+    if (!error && data && data.length > 0) {
+      // 원료 id → 이름 매핑
+      const ids = [...new Set(data.flatMap((p) => p.ingredient_ids ?? []))];
+      const { data: ings } = ids.length
+        ? await supabase.from("ingredients").select("id, name").in("id", ids)
+        : { data: [] as { id: number; name: string }[] };
+      const nameById = new Map((ings ?? []).map((i) => [i.id, i.name]));
+
+      return {
+        products: data.map((p) => ({
+          id: p.id,
+          source: p.source,
+          sourceUrl: p.source_url,
+          name: p.name,
+          priceWholesale: p.price_wholesale ?? 0,
+          ingredients: (p.ingredient_ids ?? [])
+            .map((id: number) => nameById.get(id))
+            .filter(Boolean) as string[],
+          crawledAt: p.crawled_at,
+          isSample: false,
+        })),
+        crawledAt: data[0]?.crawled_at ?? null,
+        isSample: false,
+      };
+    }
+  }
+
+  return {
+    products: SAMPLE_PRODUCTS.map((p) => ({ ...p, isSample: true })),
+    crawledAt: SAMPLE_PRODUCTS[0]?.crawledAt ?? null,
+    isSample: true,
+  };
 }
 
 // ── 내부 ─────────────────────────────────────────────────────
