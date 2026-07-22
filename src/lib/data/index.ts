@@ -207,6 +207,72 @@ export async function getWholesaleProducts(): Promise<{
   };
 }
 
+export interface InviteCodeRow {
+  code: string;
+  memo: string | null;
+  maxUses: number;
+  used: number;
+  expiresAt: string | null;
+  isSample: boolean;
+}
+
+export interface MemberRow {
+  email: string | null;
+  role: string;
+  inviteCode: string | null;
+  createdAt: string;
+  isSample: boolean;
+}
+
+/** admin 화면 데이터 — 코드 목록 + 회원 목록 (mock 모드는 데모 표시용 샘플) */
+export async function getAdminData(): Promise<{
+  codes: InviteCodeRow[];
+  members: MemberRow[];
+}> {
+  if (isMockMode()) {
+    return {
+      codes: [
+        { code: "MEDI-DEMO-0001", memo: "[샘플] 7월 기수", maxUses: 10, used: 3, expiresAt: "2026-08-31T14:59:59Z", isSample: true },
+        { code: "MEDI-DEMO-0002", memo: "[샘플] 체험판", maxUses: 1, used: 1, expiresAt: null, isSample: true },
+      ],
+      members: [
+        { email: "sample-seller@example.com", role: "member", inviteCode: "MEDI-DEMO-0001", createdAt: "2026-07-10T02:00:00Z", isSample: true },
+        { email: "sample-admin@example.com", role: "admin", inviteCode: null, createdAt: "2026-07-01T02:00:00Z", isSample: true },
+      ],
+    };
+  }
+
+  const supabase = await createClient();
+  const [{ data: codes }, { data: members }] = await Promise.all([
+    supabase
+      .from("invite_codes")
+      .select("code, memo, max_uses, used, expires_at")
+      .order("code"),
+    supabase
+      .from("profiles")
+      .select("email, role, invite_code, created_at")
+      .order("created_at", { ascending: false }),
+  ]);
+
+  return {
+    codes: (codes ?? []).map((c) => ({
+      code: c.code,
+      memo: c.memo,
+      maxUses: c.max_uses ?? 1,
+      used: c.used ?? 0,
+      expiresAt: c.expires_at,
+      isSample: false,
+    })),
+    members: (members ?? []).map((m) => ({
+      email: m.email,
+      role: m.role,
+      inviteCode: m.invite_code,
+      createdAt: m.created_at,
+      isSample: false,
+    })),
+  };
+}
+
 // ── 내부 ─────────────────────────────────────────────────────
 
 function buildMockDetails(): Record<string, SubcategoryDetail> {
