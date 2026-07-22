@@ -67,6 +67,22 @@ npm run seed
 npm run seed:contents
 ```
 
+### Cloudflare 배포 (Workers + OpenNext)
+
+Next.js 15 SSR(서버 액션·미들웨어 포함)이라 **Cloudflare Workers + OpenNext 어댑터**로 배포합니다
+(`wrangler.jsonc` · `open-next.config.ts` 커밋됨, `nodejs_compat` 필수).
+
+```bash
+npm run cf:build     # 어댑터 빌드 검증 (.open-next/ 생성)
+npm run cf:preview   # 로컬 workerd로 프리뷰 (http://localhost:8787)
+npm run cf:deploy    # 배포 — CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID 필요
+```
+
+**대시보드로 배포(권장)**: Cloudflare 대시보드 → Workers & Pages → Create → *Import a repository* →
+`Brrriann/medidash` 선택 → Build command `npx opennextjs-cloudflare build`, Deploy command
+`npx opennextjs-cloudflare deploy` → 배포. 환경변수를 비워두면 mock 모드로 동작하고,
+Settings → Variables에 Supabase/AI 키를 넣으면 실기능이 켜집니다.
+
 ### 크롤러 운영 (월 1회)
 
 ```bash

@@ -12,7 +12,10 @@
     "seed": "tsx scripts/seed.ts",
     "seed:contents": "tsx scripts/seed-contents.ts",
     "crawl": "echo '[W2에서 구현 예정] workers/crawl-wholesale.ts' && exit 1",
-    "crawl:broadcast": "echo '[W2에서 구현 예정] workers/crawl-broadcast.ts' && exit 1"
+    "crawl:broadcast": "echo '[W2에서 구현 예정] workers/crawl-broadcast.ts' && exit 1",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -26,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@opennextjs/cloudflare": "^1.20.2",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^22.16.5",
     "@types/react": "^19.1.8",
@@ -35,6 +39,7 @@
     "eslint-config-next": "^15.4.2",
     "tailwindcss": "^4.1.11",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^4.113.0"
   }
 }
