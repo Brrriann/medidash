@@ -73,7 +73,11 @@ npm run seed
 npm run seed:contents
 ```
 
-### Cloudflare 배포 (Workers + OpenNext)
+### 배포 (Supabase + Cloudflare)
+
+> **처음 배포라면 [`docs/DEPLOY.md`](docs/DEPLOY.md)** 를 따라오세요 — 터미널 없이 브라우저에서
+> SQL 붙여넣기(마이그레이션 `0001_init.sql` + `supabase/seed.sql`) + 레포 연결만으로 끝납니다.
+> 첫 운영자 계정·수강생 코드는 SQL 스니펫(또는 `npm run bootstrap:admin`)으로 생성합니다.
 
 Next.js 15 SSR(서버 액션·미들웨어 포함)이라 **Cloudflare Workers + OpenNext 어댑터**로 배포합니다
 (`wrangler.jsonc` · `open-next.config.ts` 커밋됨, `nodejs_compat` 필수).

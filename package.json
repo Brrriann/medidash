@@ -11,6 +11,8 @@
     "test": "tsx --test tests/*.test.ts",
     "seed": "tsx scripts/seed.ts",
     "seed:contents": "tsx scripts/seed-contents.ts",
+    "seed:sql": "tsx scripts/gen-seed-sql.ts",
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
     "crawl": "tsx workers/crawl-wholesale.ts",
     "crawl:broadcast": "tsx workers/crawl-broadcast.ts",
     "crawl:inspect": "tsx workers/inspect.ts",
