@@ -33,7 +33,7 @@ async function main() {
 
   console.log(
     `\n▶ 도매몰 크롤 시작 — ${opts.dryRun ? "DRY-RUN(픽스처)" : "실크롤"} · ` +
-      `소스 ${sources.join(", ")} · 소스당 최대 ${opts.limitPerSource}건\n`,
+      `소스 ${sources.join(", ")} · 소스당 ${Number.isFinite(opts.limitPerSource) ? `최대 ${opts.limitPerSource}건` : "전체(모든 페이지)"}\n`,
   );
 
   // 원료 사전: 실모드는 DB, dry-run은 샘플 상수
@@ -152,6 +152,7 @@ async function crawlSourceLive(
 
 function parseArgs(argv: string[]): CrawlOptions {
   const dryRun = argv.includes("--dry-run");
+  const all = argv.includes("--all");
   const sourceArg = argv.find((a) => a.startsWith("--source="))?.split("=")[1];
   const limitArg = argv.find((a) => a.startsWith("--limit="))?.split("=")[1];
   const onlySource =
@@ -160,7 +161,12 @@ function parseArgs(argv: string[]): CrawlOptions {
       : undefined;
   return {
     dryRun,
-    limitPerSource: limitArg ? Math.max(1, Number(limitArg)) : 10,
+    // --all: 카테고리 전체(모든 페이지) 순회. 아니면 --limit 또는 기본 10건.
+    limitPerSource: all
+      ? Number.POSITIVE_INFINITY
+      : limitArg
+        ? Math.max(1, Number(limitArg))
+        : 10,
     onlySource,
   };
 }
