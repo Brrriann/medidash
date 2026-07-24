@@ -142,10 +142,10 @@ export default async function MyPage() {
               <thead>
                 <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
                   <th className="py-2 pr-4 font-medium">일시</th>
-                  <th className="py-2 pr-4 font-medium">원가</th>
+                  <th className="py-2 pr-4 font-medium">플랫폼</th>
                   <th className="py-2 pr-4 font-medium">판매가</th>
-                  <th className="py-2 pr-4 font-medium">마진액</th>
-                  <th className="py-2 font-medium">마진율</th>
+                  <th className="py-2 pr-4 font-medium">최종마진</th>
+                  <th className="py-2 font-medium">최종마진율</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -154,16 +154,16 @@ export default async function MyPage() {
                     <td className="py-2 pr-4 text-xs text-slate-400">
                       {new Date(m.createdAt).toLocaleString("ko-KR")}
                     </td>
-                    <td className="py-2 pr-4">{won(m.cost)}</td>
+                    <td className="py-2 pr-4">{m.platform === "coupang" ? "쿠팡" : m.platform === "naver" ? "네이버" : m.platform}</td>
                     <td className="py-2 pr-4">{won(m.price)}</td>
                     <td
                       className={`py-2 pr-4 font-semibold ${
-                        m.margin >= 0 ? "text-brand-700" : "text-red-600"
+                        m.finalMargin >= 0 ? "text-brand-700" : "text-red-600"
                       }`}
                     >
-                      {won(m.margin)}
+                      {won(m.finalMargin)}
                     </td>
-                    <td className="py-2">{m.marginRate}%</td>
+                    <td className="py-2">{(m.finalMarginRate * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>

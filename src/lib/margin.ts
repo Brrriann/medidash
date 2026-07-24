@@ -1,98 +1,130 @@
 /**
- * 마진 계산 순수 함수 (docs/SPEC.md §6.6 · docs/UI-PLAN.md §8)
+ * 마진 계산 — 고객 제공 엑셀 "세금 제외되는 실패없는 마진계산기" 수식 1:1 이식.
+ * (docs/SPEC.md §6.6 — 동일 입력 시 엑셀과 동일 출력 ±0원)
  *
- * ⚠️ v1 표준 수식 — 고객 제공 엑셀 수령 시 이 파일의 수식을 1:1로 이식·교체하고
- *    tests/margin.test.ts 를 엑셀 케이스(동일 입력 → ±0원)로 갱신한다 (W3 계약 조건).
+ * 엑셀 열 매핑:
+ *   G 판매가 · H 상품원가 · I 고객배송비(수취) · J 지불배송비 · K 포장비용 · L 수수료율
+ *   M 수수료(원) · N 부가세(순) · O 종소세 · P 판매마진 · Q 판매마진율 · R 최종마진 · S 최종마진율
  *
- * 수식 (v1):
- *   부가세        = 원가(도매가) × 10%            [UI-PLAN §8]
- *   총원가        = 원가 + 부가세 + 배송비 + 기타비용
- *   플랫폼 수수료 = 판매가 × 수수료율
- *   마진액        = 판매가 − 수수료 − 총원가
- *   마진율(%)     = 마진액 ÷ 판매가 × 100
- *   손익분기 판매가 = 총원가 ÷ (1 − 수수료율)
- *   권장 판매가   = 총원가 ÷ (1 − 수수료율 − 목표마진율)  → 100원 단위 올림
+ * 플랫폼 차이:
+ *   쿠팡  M = 판매가×(수수료율×1.1) + 고객배송비×3.3%   (카테고리 수수료율은 VAT 별도 → ×1.1)
+ *   네이버 M = 판매가×수수료율      + 고객배송비×3.63%  (수수료율은 VAT 포함)
+ *
+ * ⚠️ 엑셀과 동일하게 중간값을 반올림하지 않는다(부동소수 그대로). 반올림은 표시 단계에서만.
  */
 
+export type MarginPlatform = "coupang" | "naver";
+
+/** 쿠팡: 카테고리 수수료 3.3%, 네이버: 3.63% (고객배송비에 부과되는 수수료율) */
+const SHIPPING_FEE_RATE: Record<MarginPlatform, number> = {
+  coupang: 0.033,
+  naver: 0.0363,
+};
+
 export interface MarginInputs {
-  /** 원가(도매가, 원) */
-  cost: number;
-  /** 판매가(원) */
+  /** G 판매가(원) */
   price: number;
-  /** 플랫폼 수수료율 (%, 예: 스마트스토어 5.5) */
+  /** H 상품원가(도매가, 원) */
+  cost: number;
+  /** I 고객배송비 — 고객에게 받는 배송비(매출) */
+  customerShipping: number;
+  /** J 지불배송비 — 판매자가 지불하는 배송비(비용) */
+  paidShipping: number;
+  /** K 포장비용 */
+  packaging: number;
+  /** L 수수료율 (소수. 쿠팡=카테고리율 VAT별도, 네이버=총율 VAT포함) */
   feeRate: number;
-  /** 배송비(판매자 부담, 원) */
-  shipping: number;
-  /** 기타비용(포장·광고 등, 원) */
-  extraCost: number;
+  platform: MarginPlatform;
+  /** 종합소득세율 (소수, 예: 0.06 · 0.15) */
+  incomeTaxRate: number;
 }
 
 export interface MarginResults {
-  /** 부가세 (원가 × 10%) */
-  vat: number;
-  /** 총원가 = 원가 + 부가세 + 배송비 + 기타 */
-  totalCost: number;
-  /** 플랫폼 수수료 = 판매가 × 수수료율 */
+  /** M 수수료(원) */
   fee: number;
-  /** 마진액 */
-  margin: number;
-  /** 마진율 (%) — 판매가 0이면 0 */
-  marginRate: number;
-  /** 손익분기 판매가 */
-  breakEvenPrice: number;
+  /** N 부가세(순 = 매출VAT − 매입VAT, 음수 가능) */
+  vat: number;
+  /** O 종합소득세 */
+  incomeTax: number;
+  /** P 판매마진 (종소세 차감 전) */
+  salesMargin: number;
+  /** Q 판매마진율 */
+  salesMarginRate: number;
+  /** R 최종마진 (종소세 차감 후) */
+  finalMargin: number;
+  /** S 최종마진율 */
+  finalMarginRate: number;
 }
 
-export function calcMargin(inputs: MarginInputs): MarginResults {
-  const cost = nonNegative(inputs.cost);
-  const price = nonNegative(inputs.price);
-  const feeRate = clampRate(inputs.feeRate) / 100;
-  const shipping = nonNegative(inputs.shipping);
-  const extraCost = nonNegative(inputs.extraCost);
+export function calcMargin(inp: MarginInputs): MarginResults {
+  const price = num(inp.price);
+  const cost = num(inp.cost);
+  const custShip = num(inp.customerShipping);
+  const paidShip = num(inp.paidShipping);
+  const packaging = num(inp.packaging);
+  const feeRate = num(inp.feeRate);
+  const taxRate = num(inp.incomeTaxRate);
 
-  const vat = Math.round(cost * 0.1);
-  const totalCost = cost + vat + shipping + extraCost;
-  const fee = Math.round(price * feeRate);
-  const margin = price - fee - totalCost;
-  const marginRate = price > 0 ? round1((margin / price) * 100) : 0;
-  const breakEvenPrice =
-    feeRate >= 1 ? Infinity : Math.ceil(totalCost / (1 - feeRate));
+  // M 수수료(원) — 플랫폼별
+  const fee =
+    inp.platform === "coupang"
+      ? price * (feeRate * 1.1) + custShip * SHIPPING_FEE_RATE.coupang
+      : price * feeRate + custShip * SHIPPING_FEE_RATE.naver;
 
-  return { vat, totalCost, fee, margin, marginRate, breakEvenPrice };
-}
+  // N 부가세(순) = 매출VAT − 매입VAT
+  const vat = (price + custShip) * 0.1 - (cost + paidShip + fee) * 0.1;
 
-/** 목표 마진율(%)로 권장 판매가 산출 — 100원 단위 올림 (UI-PLAN §8 "판매가 (권장)") */
-export function recommendPrice(
-  inputs: Omit<MarginInputs, "price">,
-  targetMarginRate: number,
-): number | null {
-  const cost = nonNegative(inputs.cost);
-  const feeRate = clampRate(inputs.feeRate) / 100;
-  const target = clampRate(targetMarginRate) / 100;
-  if (feeRate + target >= 1) return null; // 수수료+목표마진 ≥ 100% — 산출 불가
+  // P 판매마진
+  const salesMargin = price + custShip - (cost + paidShip + packaging + fee + vat);
 
-  const vat = Math.round(cost * 0.1);
-  const totalCost =
-    cost + vat + nonNegative(inputs.shipping) + nonNegative(inputs.extraCost);
-  const raw = totalCost / (1 - feeRate - target);
-  return Math.ceil(raw / 100) * 100;
+  // O 종소세 · R 최종마진
+  const incomeTax = salesMargin * taxRate;
+  const finalMargin = salesMargin - incomeTax;
+
+  return {
+    fee,
+    vat,
+    incomeTax,
+    salesMargin,
+    salesMarginRate: price > 0 ? salesMargin / price : 0,
+    finalMargin,
+    finalMarginRate: price > 0 ? finalMargin / price : 0,
+  };
 }
 
 /** 소싱 카드의 기본 추천 판매가 — 도매가 × 2 (docs/SPEC.md §5-4, 조정 가능) */
 export function defaultRecommendedPrice(cost: number): number {
-  return Math.ceil((nonNegative(cost) * 2) / 100) * 100;
+  return Math.ceil((num(cost) * 2) / 100) * 100;
 }
 
-// ── 내부 ─────────────────────────────────────────────────────
+// ── 수수료 프리셋 (오픈마켓 수수료 시트) ──────────────────────
 
-function nonNegative(n: number): number {
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
+/** 쿠팡 카테고리 수수료율 (VAT 별도 — 계산 시 ×1.1) */
+export const COUPANG_FEE_PRESETS: { label: string; rate: number }[] = [
+  { label: "뷰티/헬스", rate: 0.096 },
+  { label: "식품", rate: 0.106 },
+  { label: "출산/유아", rate: 0.1 },
+  { label: "생활용품", rate: 0.078 },
+  { label: "가전/디지털", rate: 0.078 },
+  { label: "주방/스포츠/패션", rate: 0.108 },
+];
 
-function clampRate(n: number): number {
-  if (!Number.isFinite(n) || n < 0) return 0;
-  return Math.min(n, 100);
-}
+/** 네이버(스마트스토어) 총수수료 = 주문관리(VAT포함) + 판매연동 2% */
+export const NAVER_FEE_PRESETS: { label: string; rate: number }[] = [
+  { label: "일반(신용카드)", rate: 0.0574 }, // 3.74% + 2%
+  { label: "영세(~3억)", rate: 0.0398 }, // 1.98% + 2%
+  { label: "중소1(3~5억)", rate: 0.04585 }, // 2.585% + 2%
+  { label: "중소2(5~10억)", rate: 0.0475 }, // 2.75% + 2%
+  { label: "중소3(10~30억)", rate: 0.05025 }, // 3.025% + 2%
+];
 
-function round1(n: number): number {
-  return Math.round(n * 10) / 10;
+/** 종합소득세율 옵션 (엑셀 6% · 15% + 상위 구간) */
+export const INCOME_TAX_PRESETS: { label: string; rate: number }[] = [
+  { label: "6% (~1,400만)", rate: 0.06 },
+  { label: "15% (~5,000만)", rate: 0.15 },
+  { label: "24% (~8,800만)", rate: 0.24 },
+];
+
+function num(n: number): number {
+  return Number.isFinite(n) ? n : 0;
 }

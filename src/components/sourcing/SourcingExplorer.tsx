@@ -112,13 +112,16 @@ export function SourcingExplorer({
 
 function ProductCard({ product }: { product: WholesaleProduct }) {
   const [price, setPrice] = useState(defaultRecommendedPrice(product.priceWholesale));
-  // 미리보기 가정: 스마트스토어 수수료 5.5% + 배송비 3,000원 (계산기에서 조정)
+  // 미리보기 가정: 쿠팡 뷰티/헬스 수수료 9.6% · 지불배송비 3,000원 · 종소세 6% (계산기에서 조정)
   const preview = calcMargin({
-    cost: product.priceWholesale,
     price,
-    feeRate: 5.5,
-    shipping: 3000,
-    extraCost: 0,
+    cost: product.priceWholesale,
+    customerShipping: 0,
+    paidShipping: 3000,
+    packaging: 0,
+    feeRate: 0.096,
+    platform: "coupang",
+    incomeTaxRate: 0.06,
   });
 
   return (
@@ -171,13 +174,13 @@ function ProductCard({ product }: { product: WholesaleProduct }) {
           </dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-slate-400">예상 마진 (수수료 5.5%·배송 3천 가정)</dt>
+          <dt className="text-slate-400">예상 최종마진 (쿠팡 9.6%·배송 3천 가정)</dt>
           <dd
             className={`font-bold ${
-              preview.margin >= 0 ? "text-brand-700" : "text-red-600"
+              preview.finalMargin >= 0 ? "text-brand-700" : "text-red-600"
             }`}
           >
-            {won(preview.margin)} ({preview.marginRate}%)
+            {won(preview.finalMargin)} ({(preview.finalMarginRate * 100).toFixed(1)}%)
           </dd>
         </div>
       </dl>

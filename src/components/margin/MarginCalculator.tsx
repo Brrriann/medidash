@@ -1,22 +1,19 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
-import { calcMargin, recommendPrice } from "@/lib/margin";
+import { useMemo, useState, useTransition } from "react";
 import {
-  saveMarginCalc,
-  type SaveMarginState,
-} from "@/app/(dashboard)/margin/actions";
-
-/** 플랫폼 수수료 프리셋 (직접 조정 가능) */
-const FEE_PRESETS = [
-  { label: "스마트스토어", rate: 5.5 },
-  { label: "쿠팡", rate: 10.8 },
-];
-
-const initialSave: SaveMarginState = { ok: false, error: null };
+  calcMargin,
+  COUPANG_FEE_PRESETS,
+  NAVER_FEE_PRESETS,
+  INCOME_TAX_PRESETS,
+  type MarginInputs,
+  type MarginPlatform,
+} from "@/lib/margin";
+import { saveMarginCalc } from "@/app/(dashboard)/margin/actions";
 
 const won = (n: number) =>
   Number.isFinite(n) ? `${Math.round(n).toLocaleString("ko-KR")}원` : "—";
+const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
 export function MarginCalculator({
   initialCost,
@@ -27,121 +24,125 @@ export function MarginCalculator({
   productRef: number | null;
   mock: boolean;
 }) {
+  const [platform, setPlatform] = useState<MarginPlatform>("coupang");
+  const [price, setPrice] = useState(initialCost ? Math.ceil((initialCost * 2) / 100) * 100 : 25000);
   const [cost, setCost] = useState(initialCost ?? 12500);
-  const [price, setPrice] = useState(
-    initialCost ? Math.ceil((initialCost * 2) / 100) * 100 : 25000,
-  );
-  const [feeRate, setFeeRate] = useState(5.5);
-  const [shipping, setShipping] = useState(3000);
-  const [extraCost, setExtraCost] = useState(0);
-  const [targetRate, setTargetRate] = useState(30);
+  const [customerShipping, setCustomerShipping] = useState(0);
+  const [paidShipping, setPaidShipping] = useState(3000);
+  const [packaging, setPackaging] = useState(0);
+  const [feePct, setFeePct] = useState(9.6); // 화면은 %, 계산은 소수
+  const [taxRate, setTaxRate] = useState(0.06);
 
-  const [saveState, saveAction, saving] = useActionState(
-    saveMarginCalc,
-    initialSave,
-  );
+  const [saving, startSave] = useTransition();
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  const results = useMemo(
-    () => calcMargin({ cost, price, feeRate, shipping, extraCost }),
-    [cost, price, feeRate, shipping, extraCost],
+  const inputs: MarginInputs = useMemo(
+    () => ({
+      price, cost, customerShipping, paidShipping, packaging,
+      feeRate: feePct / 100, platform, incomeTaxRate: taxRate,
+    }),
+    [price, cost, customerShipping, paidShipping, packaging, feePct, platform, taxRate],
   );
-  const recommended = useMemo(
-    () => recommendPrice({ cost, feeRate, shipping, extraCost }, targetRate),
-    [cost, feeRate, shipping, extraCost, targetRate],
-  );
+  const r = useMemo(() => calcMargin(inputs), [inputs]);
 
-  const marginPositive = results.margin >= 0;
+  const presets = platform === "coupang" ? COUPANG_FEE_PRESETS : NAVER_FEE_PRESETS;
+  const positive = r.finalMargin >= 0;
+
+  const switchPlatform = (p: MarginPlatform) => {
+    setPlatform(p);
+    setFeePct(p === "coupang" ? 9.6 : 5.74); // 플랫폼 기본 수수료율
+  };
+
+  const save = () => {
+    setSaveMsg(null);
+    startSave(async () => {
+      const res = await saveMarginCalc(inputs, productRef);
+      setSaveMsg(res.ok ? "저장되었습니다 — 아래 히스토리에서 확인하세요." : res.error);
+    });
+  };
 
   return (
     <div className="grid gap-5 lg:grid-cols-[5fr_4fr]">
       {/* ── 입력 ── */}
-      <form
-        action={saveAction}
-        className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <h2 className="text-sm font-bold text-slate-800">입력</h2>
-
-        <Field label="원가 (도매가)" suffix="원">
-          <input {...numProps(cost, setCost)} name="cost" />
-        </Field>
-
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-700">
-              플랫폼 수수료율
-            </span>
-            <div className="flex gap-1">
-              {FEE_PRESETS.map((p) => (
-                <button
-                  key={p.label}
-                  type="button"
-                  onClick={() => setFeeRate(p.rate)}
-                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium transition ${
-                    feeRate === p.rate
-                      ? "border-brand-600 bg-brand-600 text-white"
-                      : "border-slate-300 text-slate-500 hover:border-brand-400"
-                  }`}
-                >
-                  {p.label} {p.rate}%
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="relative">
-            <input {...numProps(feeRate, setFeeRate, 0.1)} name="feeRate" />
-            <Suffix>%</Suffix>
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-800">입력</h2>
+          {/* 플랫폼 */}
+          <div className="flex gap-1">
+            {(["coupang", "naver"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => switchPlatform(p)}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                  platform === p
+                    ? "border-brand-600 bg-brand-600 text-white"
+                    : "border-slate-300 text-slate-500 hover:border-brand-400"
+                }`}
+              >
+                {p === "coupang" ? "쿠팡" : "네이버(스마트스토어)"}
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="배송비 (판매자 부담)" suffix="원">
-            <input {...numProps(shipping, setShipping)} name="shipping" />
+          <Field label="판매가" suffix="원">
+            <input {...numAttrs(price, setPrice)} />
           </Field>
-          <Field label="기타비용" suffix="원">
-            <input {...numProps(extraCost, setExtraCost)} name="extraCost" />
+          <Field label="상품원가 (도매가)" suffix="원">
+            <input {...numAttrs(cost, setCost)} />
+          </Field>
+          <Field label="고객배송비 (수취)" suffix="원">
+            <input {...numAttrs(customerShipping, setCustomerShipping)} />
+          </Field>
+          <Field label="지불배송비" suffix="원">
+            <input {...numAttrs(paidShipping, setPaidShipping)} />
+          </Field>
+          <Field label="포장비용" suffix="원">
+            <input {...numAttrs(packaging, setPackaging)} />
+          </Field>
+          <Field label="수수료율" suffix="%">
+            <input {...numAttrs(feePct, setFeePct, 0.1)} />
           </Field>
         </div>
 
-        <Field label="판매가" suffix="원">
-          <input {...numProps(price, setPrice)} name="price" />
-        </Field>
-
-        {/* 목표 마진율 → 권장 판매가 */}
-        <div className="rounded-xl border border-accent-200 bg-accent-50 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-xs font-medium text-accent-800">
-              목표 마진율
-              <input
-                type="number"
-                value={targetRate}
-                step={1}
-                onChange={(e) => setTargetRate(Number(e.target.value))}
-                className="mx-1.5 w-14 rounded-md border border-accent-300 bg-white px-1.5 py-0.5 text-right text-xs"
-              />
-              %
-            </label>
-            <div className="text-right">
-              <span className="block text-[10px] text-accent-600">권장 판매가</span>
-              <span className="text-sm font-bold text-accent-800">
-                {recommended === null ? "산출 불가" : won(recommended)}
-              </span>
-            </div>
+        {/* 수수료 프리셋 */}
+        <div>
+          <p className="mb-1.5 text-[11px] font-medium text-slate-400">
+            {platform === "coupang" ? "쿠팡 카테고리 (VAT 별도 → ×1.1 자동)" : "네이버 등급 (VAT 포함)"}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {presets.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => setFeePct(Number((p.rate * 100).toFixed(3)))}
+                className="rounded-full border border-slate-300 px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-brand-400 hover:text-brand-700"
+              >
+                {p.label} {(p.rate * 100).toFixed(1)}%
+              </button>
+            ))}
           </div>
-          {recommended !== null && (
-            <button
-              type="button"
-              onClick={() => setPrice(recommended)}
-              className="mt-2 w-full rounded-lg border border-accent-300 bg-white py-1.5 text-xs font-semibold text-accent-700 transition hover:bg-accent-100"
-            >
-              권장가를 판매가에 적용
-            </button>
-          )}
         </div>
 
-        <input type="hidden" name="productRef" value={productRef ?? 0} />
+        {/* 종소세율 */}
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-slate-700">종합소득세율</span>
+          <select
+            value={taxRate}
+            onChange={(e) => setTaxRate(Number(e.target.value))}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          >
+            {INCOME_TAX_PRESETS.map((t) => (
+              <option key={t.rate} value={t.rate}>{t.label}</option>
+            ))}
+          </select>
+        </label>
 
         <button
-          type="submit"
+          type="button"
+          onClick={save}
           disabled={mock || saving}
           className="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -152,113 +153,64 @@ export function MarginCalculator({
             Mock 모드 — Supabase 연결 후 저장·히스토리가 활성화됩니다
           </p>
         )}
-        {saveState.error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
-            {saveState.error}
-          </p>
-        )}
-        {saveState.ok && (
-          <p className="rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">
-            저장되었습니다 — 아래 히스토리에서 확인하세요.
-          </p>
-        )}
-      </form>
+        {saveMsg && <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">{saveMsg}</p>}
+      </div>
 
       {/* ── 결과 ── */}
       <div className="space-y-3">
-        <div
-          className={`rounded-2xl border p-6 shadow-sm ${
-            marginPositive
-              ? "border-brand-200 bg-brand-50"
-              : "border-red-200 bg-red-50"
-          }`}
-        >
-          <p className="text-xs font-medium text-slate-500">마진액 / 마진율</p>
-          <p
-            className={`mt-1 text-2xl font-extrabold ${
-              marginPositive ? "text-brand-700" : "text-red-600"
-            }`}
-          >
-            {won(results.margin)}{" "}
-            <span className="text-base font-bold">({results.marginRate}%)</span>
+        <div className={`rounded-2xl border p-6 shadow-sm ${positive ? "border-brand-200 bg-brand-50" : "border-red-200 bg-red-50"}`}>
+          <p className="text-xs font-medium text-slate-500">최종마진 (종소세 제외) / 최종마진율</p>
+          <p className={`mt-1 text-2xl font-extrabold ${positive ? "text-brand-700" : "text-red-600"}`}>
+            {won(r.finalMargin)} <span className="text-base font-bold">({pct(r.finalMarginRate)})</span>
           </p>
-          {!marginPositive && (
-            <p className="mt-1 text-xs text-red-500">
-              손해 구간입니다 — 판매가를 손익분기 이상으로 올리세요.
-            </p>
-          )}
+          {!positive && <p className="mt-1 text-xs text-red-500">손해 구간입니다 — 판매가/원가를 조정하세요.</p>}
         </div>
 
         <dl className="space-y-2 rounded-2xl border border-slate-200 bg-white p-6 text-sm shadow-sm">
-          <Row k="부가세 (원가×10%)" v={won(results.vat)} />
-          <Row k="총원가 (원가+부가세+배송+기타)" v={won(results.totalCost)} />
-          <Row k={`플랫폼 수수료 (${feeRate}%)`} v={won(results.fee)} />
+          <Row k="판매마진 (종소세 전)" v={won(r.salesMargin)} sub={pct(r.salesMarginRate)} />
           <div className="border-t border-slate-100 pt-2">
-            <Row
-              k="손익분기 판매가"
-              v={won(results.breakEvenPrice)}
-              strong
-            />
+            <Row k={`수수료 (${platform === "coupang" ? "쿠팡 ×1.1" : "네이버"})`} v={won(r.fee)} />
+            <Row k="부가세 (순 = 매출−매입 VAT)" v={won(r.vat)} />
+            <Row k="종합소득세" v={won(r.incomeTax)} />
           </div>
         </dl>
 
         <p className="px-1 text-[11px] leading-relaxed text-slate-400">
-          v1 표준 수식 기준입니다. 고객 제공 엑셀 수령 후 동일 입력 → 동일 출력(±0원)으로
-          수식이 교체됩니다 (src/lib/margin.ts).
+          고객 제공 엑셀 &ldquo;세금 제외 실패없는 마진계산기&rdquo; 수식을 그대로 이식했습니다 (동일 입력 → 동일 출력).
+          쿠팡은 카테고리 수수료율에 부가세(×1.1)가 자동 반영됩니다.
         </p>
       </div>
     </div>
   );
 }
 
-// ── 소소한 프레젠테이션 헬퍼 ──
+// ── 프레젠테이션 헬퍼 ──
 
-function Field({
-  label,
-  suffix,
-  children,
-}: {
-  label: string;
-  suffix: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, suffix, children }: { label: string; suffix: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">
-        {label}
-      </span>
+      <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
       <div className="relative">
         {children}
-        <Suffix>{suffix}</Suffix>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">{suffix}</span>
       </div>
     </label>
   );
 }
 
-function Suffix({ children }: { children: React.ReactNode }) {
+function Row({ k, v, sub }: { k: string; v: string; sub?: string }) {
   return (
-    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-      {children}
-    </span>
-  );
-}
-
-function Row({ k, v, strong }: { k: string; v: string; strong?: boolean }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
+    <div className="flex items-baseline justify-between gap-3 py-0.5">
       <dt className="text-xs text-slate-500">{k}</dt>
-      <dd className={strong ? "font-bold text-slate-800" : "text-slate-700"}>
+      <dd className="font-semibold text-slate-800">
         {v}
+        {sub && <span className="ml-1.5 text-xs font-normal text-slate-400">{sub}</span>}
       </dd>
     </div>
   );
 }
 
-function numProps(
-  value: number,
-  set: (n: number) => void,
-  step = 100,
-): React.InputHTMLAttributes<HTMLInputElement> {
+function numAttrs(value: number, set: (n: number) => void, step = 100): React.InputHTMLAttributes<HTMLInputElement> {
   return {
     type: "number",
     value,

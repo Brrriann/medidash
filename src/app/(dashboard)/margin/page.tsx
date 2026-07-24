@@ -22,8 +22,8 @@ export default async function MarginPage({
       <div>
         <h1 className="text-xl font-bold text-slate-900">마진계산기</h1>
         <p className="mt-1 text-sm text-slate-500">
-          원가·수수료·배송비를 넣으면 마진액과 손익분기, 목표 마진율 기준 권장
-          판매가를 바로 계산합니다.
+          고객 제공 엑셀 수식(플랫폼별 수수료·부가세·종합소득세)을 그대로 적용해
+          판매마진과 세금 제외 최종마진을 계산합니다.
           {initialCost && (
             <span className="ml-1 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">
               도매몰 카드에서 원가 {won(initialCost)} 자동 입력됨
@@ -51,11 +51,11 @@ export default async function MarginPage({
               <thead>
                 <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
                   <th className="py-2 pr-4 font-medium">일시</th>
+                  <th className="py-2 pr-4 font-medium">플랫폼</th>
                   <th className="py-2 pr-4 font-medium">원가</th>
                   <th className="py-2 pr-4 font-medium">판매가</th>
-                  <th className="py-2 pr-4 font-medium">수수료율</th>
-                  <th className="py-2 pr-4 font-medium">마진액</th>
-                  <th className="py-2 font-medium">마진율</th>
+                  <th className="py-2 pr-4 font-medium">최종마진</th>
+                  <th className="py-2 font-medium">최종마진율</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -64,17 +64,17 @@ export default async function MarginPage({
                     <td className="py-2 pr-4 text-xs text-slate-400">
                       {new Date(h.createdAt).toLocaleString("ko-KR")}
                     </td>
+                    <td className="py-2 pr-4">{h.platform === "coupang" ? "쿠팡" : h.platform === "naver" ? "네이버" : h.platform}</td>
                     <td className="py-2 pr-4">{won(h.cost)}</td>
                     <td className="py-2 pr-4">{won(h.price)}</td>
-                    <td className="py-2 pr-4">{h.feeRate}%</td>
                     <td
                       className={`py-2 pr-4 font-semibold ${
-                        h.margin >= 0 ? "text-brand-700" : "text-red-600"
+                        h.finalMargin >= 0 ? "text-brand-700" : "text-red-600"
                       }`}
                     >
-                      {won(h.margin)}
+                      {won(h.finalMargin)}
                     </td>
-                    <td className="py-2">{h.marginRate}%</td>
+                    <td className="py-2">{(h.finalMarginRate * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>

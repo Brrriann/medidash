@@ -126,15 +126,15 @@ export async function getRecentWorks(): Promise<
 
 export interface MarginHistoryItem {
   id: number;
-  cost: number;
-  price: number;
-  feeRate: number;
-  margin: number;
-  marginRate: number;
   createdAt: string;
+  platform: string;
+  price: number;
+  cost: number;
+  finalMargin: number;
+  finalMarginRate: number;
 }
 
-/** 마진 계산 히스토리 (본인 것만 — RLS) */
+/** 마진 계산 히스토리 (본인 것만 — RLS). 고객 엑셀 모델 필드(최종마진) 기준 */
 export async function getMarginHistory(): Promise<MarginHistoryItem[]> {
   if (isMockMode()) return [];
   const supabase = await createClient();
@@ -145,12 +145,12 @@ export async function getMarginHistory(): Promise<MarginHistoryItem[]> {
     .limit(10);
   return (data ?? []).map((row) => ({
     id: row.id,
-    cost: row.inputs?.cost ?? 0,
-    price: row.inputs?.price ?? 0,
-    feeRate: row.inputs?.feeRate ?? 0,
-    margin: row.results?.margin ?? 0,
-    marginRate: row.results?.marginRate ?? 0,
     createdAt: row.created_at,
+    platform: row.inputs?.platform ?? "",
+    price: row.inputs?.price ?? 0,
+    cost: row.inputs?.cost ?? 0,
+    finalMargin: row.results?.finalMargin ?? 0,
+    finalMarginRate: row.results?.finalMarginRate ?? 0,
   }));
 }
 
