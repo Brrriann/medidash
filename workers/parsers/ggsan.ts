@@ -16,6 +16,7 @@ import { makeFixtures } from "./fixtures";
 
 // TODO(계정 수령 후): 실사이트에서 확인해 교체
 const SELECTORS: SiteSelectors = {
+  loginUrl: "https://www.ggsan.com/member/login.php", // TODO: 실제 로그인 페이지 URL
   loginId: "#member_id",
   loginPw: "#member_pw",
   loginSubmit: ".btn-login",
@@ -34,7 +35,7 @@ export const ggsanParser: WholesaleParser = {
   baseUrl: "https://www.ggsan.com",
 
   login(page: Page, creds: Credentials) {
-    return loginWith(page, this.baseUrl, SELECTORS, creds);
+    return loginWith(page, SELECTORS, creds);
   },
   listProductUrls(page: Page, limit: number) {
     return listUrlsWith(page, SELECTORS, limit);

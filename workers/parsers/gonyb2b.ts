@@ -16,6 +16,7 @@ import { makeFixtures } from "./fixtures";
 
 // TODO(계정 수령 후): 실사이트에서 확인해 교체
 const SELECTORS: SiteSelectors = {
+  loginUrl: "https://gonyb2b.com/login", // TODO: 실제 로그인 페이지 URL
   loginId: "#username",
   loginPw: "#password",
   loginSubmit: "button[type=submit]",
@@ -34,7 +35,7 @@ export const gonyb2bParser: WholesaleParser = {
   baseUrl: "https://gonyb2b.com",
 
   login(page: Page, creds: Credentials) {
-    return loginWith(page, this.baseUrl, SELECTORS, creds);
+    return loginWith(page, SELECTORS, creds);
   },
   listProductUrls(page: Page, limit: number) {
     return listUrlsWith(page, SELECTORS, limit);
