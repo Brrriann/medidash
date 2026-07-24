@@ -14,19 +14,21 @@ import {
 } from "./shared";
 import { makeFixtures } from "./fixtures";
 
-// TODO(계정 수령 후): 실사이트에서 확인해 교체
+// 실사이트 DOM 대조 완료(2026-07-24) — ggsan은 Godo(고도몰) 기반.
+// 로그인 폼은 Playwright 비로그인 캡처로, 목록/상세는 Aside(로그인 세션)로 실측.
+// 로그인 필드 id(loginId/loginPwd)가 숨은 formOrderLogin에도 중복이라 #formLogin으로 스코프.
 const SELECTORS: SiteSelectors = {
-  loginUrl: "https://www.ggsan.com/member/login.php", // TODO: 실제 로그인 페이지 URL
-  loginId: "#member_id",
-  loginPw: "#member_pw",
-  loginSubmit: ".btn-login",
-  loginSuccess: ".member-info",
-  listUrl: "https://www.ggsan.com/goods/goods_list.php",
-  productLink: ".item .name a",
-  name: ".goods_name",
-  price: ".price strong",
-  image: ".goods_image img",
-  detail: "#detail_info",
+  loginUrl: "https://www.ggsan.com/member/login.php",
+  loginId: "#formLogin #loginId",
+  loginPw: "#formLogin #loginPwd",
+  loginSubmit: "#formLogin button[type=\"submit\"]",
+  loginSuccess: 'a[href*="logout.php"]',
+  listUrl: "https://www.ggsan.com/goods/goods_list.php?cateCd=001",
+  productLink: '.item_info_cont a[href*="goods_view.php"]',
+  name: ".item_detail_tit h3",
+  price: ".item_info_box .item_price dd", // .item_price는 연관상품에도 11개 → 메인 정보박스로 스코프
+  image: ".item_photo_big img",
+  detail: "#detail",
 };
 
 export const ggsanParser: WholesaleParser = {

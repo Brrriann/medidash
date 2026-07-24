@@ -2,10 +2,15 @@
 import type { Page } from "playwright";
 import type { RawProduct } from "../lib/types";
 
-/** "12,500원" 등에서 정수 추출 */
+/** "12,500원" 등에서 정수 추출.
+ *  일부 몰(예: upick=Cafe24)은 가격 요소 안에 할인율 배지가 중첩된다:
+ *  <strong id=span_product_price_text>14,000원<div class=sale_box>53%</div></strong>
+ *  → textContent "14,000원53%" → 종전 방식은 1400053으로 오염. 그래서 '원'으로 끝나는
+ *  첫 금액 토큰만 취하고, '원'이 없으면 종전처럼 전체 숫자를 추출한다(폴백). */
 export function parsePrice(raw: string | null | undefined): number | null {
   if (!raw) return null;
-  const digits = raw.replace(/[^0-9]/g, "");
+  const won = raw.match(/([\d,]+)\s*원/);
+  const digits = (won ? won[1] : raw).replace(/[^0-9]/g, "");
   return digits ? Number(digits) : null;
 }
 

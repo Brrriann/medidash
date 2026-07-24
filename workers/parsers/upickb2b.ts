@@ -14,19 +14,20 @@ import {
 } from "./shared";
 import { makeFixtures } from "./fixtures";
 
-// TODO(계정 수령 후): 실사이트에서 확인해 교체
+// 실사이트 DOM 대조 완료(2026-07-24) — upickb2b는 Cafe24 기반.
+// 목록/상세는 Aside(로그인 세션)로, 로그인 폼은 Playwright 비로그인 캡처로 실측.
 const SELECTORS: SiteSelectors = {
-  loginUrl: "https://upickb2b.com/login", // TODO: 실제 로그인 페이지 URL
-  loginId: "input[name=loginId]",
-  loginPw: "input[name=loginPwd]",
-  loginSubmit: "button.login-btn",
-  loginSuccess: ".logout-btn",
-  listUrl: "https://upickb2b.com/product/list",
-  productLink: ".prd-list a.prd-link",
-  name: ".prd-detail .title",
-  price: ".prd-detail .price",
-  image: ".prd-detail .thumb img",
-  detail: ".prd-detail .description",
+  loginUrl: "https://upickb2b.com/member/login.html",
+  loginId: "#member_id",
+  loginPw: "#member_passwd",
+  loginSubmit: "a.btnSubmit",
+  loginSuccess: 'a[href*="Member/logout"]',
+  listUrl: "https://upickb2b.com/category/%EA%B1%B4%EA%B0%95%EA%B8%B0%EB%8A%A5%EC%8B%9D%ED%92%88/24/",
+  productLink: '.prdList li[id^="anchorBoxId_"] .name a',
+  name: ".headingArea h1",
+  price: "#span_product_price_text",
+  image: ".imgArea .prdImg img",
+  detail: "#prdDetail",
 };
 
 export const upickb2bParser: WholesaleParser = {
