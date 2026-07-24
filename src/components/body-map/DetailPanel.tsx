@@ -34,11 +34,11 @@ export function DetailPanel({
     const bm = b.symptoms.includes(symptom) ? 0 : 1;
     return am - bm;
   });
-  const sourcingQuery = ingredients
+  const matchedNames = ingredients
     .filter((i) => i.symptoms.includes(symptom))
-    .map((i) => i.name)
-    .slice(0, 3)
-    .join(",");
+    .map((i) => i.name);
+  const sourcingQuery = matchedNames.slice(0, 3).join(",");
+  const firstIngredient = matchedNames[0] ?? ingredients[0]?.name ?? "";
 
   return (
     <section
@@ -183,6 +183,14 @@ export function DetailPanel({
         >
           이 원료로 상품 소싱 →
         </Link>
+        {firstIngredient && (
+          <Link
+            href={`/titles?ingredient=${encodeURIComponent(firstIngredient)}&part=${encodeURIComponent(subcategory.name)}`}
+            className="mt-2 block w-full rounded-xl border border-slate-200 py-2 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+          >
+            상품명·태그 만들기 →
+          </Link>
+        )}
         <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
           {COMPLIANCE_NOTICE}
         </p>
