@@ -61,16 +61,20 @@ on conflict (code) do nothing;
 - **Build command**: `npx opennextjs-cloudflare build`
 - **Deploy command**: `npx opennextjs-cloudflare deploy`
 
-### 3. 환경변수 (A-6에서 복사한 값)
-프로젝트 **Settings → Variables and Secrets** 에 추가:
+### 3. 환경변수
+
+**공개 값 2개(URL·anon 키)는 이미 레포 [`.env.production`](../.env.production)에 커밋**되어 **빌드에 자동 포함**됩니다 — Cloudflare에 따로 안 넣어도 됩니다.
+> 이유: `NEXT_PUBLIC_*` 값은 런타임이 아니라 **빌드 시점**에 코드에 박힙니다. Cloudflare **런타임** 변수에만 넣으면 빌드가 못 읽어 **mock 모드**로 떠요. 그래서 빌드에 확실히 들어가도록 파일로 커밋합니다.
+>
+> ⚠️ **혹시 Cloudflare에 `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` 를 이미 넣었다면 삭제하세요.** 빌드 변수로 잘못(빈 값 등) 들어가 있으면 `.env.production` 값을 덮어써서 계속 mock 모드가 됩니다.
+
+**비밀 키 1개만** 프로젝트 **Settings → Variables and Secrets** 에 **Secret(런타임)** 으로 추가:
 | 변수 | 값 | 종류 |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL | Text |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key | Text |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role key | **Secret(암호화)** |
+| `SUPABASE_SERVICE_ROLE_KEY` | service_role key (A-6) | **Secret(암호화)** |
 | (선택) `AI_TEXT_API_KEY` 등 | AI 키 | Secret |
 
-> 환경변수를 하나도 안 넣으면 **mock 모드**로 배포됩니다(로그인 없이 UI만). 위 3개를 넣어야 실제 로그인·저장이 켜집니다.
+> Supabase 프로젝트를 바꾸면 `.env.production`의 두 값을 수정해 다시 배포하세요. (`.env.production`을 지우면 mock 모드로 돌아갑니다.)
 
 ### 4. 배포 & 확인
 **Deploy** → 완료되면 `https://medidash.<계정>.workers.dev` 발급.

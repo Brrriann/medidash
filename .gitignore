@@ -12,10 +12,11 @@ next-env.d.ts
 # production
 dist/
 
-# env — .env.example만 커밋
+# env — .env.example + .env.production(공개 NEXT_PUBLIC_ 값만)만 커밋
 .env
 .env.*
 !.env.example
+!.env.production
 
 # misc
 .DS_Store
