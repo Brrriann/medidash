@@ -1,0 +1,16 @@
+// Cloudflare Workers 배포 설정 (OpenNext 어댑터 — docs/SPEC.md §1 배포: Cloudflare)
+// 배포: npm run cf:deploy (CLOUDFLARE_API_TOKEN 필요) 또는 대시보드 Git 연결(Workers Builds)
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "medidash",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-01",
+  // 서버 액션의 node:crypto 등 Node.js API 사용을 위해 필수
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Supabase/AI 키는 대시보드 Settings → Variables 또는 `wrangler secret put`으로 설정
+  "vars": {}
+}

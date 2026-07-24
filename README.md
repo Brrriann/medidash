@@ -6,10 +6,16 @@
 > 계약: 에어스유통 / MK-202607-C03
 > 기준 문서: [`docs/SPEC.md`](docs/SPEC.md) (실행 사양서) · [`docs/UI-PLAN.md`](docs/UI-PLAN.md) (인체 지도 UI 기획서)
 
+> ### 🧪 현재 상태: 동작 테스트 버전
+> 기능 흐름(지도 → 원료 → 소싱 → 마진)을 끝까지 검증하는 **테스트 빌드**입니다.
+> Supabase 키 없이 **mock 모드**로 전체 UI를 바로 확인할 수 있습니다.
+> **300명 동시접속 대응(자산 경량화·캐싱·과금·동시성)은 후속 운영 준비 단계로 미뤄져 있으며**
+> 항목은 [`docs/PRODUCTION-READINESS.md`](docs/PRODUCTION-READINESS.md)에 정리되어 있습니다.
+
 ## 핵심 흐름
 
 ```
-인체 SVG 지도 (대분류 10계통)
+인체 3D 지도 (대분류 10계통 — 좌우 드래그 회전, GLB)
   → 중분류 카드 (부위/기능)
     → 증상 키워드 칩 (소분류)
       → 4-Tab 상세 패널 (특징 · 추천원료 · 기전원리 · 셀링포인트)
@@ -17,7 +23,11 @@
           → 썸네일 / 상품명·태그 / 마진 계산 프리셋
 ```
 
-분류 체계는 **대·중·소 3단 구조**(10계통 × 중분류 33종 × 증상 키워드)를 사용합니다 — `docs/UI-PLAN.md` §3 분류표가 시드 데이터 원본입니다.
+> 인체 모델: Higgsfield(GPT-Image-2 → Meshy image-to-3D) 생성 GLB — `public/models/body.glb`.
+> 파일이 없으면 2D SVG 실루엣으로 자동 폴백됩니다. 계통 핫스팟은 `body_categories.svg_region` ↔
+> `src/components/body-map/anchors.ts` 매핑으로 데이터 기반 배치.
+
+분류 체계는 **대·중·소 3단 구조**(10계통 × 중분류 32종 × 증상 키워드)를 사용합니다 — `docs/UI-PLAN.md` §3 분류표가 시드 데이터 원본입니다.
 
 ## 기술 스택
 
@@ -63,16 +73,44 @@ npm run seed
 npm run seed:contents
 ```
 
+### 배포 (Supabase + Cloudflare)
+
+> **처음 배포라면 [`docs/DEPLOY.md`](docs/DEPLOY.md)** 를 따라오세요 — 터미널 없이 브라우저에서
+> SQL 붙여넣기(마이그레이션 `0001_init.sql` + `supabase/seed.sql`) + 레포 연결만으로 끝납니다.
+> 첫 운영자 계정·수강생 코드는 SQL 스니펫(또는 `npm run bootstrap:admin`)으로 생성합니다.
+
+Next.js 15 SSR(서버 액션·미들웨어 포함)이라 **Cloudflare Workers + OpenNext 어댑터**로 배포합니다
+(`wrangler.jsonc` · `open-next.config.ts` 커밋됨, `nodejs_compat` 필수).
+
+```bash
+npm run cf:build     # 어댑터 빌드 검증 (.open-next/ 생성)
+npm run cf:preview   # 로컬 workerd로 프리뷰 (http://localhost:8787)
+npm run cf:deploy    # 배포 — CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID 필요
+```
+
+**대시보드로 배포(권장)**: Cloudflare 대시보드 → Workers & Pages → Create → *Import a repository* →
+`Brrriann/medidash` 선택 → Build command `npx opennextjs-cloudflare build`, Deploy command
+`npx opennextjs-cloudflare deploy` → 배포. 환경변수를 비워두면 mock 모드로 동작하고,
+Settings → Variables에 Supabase/AI 키를 넣으면 실기능이 켜집니다.
+
 ### 크롤러 운영 (월 1회)
 
 ```bash
-npm run crawl            # 도매몰 3사 상품 캐시 갱신 (wholesale_products upsert)
-npm run crawl:broadcast  # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats upsert)
+npm run crawl                        # 도매몰 3사 상품 캐시 갱신 (wholesale_products upsert)
+npm run crawl -- --dry-run           # 계정·네트워크 없이 파이프라인 검증 (픽스처)
+npm run crawl -- --source=ggsan --limit=5   # 특정 소스 소량 검증
+npm run crawl:broadcast              # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats upsert)
+npm run crawl:broadcast -- --dry-run
 ```
 
-- 요청 간 딜레이 2~5초 랜덤, 동시성 1, 재시도 2회 — 대상 사이트 부하 최소화 필수
-- 셀러 본인 계정으로만 로그인, 약관·robots 확인 후 저속·야간 실행
+- 요청 간 딜레이 2~5초 랜덤, 동시성 1, 재시도 2회 — 대상 사이트 부하 최소화 필수 (`workers/lib/manners.ts`에서 강제)
+- 셀러 본인 계정으로만 로그인(env), 약관·robots 확인 후 저속·야간 실행
+- 실패는 로그만 남기고 다음 상품으로 진행 → 서비스 무영향 · 재실행 시 `source_url` 기준 중복 없이 upsert
 - admin 화면에서도 실행 버튼 및 최근 갱신일 확인 가능
+
+> **W2 진행 상태**: 크롤러 파이프라인(매너·원료 매칭·upsert·로깅)은 완성돼 `--dry-run`으로 검증됩니다.
+> 사이트별 파서(`workers/parsers/{source}.ts`)의 **셀렉터는 플레이스홀더(TODO)** 이며, 도매몰 3사 계정
+> 수령 후 실사이트 DOM을 대조해 채우면 실크롤이 활성화됩니다.
 
 ## 화면 구성 (8화면)
 
@@ -91,7 +129,11 @@ npm run crawl:broadcast  # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats
 ├── docs/                  # 사양서(SPEC.md) · UI 기획서(UI-PLAN.md)
 ├── supabase/migrations/   # DB 스키마 + RLS
 ├── scripts/               # seed.ts(분류·원료) · seed-contents.ts(고객 데이터)
-├── workers/               # 크롤러 (crawl-wholesale.ts · crawl-broadcast.ts · parsers/)
+├── workers/               # 크롤러
+│   ├── crawl-wholesale.ts # 도매몰 3사 크롤 진입점 (--dry-run 지원)
+│   ├── crawl-broadcast.ts # 홈쇼핑모아 지표 크롤 (골격)
+│   ├── lib/               # manners(매너) · ingredient-match · db · env
+│   └── parsers/           # gonyb2b · ggsan · upickb2b (셀렉터 TODO) + fixtures
 └── src/
     ├── app/               # App Router (auth) / (dashboard) / api
     ├── components/        # body-map(지도·패널) 등 UI 컴포넌트
@@ -100,10 +142,11 @@ npm run crawl:broadcast  # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats
 
 ## 개발 로드맵
 
-- [x] **W1 — 골격 + 지도**: 스캐폴드 · 스키마/RLS · 시드 · 인증(수강생 코드) · 인체 지도 + 4-Tab 패널
-- [ ] **W2 — 데이터 파이프라인**: 도매몰 파서 3종 + 크롤러 · 홈쇼핑모아 지표 · 통합 검색 화면
-- [ ] **W3 — AI + 계산기**: 상품명·태그 API(금지어 필터) · 썸네일 스튜디오 · 마진계산기(엑셀 수식 이식)
-- [ ] **W4 — 결제 + 마감**: 토스 결제 · 마이페이지/admin · 실데이터 시드 · E2E · 배포
+- [x] **W1 — 골격 + 지도 (동작 테스트 버전)**: 스캐폴드 · 스키마/RLS · 시드 · 인증(수강생 코드) · 인체 지도 + 4-Tab 패널 · 마진계산기 · 도매몰 검색 UI · admin/마이페이지
+- [~] **W2 — 데이터 파이프라인**: 크롤러 파이프라인 골격 완성(매너·원료 매칭·upsert·`--dry-run`) · 파서 셀렉터/실크롤은 도매몰 계정 대기 · 홈쇼핑모아 지표 골격 · 통합 검색 실데이터 연결
+- [x] **W3 — AI + 계산기**: 상품명·태그 추천 · 썸네일 스튜디오(캔버스·프리셋 PNG) · **마진계산기(고객 엑셀 수식 이식 완료 — 플랫폼별 수수료·순부가세·종소세, ±0 검증)**. AI 실생성(텍스트/이미지)만 키 연동 대기
+- [ ] **W4 — 결제 + 마감**: 토스 결제 · 마이페이지/admin · 실데이터 시드 · E2E
+- [ ] **운영 준비 — 300 동접 대응 (후속)**: 3D 경량화 · 읽기 캐싱 · Supabase Pro · 가입 코드 동시성 · AI 율제한 → [`docs/PRODUCTION-READINESS.md`](docs/PRODUCTION-READINESS.md)
 
 ## 범위 가드 (계약 기준 — 구현하지 않는 것)
 
