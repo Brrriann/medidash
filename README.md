@@ -92,13 +92,21 @@ Settings → Variables에 Supabase/AI 키를 넣으면 실기능이 켜집니다
 ### 크롤러 운영 (월 1회)
 
 ```bash
-npm run crawl            # 도매몰 3사 상품 캐시 갱신 (wholesale_products upsert)
-npm run crawl:broadcast  # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats upsert)
+npm run crawl                        # 도매몰 3사 상품 캐시 갱신 (wholesale_products upsert)
+npm run crawl -- --dry-run           # 계정·네트워크 없이 파이프라인 검증 (픽스처)
+npm run crawl -- --source=ggsan --limit=5   # 특정 소스 소량 검증
+npm run crawl:broadcast              # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats upsert)
+npm run crawl:broadcast -- --dry-run
 ```
 
-- 요청 간 딜레이 2~5초 랜덤, 동시성 1, 재시도 2회 — 대상 사이트 부하 최소화 필수
-- 셀러 본인 계정으로만 로그인, 약관·robots 확인 후 저속·야간 실행
+- 요청 간 딜레이 2~5초 랜덤, 동시성 1, 재시도 2회 — 대상 사이트 부하 최소화 필수 (`workers/lib/manners.ts`에서 강제)
+- 셀러 본인 계정으로만 로그인(env), 약관·robots 확인 후 저속·야간 실행
+- 실패는 로그만 남기고 다음 상품으로 진행 → 서비스 무영향 · 재실행 시 `source_url` 기준 중복 없이 upsert
 - admin 화면에서도 실행 버튼 및 최근 갱신일 확인 가능
+
+> **W2 진행 상태**: 크롤러 파이프라인(매너·원료 매칭·upsert·로깅)은 완성돼 `--dry-run`으로 검증됩니다.
+> 사이트별 파서(`workers/parsers/{source}.ts`)의 **셀렉터는 플레이스홀더(TODO)** 이며, 도매몰 3사 계정
+> 수령 후 실사이트 DOM을 대조해 채우면 실크롤이 활성화됩니다.
 
 ## 화면 구성 (8화면)
 
@@ -117,7 +125,11 @@ npm run crawl:broadcast  # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats
 ├── docs/                  # 사양서(SPEC.md) · UI 기획서(UI-PLAN.md)
 ├── supabase/migrations/   # DB 스키마 + RLS
 ├── scripts/               # seed.ts(분류·원료) · seed-contents.ts(고객 데이터)
-├── workers/               # 크롤러 (crawl-wholesale.ts · crawl-broadcast.ts · parsers/)
+├── workers/               # 크롤러
+│   ├── crawl-wholesale.ts # 도매몰 3사 크롤 진입점 (--dry-run 지원)
+│   ├── crawl-broadcast.ts # 홈쇼핑모아 지표 크롤 (골격)
+│   ├── lib/               # manners(매너) · ingredient-match · db · env
+│   └── parsers/           # gonyb2b · ggsan · upickb2b (셀렉터 TODO) + fixtures
 └── src/
     ├── app/               # App Router (auth) / (dashboard) / api
     ├── components/        # body-map(지도·패널) 등 UI 컴포넌트
@@ -127,7 +139,7 @@ npm run crawl:broadcast  # 홈쇼핑모아 방송 지표 갱신 (broadcast_stats
 ## 개발 로드맵
 
 - [x] **W1 — 골격 + 지도 (동작 테스트 버전)**: 스캐폴드 · 스키마/RLS · 시드 · 인증(수강생 코드) · 인체 지도 + 4-Tab 패널 · 마진계산기 · 도매몰 검색 UI · admin/마이페이지
-- [ ] **W2 — 데이터 파이프라인**: 도매몰 파서 3종 + 크롤러 · 홈쇼핑모아 지표 · 통합 검색 화면(실데이터)
+- [~] **W2 — 데이터 파이프라인**: 크롤러 파이프라인 골격 완성(매너·원료 매칭·upsert·`--dry-run`) · 파서 셀렉터/실크롤은 도매몰 계정 대기 · 홈쇼핑모아 지표 골격 · 통합 검색 실데이터 연결
 - [ ] **W3 — AI + 계산기**: 상품명·태그 API(금지어 필터) · 썸네일 스튜디오 · 마진계산기(엑셀 수식 이식)
 - [ ] **W4 — 결제 + 마감**: 토스 결제 · 마이페이지/admin · 실데이터 시드 · E2E
 - [ ] **운영 준비 — 300 동접 대응 (후속)**: 3D 경량화 · 읽기 캐싱 · Supabase Pro · 가입 코드 동시성 · AI 율제한 → [`docs/PRODUCTION-READINESS.md`](docs/PRODUCTION-READINESS.md)

@@ -11,8 +11,8 @@
     "test": "tsx --test tests/*.test.ts",
     "seed": "tsx scripts/seed.ts",
     "seed:contents": "tsx scripts/seed-contents.ts",
-    "crawl": "echo '[W2에서 구현 예정] workers/crawl-wholesale.ts' && exit 1",
-    "crawl:broadcast": "echo '[W2에서 구현 예정] workers/crawl-broadcast.ts' && exit 1",
+    "crawl": "tsx workers/crawl-wholesale.ts",
+    "crawl:broadcast": "tsx workers/crawl-broadcast.ts",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
@@ -37,6 +37,7 @@
     "@types/three": "^0.185.1",
     "eslint": "^9.31.0",
     "eslint-config-next": "^15.4.2",
+    "playwright": "^1.61.1",
     "tailwindcss": "^4.1.11",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
