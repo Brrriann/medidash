@@ -1,6 +1,7 @@
 /** 파서 공통 헬퍼 */
 import type { Page } from "playwright";
 import type { RawProduct } from "../lib/types";
+import { politeDelay } from "../lib/manners";
 
 /** "12,500원" 등에서 정수 추출.
  *  일부 몰(예: upick=Cafe24)은 가격 요소 안에 할인율 배지가 중첩된다:
@@ -42,17 +43,50 @@ export async function loginWith(
   await page.waitForSelector(sel.loginSuccess, { timeout: 15000 });
 }
 
+/** 목록 URL에 page 쿼리 파라미터를 설정(교체). Cafe24·Godo·영카트 모두 page=N 페이지네이션. */
+function withPageParam(listUrl: string, n: number): string {
+  const u = new URL(listUrl);
+  u.searchParams.set("page", String(n));
+  return u.toString();
+}
+
+/** 목록 페이지 순회 안전 상한(무한 루프 방지). */
+const MAX_LIST_PAGES = 100;
+
+/** 목록을 페이지별로 순회하며 상세 URL 수집. limit 도달 또는 새 링크 없음(마지막 페이지)에서 종료. */
 export async function listUrlsWith(
   page: Page,
   sel: SiteSelectors,
   limit: number,
 ): Promise<string[]> {
-  await page.goto(sel.listUrl, { waitUntil: "domcontentloaded" });
-  // TODO: 페이지네이션 순회. 현재는 첫 페이지의 링크만 수집.
-  const hrefs = await page.$$eval(sel.productLink, (els) =>
-    els.map((e) => (e as HTMLAnchorElement).href),
-  );
-  return hrefs.slice(0, limit);
+  const collected: string[] = [];
+  const seen = new Set<string>();
+  let pageNo = 1;
+  for (; pageNo <= MAX_LIST_PAGES; pageNo++) {
+    await page.goto(withPageParam(sel.listUrl, pageNo), {
+      waitUntil: "domcontentloaded",
+    });
+    const hrefs = (
+      await page.$$eval(sel.productLink, (els) =>
+        els.map((e) => (e as HTMLAnchorElement).href),
+      )
+    ).filter(Boolean);
+    // 새 링크가 없으면 마지막 페이지를 지났거나 page 파라미터가 무시된 것 → 종료
+    const fresh = hrefs.filter((h) => !seen.has(h));
+    if (fresh.length === 0) break;
+    for (const h of fresh) {
+      seen.add(h);
+      collected.push(h);
+      if (collected.length >= limit) return collected;
+    }
+    await politeDelay(); // 목록 페이지 사이에도 매너 딜레이
+  }
+  if (pageNo > MAX_LIST_PAGES) {
+    console.warn(
+      `    ⚠️ 목록 페이지 상한(${MAX_LIST_PAGES}p) 도달 — 이후 페이지는 수집되지 않음`,
+    );
+  }
+  return collected;
 }
 
 export async function parseProductWith(
