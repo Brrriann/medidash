@@ -14,18 +14,20 @@ import {
 } from "./shared";
 import { makeFixtures } from "./fixtures";
 
-// TODO(계정 수령 후): 실사이트에서 확인해 교체
+// 실사이트 DOM 대조 완료(2026-07-24) — gonyb2b는 영카트(Youngcart/그누보드) 기반.
+// 로그인 폼은 Playwright 비로그인 캡처로, 목록/상세는 Aside(로그인 세션)로 실측.
 const SELECTORS: SiteSelectors = {
-  loginId: "#username",
-  loginPw: "#password",
-  loginSubmit: "button[type=submit]",
-  loginSuccess: ".my-account", // 로그인 완료 신호
-  listUrl: "https://gonyb2b.com/products",
-  productLink: "a.product-item",
-  name: "h1.product-title",
-  price: ".price .amount",
-  image: ".product-image img",
-  detail: ".product-detail",
+  loginUrl: "https://gonyb2b.com/bbs/login.php",
+  loginId: "#login_id",
+  loginPw: "#login_pw",
+  loginSubmit: "form[name=\"flogin\"] button[type=\"submit\"]",
+  loginSuccess: 'a[href*="logout.php"]',
+  listUrl: "https://gonyb2b.com/shop/list.php?ca_id=10",
+  productLink: ".product .img a",
+  name: "#sit_title",
+  price: "td:has(#it_price) strong", // 판매가격 행(hidden #it_price 포함)의 금액. #sit_tot_price는 JS로만 채워져 비어있음
+  image: "#sit_pvi_big img",
+  detail: "#sit_inf_explan",
 };
 
 export const gonyb2bParser: WholesaleParser = {
@@ -34,13 +36,15 @@ export const gonyb2bParser: WholesaleParser = {
   baseUrl: "https://gonyb2b.com",
 
   login(page: Page, creds: Credentials) {
-    return loginWith(page, this.baseUrl, SELECTORS, creds);
+    return loginWith(page, SELECTORS, creds);
   },
   listProductUrls(page: Page, limit: number) {
     return listUrlsWith(page, SELECTORS, limit);
   },
-  parseProduct(page: Page, url: string): Promise<RawProduct> {
-    return parseProductWith(page, SELECTORS, url);
+  async parseProduct(page: Page, url: string): Promise<RawProduct> {
+    const p = await parseProductWith(page, SELECTORS, url);
+    // 영카트 #sit_title 끝의 스크린리더용 " 요약정보 및 구매" 접미사 제거 (셀렉터로는 분리 불가)
+    return { ...p, name: p.name.replace(/\s*요약정보 및 구매\s*$/, "").trim() };
   },
   fixture(limit: number): RawProduct[] {
     return makeFixtures("gonyb2b", limit);
