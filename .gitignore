@@ -39,4 +39,5 @@ playwright-report/
 
 # crawler output
 workers/.cache/
+workers/.inspect/
 *.log
