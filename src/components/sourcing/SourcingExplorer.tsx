@@ -197,14 +197,12 @@ function ProductCard({ product }: { product: WholesaleProduct }) {
         >
           원본 보기 ↗
         </a>
-        <button
-          type="button"
-          disabled
-          title="W3에서 구현"
-          className="cursor-not-allowed rounded-lg border border-slate-200 py-1.5 text-xs font-semibold text-slate-300"
+        <Link
+          href={`/studio?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}`}
+          className="rounded-lg border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
         >
-          썸네일 만들기 (W3)
-        </button>
+          썸네일 만들기
+        </Link>
         <Link
           href={`/titles?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}`}
           className="rounded-lg border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
