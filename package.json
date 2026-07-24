@@ -16,6 +16,7 @@
     "crawl": "tsx workers/crawl-wholesale.ts",
     "crawl:broadcast": "tsx workers/crawl-broadcast.ts",
     "crawl:inspect": "tsx workers/inspect.ts",
+    "report": "tsx scripts/report-products.ts",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
