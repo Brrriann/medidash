@@ -2,19 +2,23 @@
 
 > "API 발급" 같은 어려운 절차는 없습니다. **이미 만들어진 값 3개 복사 + 레포 연결**이 전부입니다.
 > 터미널 없이 대시보드에서 SQL 붙여넣기만으로 DB를 세팅합니다.
+>
+> **이 프로젝트는 기존 Supabase에 `medidash` 전용 스키마로 격리 설치**됩니다(기존 앱과 테이블 충돌 없음).
+> 그래서 아래 **A-2(스키마 노출) 단계가 반드시 필요**합니다. `auth`(로그인 계정)는 프로젝트 공용입니다.
 
 ---
 
 ## A. Supabase (DB·인증) — 브라우저만
 
-### 1. 프로젝트 생성
-[supabase.com](https://supabase.com) 로그인 → **New project**
-- Region: **Northeast Asia (Seoul)** 권장
-- Database Password: 아무 강한 비번(메모해두기)
+### 1. 프로젝트 (기존 것 사용)
+기존 Supabase 프로젝트를 그대로 씁니다. (새로 만들 거면 [supabase.com](https://supabase.com) → New project, Region **Seoul** 권장)
 
-### 2. 스키마 만들기 (마이그레이션)
+### 2. 스키마 만들기 (마이그레이션) + 스키마 노출
 좌측 **SQL Editor** → **New query** → 레포의 [`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql) **전체 복사·붙여넣기** → **Run**
-- "Success. No rows returned" 나오면 성공.
+- `medidash` 스키마와 테이블·RLS·권한이 한 번에 생성됩니다. "Success" 나오면 성공.
+
+**중요 — 스키마 노출**: **Project Settings → API → Data API → Exposed schemas** 에서
+`medidash` 를 추가(체크)하고 저장하세요. (기본은 `public`만 노출 → 이걸 안 하면 앱이 데이터에 접근 못 합니다.)
 
 ### 3. 분류·원료 시드
 같은 **SQL Editor**에서 새 쿼리 → [`supabase/seed.sql`](../supabase/seed.sql) **전체 붙여넣기** → **Run**
@@ -25,13 +29,13 @@
 - 본인 이메일 + 비밀번호 입력, **Auto Confirm User 체크** → Create
 
 ### 5. admin 권한 + 첫 수강생 코드 (SQL 한 번)
-**SQL Editor**에서 아래를 붙여넣되 `본인이메일@example.com`만 바꿔 **Run**:
+**SQL Editor**에서 아래를 붙여넣되 `본인이메일@example.com`만 바꿔 **Run** (medidash 스키마):
 ```sql
-insert into profiles (id, email, role)
+insert into medidash.profiles (id, email, role)
 select id, email, 'admin' from auth.users where email='본인이메일@example.com'
 on conflict (id) do update set role='admin';
 
-insert into invite_codes (code, memo, max_uses)
+insert into medidash.invite_codes (code, memo, max_uses)
 values ('MEDI-2026-CLASS', '초기 수강생 코드', 100)
 on conflict (code) do nothing;
 ```

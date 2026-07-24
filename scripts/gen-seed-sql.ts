@@ -14,6 +14,8 @@ const arr = (xs: string[]) =>
 const out: string[] = [];
 out.push("-- MediDash 시드 (분류 체계 + 원료 샘플) — Supabase SQL Editor에 붙여넣어 실행");
 out.push("-- 마이그레이션(0001_init.sql) 실행 후 사용. 재실행 안전(ON CONFLICT).");
+out.push("-- medidash 스키마 대상 (search_path 설정)");
+out.push("set search_path = medidash, public;");
 out.push("");
 
 // 1) 대분류

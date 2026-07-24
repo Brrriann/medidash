@@ -38,6 +38,7 @@ if (args.password.length < 8) {
 }
 
 const db = createClient(url, serviceKey, {
+  db: { schema: "medidash" },
   auth: { autoRefreshToken: false, persistSession: false },
 });
 

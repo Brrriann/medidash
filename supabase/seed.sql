@@ -1,5 +1,7 @@
 -- MediDash 시드 (분류 체계 + 원료 샘플) — Supabase SQL Editor에 붙여넣어 실행
 -- 마이그레이션(0001_init.sql) 실행 후 사용. 재실행 안전(ON CONFLICT).
+-- medidash 스키마 대상 (search_path 설정)
+set search_path = medidash, public;
 
 -- 대분류(계통) 10
 insert into body_categories (slug, name, svg_region, sort) values ('nervous', '신경계/뇌', 'head', 1) on conflict (slug) do update set name=excluded.name, svg_region=excluded.svg_region, sort=excluded.sort;

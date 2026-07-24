@@ -23,6 +23,7 @@ if (!url || !serviceKey) {
 }
 
 const db = createClient(url, serviceKey, {
+  db: { schema: "medidash" },
   auth: { autoRefreshToken: false, persistSession: false },
 });
 

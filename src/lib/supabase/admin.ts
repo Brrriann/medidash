@@ -1,7 +1,8 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { DB_SCHEMA } from "./env";
 
 /**
- * service role 클라이언트 (서버 전용 — RLS 우회).
+ * service role 클라이언트 (서버 전용 — RLS 우회). medidash 스키마.
  * 가입 코드 검증·회원 생성·시드 등 관리 작업에만 사용한다.
  */
 export function createAdminClient() {
@@ -13,6 +14,7 @@ export function createAdminClient() {
     );
   }
   return createSupabaseClient(url, key, {
+    db: { schema: DB_SCHEMA },
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
