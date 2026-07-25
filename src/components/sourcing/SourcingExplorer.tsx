@@ -155,6 +155,7 @@ function ProductCard({ product }: { product: WholesaleProduct }) {
 
   return (
     <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300">
+      <ProductThumb src={product.imageUrl} alt={product.name} />
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-bold text-accent-700">
           {SOURCE_LABEL[product.source] ?? product.source}
@@ -243,6 +244,43 @@ function ProductCard({ product }: { product: WholesaleProduct }) {
         </Link>
       </div>
     </article>
+  );
+}
+
+/** 상품 대표 이미지 썸네일. 프로토콜상대(//) URL은 https로, 로드 실패/없음은 플레이스홀더. */
+function ProductThumb({ src, alt }: { src?: string | null; alt: string }) {
+  const url = src?.startsWith("//") ? `https:${src}` : src;
+  const [broken, setBroken] = useState(false);
+  return (
+    <div className="mb-3 aspect-square overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+      {url && !broken ? (
+        // 외부 도매몰/CDN 이미지 — next/image 도메인 설정 없이 단순 표시
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt={alt}
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-slate-300">
+          <svg
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            aria-hidden
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="m21 15-5-5L5 21" />
+          </svg>
+        </div>
+      )}
+    </div>
   );
 }
 

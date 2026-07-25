@@ -168,7 +168,7 @@ export async function getWholesaleProducts(): Promise<{
   if (!isMockMode()) {
     const supabase = await createClient();
     const SEL =
-      "id, source, source_url, name, price_wholesale, ingredient_ids, crawled_at";
+      "id, source, source_url, name, price_wholesale, image_url, ingredient_ids, crawled_at";
     // Supabase는 요청당 행 상한(기본 1000)이 있어, range로 전량을 나눠 가져온다.
     // crawled_at은 배치마다 동점이 많으므로 id를 2차 정렬키로 둬 페이지네이션을 안정화.
     // ponytail: 카탈로그가 수만 건으로 커지면 클라 전량로드 대신 서버측 검색으로 전환.
@@ -206,6 +206,7 @@ export async function getWholesaleProducts(): Promise<{
           sourceUrl: p.source_url,
           name: p.name,
           priceWholesale: p.price_wholesale ?? 0,
+          imageUrl: p.image_url ?? null,
           ingredients: (p.ingredient_ids ?? [])
             .map((id: number) => nameById.get(id))
             .filter(Boolean) as string[],
