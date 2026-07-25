@@ -58,6 +58,18 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // 정적 자산·이미지·파비콘·API(웹훅 콜백 등)는 미들웨어 제외
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)"],
+  /**
+   * 미들웨어 제외 대상.
+   *
+   * `_next/static`만 빼고 `public/` 자산(예: /models/body.glb 7.6MB)이 빠져 있었다.
+   * 그래서 정적 파일 요청 하나마다 이 미들웨어가 돌며 Supabase `auth.getUser()`를
+   * 네트워크로 호출했고, 비로그인 사용자는 모델 요청이 /login으로 307 리다이렉트됐다.
+   * 게다가 미들웨어를 타면 `_next/static`이 받는 `immutable` 장기 캐시도 못 받는다.
+   *
+   * `public/` 파일은 Next에서 원래 누구나 받을 수 있는 공개 자산이라 미들웨어로 막아봐야
+   * 보호가 되지도 않는다 — 확장자로 통째로 제외한다.
+   */
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:glb|gltf|bin|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|otf|css|js|map|txt|xml|webmanifest)$).*)",
+  ],
 };
