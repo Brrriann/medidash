@@ -12,6 +12,8 @@ export interface SampleProduct {
   /** 매칭 원료명 (ingredients.aliases 사전 매칭 결과에 해당) */
   ingredients: string[];
   crawledAt: string;
+  /** 대표 이미지 URL (없으면 카드에서 플레이스홀더) */
+  imageUrl?: string | null;
 }
 
 const CRAWLED_AT = "2026-07-01T03:00:00+09:00"; // 샘플 갱신일 (월 1회 배치 가정)

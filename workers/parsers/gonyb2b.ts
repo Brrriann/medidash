@@ -23,6 +23,8 @@ const SELECTORS: SiteSelectors = {
   loginSubmit: "form[name=\"flogin\"] button[type=\"submit\"]",
   loginSuccess: 'a[href*="logout.php"]',
   listUrl: "https://gonyb2b.com/shop/list.php?ca_id=10",
+  // 전 카테고리 순회: 네비의 list.php?ca_id= 링크(상품은 item.php?it_id=라 구분됨)
+  categoryLink: 'a[href*="list.php?ca_id="]',
   productLink: ".product .img a",
   name: "#sit_title",
   price: "td:has(#it_price) strong", // 판매가격 행(hidden #it_price 포함)의 금액. #sit_tot_price는 JS로만 채워져 비어있음

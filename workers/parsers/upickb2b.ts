@@ -23,6 +23,8 @@ const SELECTORS: SiteSelectors = {
   loginSubmit: "a.btnSubmit",
   loginSuccess: 'a[href*="Member/logout"]',
   listUrl: "https://upickb2b.com/category/%EA%B1%B4%EA%B0%95%EA%B8%B0%EB%8A%A5%EC%8B%9D%ED%92%88/24/",
+  // 전 카테고리 순회: 네비의 /category/ 링크(상품 URL도 /category/ 포함 → /product/ 제외)
+  categoryLink: 'a[href*="/category/"]:not([href*="/product/"])',
   productLink: '.prdList li[id^="anchorBoxId_"] .name a',
   name: ".headingArea h1",
   price: "#span_product_price_text",

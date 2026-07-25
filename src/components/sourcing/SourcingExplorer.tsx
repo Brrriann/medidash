@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { WholesaleProduct } from "@/lib/data";
 import { calcMargin, defaultRecommendedPrice } from "@/lib/margin";
@@ -13,6 +13,8 @@ import { WHOLESALE_SOURCES } from "@/lib/constants";
  */
 
 const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
+
+const PAGE_STEP = 120; // 한 번에 렌더할 카드 수 (수천 건 동시 렌더 방지)
 
 const SOURCE_LABEL = Object.fromEntries(
   WHOLESALE_SOURCES.map((s) => [s.key, s.label]),
@@ -29,6 +31,7 @@ export function SourcingExplorer({
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [source, setSource] = useState<string | null>(null);
+  const [shown, setShown] = useState(PAGE_STEP);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -41,6 +44,10 @@ export function SourcingExplorer({
       );
     });
   }, [products, query, source]);
+
+  // 검색/필터가 바뀌면 렌더 개수 초기화
+  useEffect(() => setShown(PAGE_STEP), [query, source]);
+  const visible = filtered.slice(0, shown);
 
   return (
     <div className="space-y-4">
@@ -100,10 +107,32 @@ export function SourcingExplorer({
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+        <div className="space-y-3">
+          <p className="text-xs text-slate-500">
+            총{" "}
+            <span className="font-semibold text-slate-700">
+              {filtered.length.toLocaleString("ko-KR")}
+            </span>
+            개
+            {filtered.length > visible.length &&
+              ` 중 ${visible.length.toLocaleString("ko-KR")}개 표시`}
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {visible.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+          {filtered.length > visible.length && (
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={() => setShown((n) => n + PAGE_STEP)}
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+              >
+                더 보기 ({(filtered.length - visible.length).toLocaleString("ko-KR")}개 남음)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -126,6 +155,7 @@ function ProductCard({ product }: { product: WholesaleProduct }) {
 
   return (
     <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300">
+      <ProductThumb src={product.imageUrl} alt={product.name} />
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-bold text-accent-700">
           {SOURCE_LABEL[product.source] ?? product.source}
@@ -214,6 +244,43 @@ function ProductCard({ product }: { product: WholesaleProduct }) {
         </Link>
       </div>
     </article>
+  );
+}
+
+/** 상품 대표 이미지 썸네일. 프로토콜상대(//) URL은 https로, 로드 실패/없음은 플레이스홀더. */
+function ProductThumb({ src, alt }: { src?: string | null; alt: string }) {
+  const url = src?.startsWith("//") ? `https:${src}` : src;
+  const [broken, setBroken] = useState(false);
+  return (
+    <div className="mb-3 aspect-square overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+      {url && !broken ? (
+        // 외부 도매몰/CDN 이미지 — next/image 도메인 설정 없이 단순 표시
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt={alt}
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-slate-300">
+          <svg
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            aria-hidden
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="m21 15-5-5L5 21" />
+          </svg>
+        </div>
+      )}
+    </div>
   );
 }
 
