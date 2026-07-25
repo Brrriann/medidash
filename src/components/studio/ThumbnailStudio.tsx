@@ -252,7 +252,7 @@ export function ThumbnailStudio({
     setNote(null);
     const r = await loadProductImageAction(defaults.productId);
     setBusy(null);
-    if (r.ok) addImage(r.url, 0.72, 0.62, 0.4);
+    if (r.ok) addImage(r.url, 0.7, 0.6, 0.62);
     else setNote(`상품 이미지 불러오기 실패 — ${r.error}`);
   };
 
@@ -273,6 +273,30 @@ export function ThumbnailStudio({
     setBlocks((bs) => bs.filter((b) => b.id !== id));
     setSelectedId(null);
   };
+
+  /**
+   * 레이어 순서. 그리는 순서가 곧 앞뒤라 배열 순서를 바꾸면 된다(뒤 원소가 위에 그려진다).
+   * 인물을 상품 뒤로 보내거나, 문구를 인물 위로 올리는 데 쓴다.
+   */
+  const move = (id: string, to: "front" | "up" | "down" | "back") => {
+    setBlocks((bs) => {
+      const i = bs.findIndex((b) => b.id === id);
+      if (i < 0) return bs;
+      const next = [...bs];
+      const [b] = next.splice(i, 1);
+      const j =
+        to === "front" ? next.length
+        : to === "back" ? 0
+        : to === "up" ? Math.min(i + 1, next.length)
+        : Math.max(i - 1, 0);
+      next.splice(j, 0, b);
+      return next;
+    });
+  };
+
+  /** 선택한 이미지를 캔버스에 꽉 차게 (가로 기준으로 키우고 가운데 정렬) */
+  const fitToCanvas = (id: string) =>
+    setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, x: 0.5, y: 0.5, size: 1 } : b)));
 
   // ── 다운로드 ──
   const preset = THUMBNAIL_PRESETS.find((p) => p.key === presetKey)!;
@@ -465,19 +489,54 @@ export function ThumbnailStudio({
                 </>
               )}
               {(selected.type === "badge" || selected.type === "logo") && (
-                <label className="flex items-center gap-2 text-xs text-slate-500">
-                  크기
-                  <input
-                    type="range"
-                    min={0.1}
-                    max={0.5}
-                    step={0.01}
-                    value={selected.size}
-                    onChange={(e) => patch(selected.id, { size: Number(e.target.value) })}
-                    className="flex-1"
-                  />
-                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-xs text-slate-500">
+                    크기
+                    <input
+                      type="range"
+                      min={0.1}
+                      /* 상품·인물 이미지는 캔버스를 넘겨 잘라 쓰기도 하므로 1을 넘게 둔다 */
+                      max={selected.type === "logo" ? 1.6 : 0.5}
+                      step={0.01}
+                      value={selected.size}
+                      onChange={(e) => patch(selected.id, { size: Number(e.target.value) })}
+                      className="flex-1"
+                    />
+                    <span className="w-10 shrink-0 text-right tabular-nums text-slate-400">
+                      {Math.round(selected.size * 100)}%
+                    </span>
+                  </label>
+                  {selected.type === "logo" && (
+                    <button type="button" onClick={() => fitToCanvas(selected.id)} className={btn}>
+                      ⤢ 꽉 채우기
+                    </button>
+                  )}
+                </div>
               )}
+
+              {/* 레이어 순서 — 인물을 상품 뒤로, 문구를 맨 위로 같은 조정 */}
+              <div>
+                <span className="mb-1 block text-xs text-slate-500">
+                  레이어 순서{" "}
+                  <span className="text-slate-400">
+                    ({blocks.findIndex((b) => b.id === selected.id) + 1}/{blocks.length}, 클수록 위)
+                  </span>
+                </span>
+                <div className="flex gap-1.5">
+                  <button type="button" onClick={() => move(selected.id, "front")} className={btn}>
+                    맨 위
+                  </button>
+                  <button type="button" onClick={() => move(selected.id, "up")} className={btn}>
+                    ↑ 위로
+                  </button>
+                  <button type="button" onClick={() => move(selected.id, "down")} className={btn}>
+                    ↓ 아래로
+                  </button>
+                  <button type="button" onClick={() => move(selected.id, "back")} className={btn}>
+                    맨 아래
+                  </button>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => remove(selected.id)}
