@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { WholesaleProduct, BroadcastStat } from "@/lib/data";
+import type { WholesaleProduct, BroadcastStat, KeywordStat } from "@/lib/data";
 import { calcMargin, defaultRecommendedPrice } from "@/lib/margin";
 import { WHOLESALE_SOURCES } from "@/lib/constants";
 
@@ -23,11 +23,13 @@ const SOURCE_LABEL = Object.fromEntries(
 export function SourcingExplorer({
   products,
   broadcast,
+  keywords,
   initialQuery,
   symptom,
 }: {
   products: WholesaleProduct[];
   broadcast: Record<string, BroadcastStat>;
+  keywords: Record<string, KeywordStat>;
   initialQuery: string;
   symptom: string | null;
 }) {
@@ -121,7 +123,12 @@ export function SourcingExplorer({
           </p>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {visible.map((p) => (
-              <ProductCard key={p.id} product={p} broadcast={broadcast} />
+              <ProductCard
+                key={p.id}
+                product={p}
+                broadcast={broadcast}
+                keywords={keywords}
+              />
             ))}
           </div>
           {filtered.length > visible.length && (
@@ -144,9 +151,11 @@ export function SourcingExplorer({
 function ProductCard({
   product,
   broadcast,
+  keywords,
 }: {
   product: WholesaleProduct;
   broadcast: Record<string, BroadcastStat>;
+  keywords: Record<string, KeywordStat>;
 }) {
   const [price, setPrice] = useState(defaultRecommendedPrice(product.priceWholesale));
   // 원료 중 방송 노출이 가장 많은 지표 (홈쇼핑 수요 신호)
@@ -154,6 +163,11 @@ function ProductCard({
     .map((ing) => broadcast[ing])
     .filter(Boolean)
     .sort((a, b) => b.count - a.count)[0];
+  // 원료 중 검색 수요가 가장 높은 지표 (네이버 수요 신호)
+  const kw = product.ingredients
+    .map((ing) => keywords[ing])
+    .filter((k) => k && k.demandIndex != null)
+    .sort((a, b) => b.demandIndex! - a.demandIndex!)[0];
   // 미리보기 가정: 쿠팡 뷰티/헬스 수수료 9.6% · 지불배송비 3,000원 · 종소세 6% (계산기에서 조정)
   const preview = calcMargin({
     price,
@@ -169,8 +183,9 @@ function ProductCard({
   return (
     <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300">
       <ProductThumb src={product.imageUrl} alt={product.name} />
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        {/* 도매몰·방송·수요 3종이 겹치므로 좁은 카드에선 줄바꿈시킨다 */}
+        <div className="flex flex-wrap items-center gap-1">
           <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-bold text-accent-700">
             {SOURCE_LABEL[product.source] ?? product.source}
           </span>
@@ -183,6 +198,7 @@ function ProductCard({
               {bc.count >= 10 ? "+" : ""}
             </span>
           )}
+          {kw && <DemandBadge stat={kw} />}
         </div>
         {product.isSample && (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
@@ -268,6 +284,41 @@ function ProductCard({
         </Link>
       </div>
     </article>
+  );
+}
+
+/**
+ * 네이버 검색 수요 배지.
+ *
+ * 원지표는 앵커(콜라겐)=1.0 기준 상대값이라 카드에 "0.67×"만 띄우면 셀러에게 아무 뜻이 없다.
+ * 그래서 카드에는 높음/보통/낮음만 보이고, 실수치와 경쟁 상품수는 툴팁으로 준다.
+ * 구간은 수집한 82종 분포(중앙값 0.33)에 맞췄다.
+ *
+ * 수요와 경쟁을 하나의 점수로 합치지 않는다 — 상대지수와 절대 상품수는 단위가 달라
+ * 합치면 근거 없는 숫자가 된다. 판단은 셀러가 두 값을 보고 한다.
+ */
+function DemandBadge({ stat }: { stat: KeywordStat }) {
+  const d = stat.demandIndex!;
+  const level = d >= 0.8 ? "높음" : d >= 0.25 ? "보통" : "낮음";
+  const tone =
+    d >= 0.8
+      ? "bg-emerald-100 text-emerald-700"
+      : d >= 0.25
+        ? "bg-slate-100 text-slate-600"
+        : "bg-slate-50 text-slate-400";
+  const tip =
+    `${stat.keyword} — 네이버 검색 수요 ${d.toFixed(2)}× (콜라겐=1.0 기준, 최근 12개월 평균)` +
+    (stat.competition != null
+      ? `\n네이버쇼핑 등록 상품 ${stat.competition.toLocaleString("ko-KR")}건`
+      : "");
+
+  return (
+    <span
+      title={tip}
+      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tone}`}
+    >
+      🔍 수요 {level}
+    </span>
   );
 }
 

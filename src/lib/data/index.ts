@@ -282,6 +282,29 @@ export async function getKeywordStat(keyword: string): Promise<KeywordStat | nul
   };
 }
 
+/** 소싱 화면용 — 전 키워드 지표를 원료명 → 지표 맵으로 (카드마다 조회하면 N+1이 된다). */
+export async function getKeywordStats(): Promise<Record<string, KeywordStat>> {
+  if (isMockMode()) return {};
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("keyword_stats")
+    .select("keyword, demand_index, competition, related_keywords")
+    .eq("kind", "ingredient");
+  if (error || !data) return {};
+  const map: Record<string, KeywordStat> = {};
+  for (const r of data) {
+    map[r.keyword] = {
+      keyword: r.keyword,
+      demandIndex: r.demand_index === null ? null : Number(r.demand_index),
+      competition: r.competition ?? null,
+      related: Array.isArray(r.related_keywords)
+        ? (r.related_keywords as { term: string; count: number }[])
+        : [],
+    };
+  }
+  return map;
+}
+
 export interface InviteCodeRow {
   code: string;
   memo: string | null;
