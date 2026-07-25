@@ -7,7 +7,12 @@ import assert from "node:assert/strict";
 import { scoreExposure, coverageOf, relatedBonus } from "../src/lib/titles/scoring";
 import { usableRelated, isBrand } from "../src/lib/titles/related";
 import { sanitize, hasBannedTerms } from "../src/lib/titles/compliance";
-import { generateTitleTags } from "../src/lib/titles/generate";
+import {
+  generateTitleTags,
+  scoreExternalTitles,
+  mergeTitles,
+  mergeTags,
+} from "../src/lib/titles/generate";
 
 // ── 노출도 스코어링 (UI-PLAN §7) ──
 
@@ -243,4 +248,67 @@ test("입력 특징의 금지어는 sanitized 플래그를 세운다", () => {
     ingredient: "밀크씨슬", bodyPart: "간", productHint: "간질환 예방에 좋음", platform: "coupang",
   });
   assert.equal(r.sanitized, true);
+});
+
+// ── AI 제안 병합 (AI는 후보만 내고 채점·금지어는 우리 코드가) ──
+
+test("AI 상품명도 규칙 기반과 같은 잣대로 채점된다", () => {
+  const input = {
+    ingredient: "루테인", bodyPart: "눈 건강", brand: "그린라이프", spec: "60캡슐",
+    platform: "coupang" as const,
+  };
+  const related = ["지아잔틴", "아스타잔틴", "빌베리"];
+  const { variants } = scoreExternalTitles(
+    [
+      "그린라이프 루테인 지아잔틴 아스타잔틴 눈건강 60캡슐", // 4요소 + 커버리지 2/3
+      "루테인 눈건강", // 2요소 + 커버리지 0
+    ],
+    input,
+    related,
+  );
+  assert.equal(variants[0].exposure, "상");
+  assert.equal(variants[1].exposure, "하");
+});
+
+test("AI 상품명의 금지어도 치환하고 플래그를 세운다", () => {
+  const { variants, sanitized } = scoreExternalTitles(
+    ["루테인 눈질환 치료 60캡슐"],
+    { ingredient: "루테인", platform: "coupang" as const },
+    [],
+  );
+  assert.equal(sanitized, true);
+  assert.ok(!hasBannedTerms(variants[0].text), variants[0].text);
+});
+
+test("병합은 중복(띄어쓰기만 다른 안)을 걷어내고 노출도 높은 순 5개", () => {
+  const rule = [
+    { text: "루테인 눈건강 60캡슐", exposure: "중" as const },
+    { text: "루테인 60캡슐", exposure: "하" as const },
+  ];
+  const ai = [
+    { text: "루테인 눈 건강 60캡슐", exposure: "중" as const }, // 띄어쓰기만 다름 → 제거
+    { text: "그린라이프 고함량 루테인 지아잔틴 눈영양제 60캡슐", exposure: "상" as const },
+    { text: "루테인 빌베리 눈케어 60캡슐", exposure: "중" as const },
+  ];
+  const merged = mergeTitles(rule, ai);
+  assert.ok(merged.length <= 5);
+  assert.equal(merged[0].exposure, "상"); // 높은 순 정렬
+  assert.equal(merged.filter((m) => m.text.replace(/\s/g, "") === "루테인눈건강60캡슐").length, 1);
+});
+
+test("태그 병합: 실측 기반 앞 15개는 지키고 하드코딩 자리를 AI로 채운다", () => {
+  const ruleTags = Array.from({ length: 20 }, (_, i) => (i < 15 ? `실측${i}` : `하드코딩${i}`));
+  const { tags } = mergeTags(ruleTags, ["눈영양제", "중장년", "고함량"]);
+  assert.equal(tags.length, 20);
+  assert.equal(new Set(tags).size, 20);
+  for (let i = 0; i < 15; i++) assert.equal(tags[i], `실측${i}`);
+  assert.deepEqual(tags.slice(15, 18), ["눈영양제", "중장년", "고함량"]);
+});
+
+test("태그 병합도 금지어를 치환한다", () => {
+  const { tags, sanitized } = mergeTags(["루테인"], ["#질병치료", "눈건강"]);
+  assert.equal(sanitized, true);
+  assert.ok(!tags.some((t) => hasBannedTerms(t)), tags.join(","));
+  // '#'과 공백은 제거된다
+  assert.ok(tags.every((t) => !t.startsWith("#") && !/\s/.test(t)));
 });

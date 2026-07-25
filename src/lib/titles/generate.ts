@@ -231,3 +231,79 @@ function dedupePad(tags: string[], n: number): string[] {
   }
   return out.slice(0, n);
 }
+
+// ── AI 제안 병합 ────────────────────────────────────────────────
+// AI는 후보 문자열만 낸다. 등급과 금지어 처리는 규칙 기반과 **똑같은 잣대**로 여기서 한다.
+// AI에게 등급을 맡기면 근거 없는 숫자가 되고, 금지어 판정을 맡기면 광고법 리스크를
+// 모델 재량에 넘기게 된다.
+
+const normText = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+
+/** AI가 만든 상품명을 규칙 기반과 동일한 기준으로 채점한다 (금지어 치환 포함). */
+export function scoreExternalTitles(
+  texts: string[],
+  input: TitleInput,
+  relatedTerms: string[],
+): { variants: TitleVariant[]; sanitized: boolean } {
+  const ingredient = input.ingredient.trim();
+  const bodyEffect = (input.bodyPart ?? "").trim().replace(/\s+/g, "");
+  const brand = (input.brand ?? "").trim();
+  const spec = (input.spec ?? "").trim();
+
+  let sanitizedAny = false;
+  const variants = texts.map((raw) => {
+    const s = sanitize(raw);
+    if (s.changed) sanitizedAny = true;
+    const h = normText(s.text);
+    const factors: ExposureFactors = {
+      ingredient: !!ingredient && h.includes(normText(ingredient)),
+      bodyPart: !!bodyEffect && h.includes(normText(bodyEffect)),
+      brand: !!brand && h.includes(normText(brand)),
+      spec: !!spec && h.includes(normText(spec)),
+      relatedCoverage: coverageOf(s.text, relatedTerms, ingredient),
+    };
+    return { text: s.text, exposure: scoreExposure(factors) };
+  });
+  return { variants, sanitized: sanitizedAny };
+}
+
+/** 규칙 안 + AI 안을 합쳐 중복을 걷어내고 상위 5개만 남긴다 (노출도 높은 순). */
+export function mergeTitles(rule: TitleVariant[], ai: TitleVariant[]): TitleVariant[] {
+  const rank: Record<string, number> = { 상: 0, 중: 1, 하: 2 };
+  const seen = new Set<string>();
+  return [...rule, ...ai]
+    .filter((v) => {
+      const k = normText(v.text);
+      if (!k || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .sort((a, b) => rank[a.exposure] - rank[b.exposure])
+    .slice(0, 5);
+}
+
+/**
+ * 태그 20개 재구성.
+ * 규칙 태그 앞 15개(증상·원료·네이버 연관어)는 실측 기반이라 그대로 두고,
+ * 뒤쪽 하드코딩 상수(대상군·계절) 자리를 AI 제안으로 채운다. 모자라면 규칙 태그로 되메운다.
+ */
+export function mergeTags(
+  ruleTags: string[],
+  aiTags: string[],
+): { tags: string[]; sanitized: boolean } {
+  let sanitizedAny = false;
+  const clean = (list: string[]) =>
+    list
+      .map((t) => {
+        const s = sanitize(t.trim().replace(/^#/, "").replace(/\s+/g, ""));
+        if (s.changed) sanitizedAny = true;
+        return s.text;
+      })
+      .filter(Boolean);
+
+  const tags = dedupePad(
+    [...clean(ruleTags.slice(0, 15)), ...clean(aiTags), ...clean(ruleTags.slice(15))],
+    20,
+  );
+  return { tags, sanitized: sanitizedAny };
+}
