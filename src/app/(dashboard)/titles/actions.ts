@@ -1,6 +1,13 @@
 "use server";
 
-import { generateTitleTags } from "@/lib/titles/generate";
+import {
+  generateTitleTags,
+  scoreExternalTitles,
+  mergeTitles,
+  mergeTags,
+} from "@/lib/titles/generate";
+import { usableRelated } from "@/lib/titles/related";
+import { getTextProvider } from "@/lib/ai/text";
 import type { TitleInput, TitleTagsResult } from "@/lib/titles/types";
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
@@ -54,7 +61,36 @@ export async function generateTitlesAction(
   const canonical = resolveIngredientName(ingredient);
   input.keywordStat = canonical ? await getKeywordStat(canonical).catch(() => null) : null;
 
-  const result = generateTitleTags(input);
+  let result = generateTitleTags(input);
+
+  // AI 제안 병합 — 실패하면(키 없음·응답 이상) 규칙 기반 결과를 그대로 쓴다.
+  // AI는 후보 문자열만 내고, 등급과 금지어 처리는 규칙 기반과 같은 코드가 한다.
+  try {
+    const related = input.keywordStat
+      ? usableRelated(input.keywordStat.related, ingredient).map((r) => r.term)
+      : [];
+    const suggestion = await getTextProvider().suggestTitlesAndTags({
+      ingredient,
+      bodyPart: input.bodyPart,
+      brand: input.brand,
+      spec: input.spec,
+      productHint: input.productHint,
+      platform,
+      relatedTerms: related,
+      seedTitles: result.titles.map((t) => t.text),
+    });
+    const scored = scoreExternalTitles(suggestion.titles, input, related);
+    const merged = mergeTags(result.tags, suggestion.tags);
+    result = {
+      ...result,
+      titles: mergeTitles(result.titles, scored.variants),
+      tags: merged.tags,
+      sanitized: result.sanitized || scored.sanitized || merged.sanitized,
+      source: "ai",
+    };
+  } catch (e) {
+    console.warn("[titles] AI 제안 실패 — 규칙 기반 결과 사용:", e instanceof Error ? e.message : e);
+  }
 
   // 로그인 사용자면 작업 이력 저장 (실패해도 결과는 반환)
   if (!isMockMode()) {
