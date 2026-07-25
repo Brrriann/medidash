@@ -110,7 +110,8 @@ async function main() {
       priceWholesale: toPrice(pick(r, "price_wholesale", "priceWholesale")),
       imageUrl: pick(r, "image_url", "imageUrl") ?? null,
       detailText,
-      ingredientIds: matchFromFields([name, detailText], dict),
+      // 상품명만 — 상세는 판매정책 안내문이라 오탐을 만든다 (ingredient-match.ts 주석 참고)
+      ingredientIds: matchFromFields([name], dict),
       crawledAt: stampAt,
     });
   }

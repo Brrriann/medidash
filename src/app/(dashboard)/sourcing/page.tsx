@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getWholesaleProducts, getBroadcastStats } from "@/lib/data";
 import { SourcingExplorer } from "@/components/sourcing/SourcingExplorer";
 
-export const metadata: Metadata = { title: "도매몰 통합 검색" };
+export const metadata: Metadata = { title: "상품 소싱" };
 
 export default async function SourcingPage({
   searchParams,
@@ -20,7 +20,7 @@ export default async function SourcingPage({
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">도매몰 통합 검색</h1>
+          <h1 className="text-xl font-bold text-slate-900">상품 소싱</h1>
           <p className="mt-1 text-sm text-slate-500">
             건온연B2B · 건강산 · 유픽B2B 상품 캐시를 한 번에 검색합니다.
             실시간 조회가 아닌 <strong>월 1회 배치 캐시</strong> 기준입니다.

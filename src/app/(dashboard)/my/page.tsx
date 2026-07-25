@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMarginHistory, getRecentWorks } from "@/lib/data";
 import { signOutAction } from "@/app/(auth)/actions";
 
-export const metadata: Metadata = { title: "마이페이지" };
+export const metadata: Metadata = { title: "내 계정" };
 
 const WORK_LABELS: Record<string, string> = {
   thumbnail: "썸네일",
@@ -44,7 +44,7 @@ export default async function MyPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">마이페이지</h1>
+        <h1 className="text-xl font-bold text-slate-900">내 계정</h1>
         <p className="mt-1 text-sm text-slate-500">
           내 작업 이력과 계정을 관리합니다.
         </p>
@@ -128,7 +128,7 @@ export default async function MyPage() {
             href="/margin"
             className="text-xs font-semibold text-brand-600 underline-offset-2 hover:underline"
           >
-            마진계산기 →
+            마진 계산 →
           </Link>
         </div>
         {margins.length === 0 ? (

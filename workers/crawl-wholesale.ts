@@ -70,7 +70,8 @@ async function main() {
       stat.collected = raws.length;
 
       const records: WholesaleRecord[] = raws.map((raw) => {
-        const ingredientIds = matchFromFields([raw.name, raw.detailText], dict);
+        // 상품명만 — 상세는 판매정책 안내문이라 오탐을 만든다 (ingredient-match.ts 주석 참고)
+        const ingredientIds = matchFromFields([raw.name], dict);
         if (ingredientIds.length) stat.matched += 1;
         return { ...raw, source, ingredientIds, crawledAt: stampAt };
       });

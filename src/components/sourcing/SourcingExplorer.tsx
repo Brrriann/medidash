@@ -244,7 +244,7 @@ function ProductCard({
           href={`/margin?cost=${product.priceWholesale}${product.isSample ? "" : `&ref=${product.id}`}`}
           className="rounded-lg bg-brand-600 py-1.5 text-center text-xs font-bold text-white transition hover:bg-brand-700"
         >
-          마진계산기
+          마진 계산
         </Link>
         <a
           href={product.sourceUrl}
