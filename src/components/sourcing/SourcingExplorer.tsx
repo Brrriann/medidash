@@ -271,7 +271,7 @@ function ProductCard({
           원본 보기 ↗
         </a>
         <Link
-          href={`/studio?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}`}
+          href={`/studio?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}${product.isSample ? "" : `&ref=${product.id}`}`}
           className="rounded-lg border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
         >
           썸네일 만들기

@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { THUMBNAIL_PRESETS, AI_DISCLAIMER } from "@/lib/constants";
 import { generateBackground, type GradientSpec } from "@/lib/thumbnail/backgrounds";
-import { saveThumbnailWork } from "@/app/(dashboard)/studio/actions";
+import {
+  saveThumbnailWork,
+  generateBackgroundAction,
+  generatePersonAction,
+  loadProductImageAction,
+} from "@/app/(dashboard)/studio/actions";
 
 type PresetKey = (typeof THUMBNAIL_PRESETS)[number]["key"];
 
@@ -40,7 +45,7 @@ export function ThumbnailStudio({
   defaults,
   mock,
 }: {
-  defaults: { ingredient: string; part: string };
+  defaults: { ingredient: string; part: string; productId: number | null };
   mock: boolean;
 }) {
   const [presetKey, setPresetKey] = useState<PresetKey>("coupang");
@@ -58,6 +63,12 @@ export function ThumbnailStudio({
   ]);
   const [selectedId, setSelectedId] = useState<string | null>("b_head");
   const [savedNote, setSavedNote] = useState<string | null>(null);
+  /** AI가 만든 배경 (data URL). 없으면 부위 테마 그라디언트를 쓴다. */
+  const [bgImage, setBgImage] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [persona, setPersona] = useState("40대 남성");
+  const [outfit, setOutfit] = useState("깔끔한 정장");
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const boxes = useRef<Record<string, Box>>({});
@@ -83,7 +94,14 @@ export function ThumbnailStudio({
   /** 캔버스 1회 렌더 — forExport면 선택 외곽선 생략, bbox 기록 안 함 */
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, W: number, H: number, forExport: boolean) => {
-      // 배경 그라디언트
+      // 배경 — AI 이미지가 있으면 꽉 채워 덮고(cover), 없으면 부위 테마 그라디언트
+      const bgImg = bgImage ? getImg(bgImage) : null;
+      if (bgImg) {
+        const r = Math.max(W / bgImg.naturalWidth, H / bgImg.naturalHeight);
+        const dw = bgImg.naturalWidth * r;
+        const dh = bgImg.naturalHeight * r;
+        ctx.drawImage(bgImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      } else {
       const rad = (bg.angle * Math.PI) / 180;
       const g = ctx.createLinearGradient(
         W / 2 - (Math.cos(rad) * W) / 2,
@@ -95,6 +113,7 @@ export function ThumbnailStudio({
       g.addColorStop(1, bg.c2);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
+      }
       // 하단 가독성 그늘
       const shade = ctx.createLinearGradient(0, H * 0.5, 0, H);
       shade.addColorStop(0, "rgba(0,0,0,0)");
@@ -119,7 +138,7 @@ export function ThumbnailStudio({
         }
       }
     },
-    [bg, blocks, selectedId, getImg],
+    [bg, bgImage, blocks, selectedId, getImg],
   );
 
   // 디스플레이 리드로우
@@ -178,6 +197,43 @@ export function ThumbnailStudio({
     setBlocks((bs) => [...bs, { id, type: "badge", x: 0.16, y: 0.1, size: 0.28 }]);
     setSelectedId(id);
   };
+  /** 이미지 레이어 추가 — 인물·상품·로고가 모두 같은 타입이다 */
+  const addImage = (src: string, x: number, y: number, size: number) => {
+    const id = nid();
+    setBlocks((bs) => [...bs, { id, type: "logo", x, y, size, src }]);
+    setSelectedId(id);
+  };
+
+  /** AI 배경 생성. 실패하면 기존 그라디언트를 그대로 두고 사유만 알린다. */
+  const genBackground = async () => {
+    setBusy("bg");
+    setNote(null);
+    const r = await generateBackgroundAction(defaults.ingredient, defaults.part);
+    setBusy(null);
+    if (r.ok) setBgImage(r.url);
+    else setNote(`배경 생성 실패 — 테마 배경을 유지합니다. (${r.error})`);
+  };
+
+  const genPerson = async () => {
+    setBusy("person");
+    setNote(null);
+    const r = await generatePersonAction(persona, outfit);
+    setBusy(null);
+    // 인물은 좌측에 크게 — 레퍼런스 구도(인물 좌측, 제품 우측)를 기본값으로
+    if (r.ok) addImage(r.url, 0.26, 0.6, 0.52);
+    else setNote(`인물 생성 실패 — ${r.error}`);
+  };
+
+  const addProduct = async () => {
+    if (!defaults.productId) return;
+    setBusy("product");
+    setNote(null);
+    const r = await loadProductImageAction(defaults.productId);
+    setBusy(null);
+    if (r.ok) addImage(r.url, 0.72, 0.62, 0.4);
+    else setNote(`상품 이미지 불러오기 실패 — ${r.error}`);
+  };
+
   const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -266,18 +322,72 @@ export function ThumbnailStudio({
           </div>
         </Section>
 
-        {/* AI 배경 */}
-        <Section title="AI 배경">
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setBgSeed((s) => s + 1)} className={btnPrimary}>
-              배경 {bgSeed === 0 ? "생성" : "재생성"}
+        {/* 배경 */}
+        <Section title="배경">
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={genBackground} disabled={busy !== null} className={btnPrimary}>
+              {busy === "bg" ? "생성 중…" : bgImage ? "AI 배경 재생성" : "AI 배경 생성"}
             </button>
-            <span className="text-[11px] text-slate-400">
-              부위: {defaults.part || "기본"} → {bg.label}
-            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setBgImage(null);
+                setBgSeed((v) => v + 1);
+              }}
+              className={btn}
+            >
+              테마 배경 ({bg.label})
+            </button>
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-400">
-            테스트 버전은 부위 테마 그라디언트를 생성합니다. 실서비스에선 이미지 생성 API로 교체됩니다.
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+            {defaults.ingredient || "원료"}의 원물 사진을 배경으로 만듭니다(약 20초). 글자는 넣지
+            않으니 문구는 아래 텍스트로 올리세요. 키가 없거나 실패하면 테마 배경이 유지됩니다.
+          </p>
+        </Section>
+
+        {/* 인물·상품 */}
+        <Section title="인물 · 상품">
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="text-xs text-slate-500">
+              모델
+              <input
+                value={persona}
+                onChange={(e) => setPersona(e.target.value)}
+                className={`${input} mt-1 w-28`}
+                placeholder="40대 남성"
+              />
+            </label>
+            <label className="text-xs text-slate-500">
+              차림
+              <input
+                value={outfit}
+                onChange={(e) => setOutfit(e.target.value)}
+                className={`${input} mt-1 w-32`}
+                placeholder="깔끔한 정장"
+              />
+            </label>
+            <button type="button" onClick={genPerson} disabled={busy !== null} className={btn}>
+              {busy === "person" ? "생성 중…" : "+ AI 인물"}
+            </button>
+          </div>
+          <div className="mt-2.5">
+            <button
+              type="button"
+              onClick={addProduct}
+              disabled={busy !== null || !defaults.productId}
+              className={`${btn} disabled:opacity-40`}
+              title={
+                defaults.productId
+                  ? "소싱에서 넘어온 상품의 대표 이미지를 올립니다"
+                  : "소싱 화면의 '썸네일 만들기'로 들어오면 상품 이미지를 바로 올릴 수 있습니다"
+              }
+            >
+              {busy === "product" ? "불러오는 중…" : "+ 소싱 상품 이미지"}
+            </button>
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+            인물은 AI가 만든 가상 인물이라 초상권 문제가 없습니다. 상품 이미지는 도매몰 원본을
+            그대로 올립니다 — AI로 편집하면 패키지의 표시사항이 깨져 쓸 수 없습니다.
           </p>
         </Section>
 
@@ -356,6 +466,12 @@ export function ThumbnailStudio({
             </div>
           )}
         </Section>
+
+        {note && (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+            {note}
+          </p>
+        )}
 
         {/* 다운로드 */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
