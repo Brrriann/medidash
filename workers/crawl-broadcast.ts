@@ -13,7 +13,7 @@
  */
 import { loadEnvFiles } from "./lib/env";
 import { createDb, loadIngredientDict } from "./lib/db";
-import { errMsg } from "./lib/manners";
+import { errMsg, politeDelay } from "./lib/manners";
 import { SAMPLE_INGREDIENTS } from "../src/lib/data/sample-ingredients";
 
 loadEnvFiles();
@@ -72,11 +72,54 @@ async function main() {
   }
 }
 
-/** ⚠️ TODO: 홈쇼핑모아 검색·파싱 구현 (계정·실사이트 대조 후) */
+const HSMOA_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
+
+/**
+ * 홈쇼핑모아(hsmoa.com) 검색 페이지의 __NEXT_DATA__(SSR JSON)에서 최근 방송 지표를 뽑는다.
+ * 공개 사이트(로그인 불필요). aggregatedData.past = 최근 방송된 상품들(사이트가 상위 10건 제공).
+ * ponytail: broadcastCount는 "최근 방송 상품 수(≤10)" 신호 — 사이트가 총계를 안 주므로 상한 존재.
+ */
+/** 원료 정식명 → 홈쇼핑모아 상품검색에 잘 맞는 핵심어 (괄호·복합·추출물 표기 제거). */
+function toSearchTerm(name: string): string {
+  return name
+    .replace(/\s*\([^)]*\)/g, "") // "MSM (디메틸설폰)" → "MSM"
+    .replace(/\s*등\s*복합\s*추출물/g, "") // "백수오 등 복합추출물" → "백수오"
+    .replace(/\s*추출물\s*$/g, "") // "밀크씨슬 추출물" → "밀크씨슬"
+    .trim();
+}
+
+async function fetchBroadcastStat(keyword: string): Promise<BroadcastStat> {
+  // keyword(원료 정식명)는 broadcast_stats 조인용으로 보존, 검색만 핵심어로.
+  const url = `https://hsmoa.com/search?query=${encodeURIComponent(toSearchTerm(keyword))}`;
+  const res = await fetch(url, { headers: { "User-Agent": HSMOA_UA } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+  const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+  if (!m) throw new Error("__NEXT_DATA__ 없음 (사이트 구조 변경?)");
+  const ag = JSON.parse(m[1])?.props?.pageProps?.aggregatedData ?? {};
+  const past: Array<{ name?: string }> = Array.isArray(ag.past) ? ag.past : [];
+  const recentTitles = past
+    .map((p) => String(p?.name ?? "").trim())
+    .filter(Boolean)
+    .slice(0, 10);
+  return { keyword, kind: "ingredient", broadcastCount: past.length, recentTitles };
+}
+
+/** 원료 키워드별로 홈쇼핑모아 최근 방송 지표 수집 (매너 딜레이·개별 실패는 로그만). */
 async function crawlBroadcastLive(keywords: string[]): Promise<BroadcastStat[]> {
-  throw new Error(
-    `홈쇼핑모아 실크롤(대상 ${keywords.length}종)은 검색/파싱 셀렉터 구현 후 활성화됩니다(W2 후반). 현재는 --dry-run 사용.`,
-  );
+  const out: BroadcastStat[] = [];
+  for (let i = 0; i < keywords.length; i++) {
+    if (i > 0) await politeDelay();
+    try {
+      const stat = await fetchBroadcastStat(keywords[i]);
+      out.push(stat);
+      console.log(`    · ${stat.keyword} — 방송 ${stat.broadcastCount}건 · 최근 ${stat.recentTitles.length}`);
+    } catch (err) {
+      console.warn(`    ✗ ${keywords[i]}: ${errMsg(err)}`);
+    }
+  }
+  return out;
 }
 
 main().catch((e) => {

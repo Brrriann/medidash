@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { WholesaleProduct } from "@/lib/data";
+import type { WholesaleProduct, BroadcastStat } from "@/lib/data";
 import { calcMargin, defaultRecommendedPrice } from "@/lib/margin";
 import { WHOLESALE_SOURCES } from "@/lib/constants";
 
@@ -22,10 +22,12 @@ const SOURCE_LABEL = Object.fromEntries(
 
 export function SourcingExplorer({
   products,
+  broadcast,
   initialQuery,
   symptom,
 }: {
   products: WholesaleProduct[];
+  broadcast: Record<string, BroadcastStat>;
   initialQuery: string;
   symptom: string | null;
 }) {
@@ -119,7 +121,7 @@ export function SourcingExplorer({
           </p>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {visible.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} broadcast={broadcast} />
             ))}
           </div>
           {filtered.length > visible.length && (
@@ -139,8 +141,19 @@ export function SourcingExplorer({
   );
 }
 
-function ProductCard({ product }: { product: WholesaleProduct }) {
+function ProductCard({
+  product,
+  broadcast,
+}: {
+  product: WholesaleProduct;
+  broadcast: Record<string, BroadcastStat>;
+}) {
   const [price, setPrice] = useState(defaultRecommendedPrice(product.priceWholesale));
+  // 원료 중 방송 노출이 가장 많은 지표 (홈쇼핑 수요 신호)
+  const bc = product.ingredients
+    .map((ing) => broadcast[ing])
+    .filter(Boolean)
+    .sort((a, b) => b.count - a.count)[0];
   // 미리보기 가정: 쿠팡 뷰티/헬스 수수료 9.6% · 지불배송비 3,000원 · 종소세 6% (계산기에서 조정)
   const preview = calcMargin({
     price,
@@ -157,9 +170,20 @@ function ProductCard({ product }: { product: WholesaleProduct }) {
     <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300">
       <ProductThumb src={product.imageUrl} alt={product.name} />
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-bold text-accent-700">
-          {SOURCE_LABEL[product.source] ?? product.source}
-        </span>
+        <div className="flex items-center gap-1">
+          <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-bold text-accent-700">
+            {SOURCE_LABEL[product.source] ?? product.source}
+          </span>
+          {bc && bc.count > 0 && (
+            <span
+              title={`홈쇼핑모아 최근 방송 상품${bc.titles.length ? ":\n- " + bc.titles.slice(0, 6).join("\n- ") : ""}`}
+              className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700"
+            >
+              📺 방송 {bc.count}
+              {bc.count >= 10 ? "+" : ""}
+            </span>
+          )}
+        </div>
         {product.isSample && (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
             샘플

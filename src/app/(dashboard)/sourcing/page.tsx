@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getWholesaleProducts } from "@/lib/data";
+import { getWholesaleProducts, getBroadcastStats } from "@/lib/data";
 import { SourcingExplorer } from "@/components/sourcing/SourcingExplorer";
 
 export const metadata: Metadata = { title: "도매몰 통합 검색" };
@@ -11,6 +11,7 @@ export default async function SourcingPage({
 }) {
   const { symptom, ingredients, q } = await searchParams;
   const { products, crawledAt, isSample } = await getWholesaleProducts();
+  const broadcast = await getBroadcastStats();
 
   // 지도 CTA에서 넘어온 원료 → 첫 원료를 검색어로 자동 입력
   const initialQuery = q ?? ingredients?.split(",")[0]?.trim() ?? "";
@@ -42,6 +43,7 @@ export default async function SourcingPage({
 
       <SourcingExplorer
         products={products}
+        broadcast={broadcast}
         initialQuery={initialQuery}
         symptom={symptom ?? null}
       />
