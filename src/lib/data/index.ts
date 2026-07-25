@@ -226,6 +226,30 @@ export async function getWholesaleProducts(): Promise<{
   };
 }
 
+export type BroadcastStat = { count: number; titles: string[] };
+
+/**
+ * 원료명 → 홈쇼핑모아 방송 지표 맵 (broadcast_stats, kind=ingredient).
+ * count는 최근 방송 상품 수(≤10, hsmoa 상위 제공분). mock/오류/없음 시 빈 맵.
+ */
+export async function getBroadcastStats(): Promise<Record<string, BroadcastStat>> {
+  if (isMockMode()) return {};
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("broadcast_stats")
+    .select("keyword, broadcast_count, recent_titles")
+    .eq("kind", "ingredient");
+  if (error || !data) return {};
+  const map: Record<string, BroadcastStat> = {};
+  for (const r of data) {
+    map[r.keyword] = {
+      count: r.broadcast_count ?? 0,
+      titles: Array.isArray(r.recent_titles) ? (r.recent_titles as string[]) : [],
+    };
+  }
+  return map;
+}
+
 export interface InviteCodeRow {
   code: string;
   memo: string | null;
