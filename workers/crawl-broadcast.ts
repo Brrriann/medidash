@@ -5,11 +5,12 @@
  *   npm run crawl:broadcast              # 실크롤 (Supabase 키 필요)
  *   npm run crawl:broadcast -- --dry-run # 파이프라인 검증(픽스처)
  *
- * ingredients 전체 + 주요 브랜드 시드에 대해 홈쇼핑모아 검색 →
- * 방송 노출 수·최근 방송 상품명 수집 → broadcast_stats upsert.
+ * 원료 사전 전체에 대해 홈쇼핑모아 검색 → 방송 지표를 broadcast_stats에 upsert.
  *
- * ⚠️ 골격 단계: 검색/파싱 셀렉터는 계정·실사이트 대조 후 채운다(TODO).
- *    현재는 dry-run 픽스처로 upsert 파이프라인만 검증 가능.
+ * **브랜드 시드는 넣지 않는다.** 도매몰 상위 브랜드 20개로 실측했더니 홈쇼핑에 잡히는 건
+ * 4개뿐이었고(그중 1개는 오탐), 배지가 붙을 상품이 6,003건 중 488건(8.1%)에 그쳤다.
+ * 도매몰은 중소·자체 브랜드 위주고 홈쇼핑은 대형 브랜드 무대라 겹치는 구간이 좁다.
+ * 대신 **방송 예정(future)** 을 함께 모은다 — "앞으로 뜰 원료"가 셀러에겐 더 쓸모 있다.
  */
 import { loadEnvFiles } from "./lib/env";
 import { createDb, loadIngredientDict } from "./lib/db";
@@ -18,11 +19,23 @@ import { SAMPLE_INGREDIENTS } from "../src/lib/data/sample-ingredients";
 
 loadEnvFiles();
 
+/** 방송 1건 — 상품명만 갖고 있던 걸 채널·일시까지 보존하도록 넓혔다 */
+export interface BroadcastItem {
+  name: string;
+  /** 홈쇼핑 채널 코드 (cjmall, gsshop, lotteonetv …) */
+  channel: string;
+  /** 방송 시작 일시 (ISO) */
+  at: string;
+}
+
 interface BroadcastStat {
   keyword: string;
   kind: "ingredient" | "brand";
+  /** 최근 방송된 상품 수 (hsmoa가 상위 10건만 주므로 상한 10) */
   broadcastCount: number;
-  recentTitles: string[];
+  recentTitles: BroadcastItem[];
+  /** 방송 **예정** 상품 — 지금 소싱하면 수요 상승기에 올라탈 수 있다는 신호 */
+  upcoming: BroadcastItem[];
 }
 
 async function main() {
@@ -48,7 +61,12 @@ async function main() {
         keyword: name,
         kind: "ingredient",
         broadcastCount: 5 + i * 3, // 결정적 픽스처
-        recentTitles: [`[DRYRUN] ${name} 방송 상품 A`, `[DRYRUN] ${name} 방송 상품 B`],
+        recentTitles: [
+          { name: `[DRYRUN] ${name} 방송 상품 A`, channel: "cjmall", at: "2026-07-25T10:00:00+09:00" },
+        ],
+        upcoming: [
+          { name: `[DRYRUN] ${name} 방송 예정 B`, channel: "gsshop", at: "2026-07-27T20:00:00+09:00" },
+        ],
       }))
     : await crawlBroadcastLive(ingredientNames);
 
@@ -58,6 +76,7 @@ async function main() {
       kind: s.kind,
       broadcast_count: s.broadcastCount,
       recent_titles: s.recentTitles,
+      upcoming: s.upcoming,
       crawled_at: stampAt,
     }));
     const { error } = await db
@@ -67,7 +86,9 @@ async function main() {
     console.log(`  ✅ upsert ${rows.length}건\n`);
   } else {
     for (const s of stats)
-      console.log(`    · ${s.keyword} — 방송 ${s.broadcastCount}회, 최근 ${s.recentTitles.length}건`);
+      console.log(
+        `    · ${s.keyword} — 방송 ${s.broadcastCount}회, 최근 ${s.recentTitles.length}건, 예정 ${s.upcoming.length}건`,
+      );
     console.log(`\n  dry-run: ${stats.length}건 (upsert 생략)\n`);
   }
 }
@@ -98,12 +119,27 @@ async function fetchBroadcastStat(keyword: string): Promise<BroadcastStat> {
   const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
   if (!m) throw new Error("__NEXT_DATA__ 없음 (사이트 구조 변경?)");
   const ag = JSON.parse(m[1])?.props?.pageProps?.aggregatedData ?? {};
-  const past: Array<{ name?: string }> = Array.isArray(ag.past) ? ag.past : [];
-  const recentTitles = past
-    .map((p) => String(p?.name ?? "").trim())
-    .filter(Boolean)
+  const past = toItems(ag.past);
+  return {
+    keyword,
+    kind: "ingredient",
+    broadcastCount: past.length,
+    recentTitles: past,
+    upcoming: toItems(ag.future),
+  };
+}
+
+/** hsmoa 항목 배열 → 필요한 필드만. 이름이 없는 건 버린다. */
+function toItems(raw: unknown): BroadcastItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((p: { name?: string; tv_channel?: string; recent_broadcast_start_datetime?: string }) => ({
+      name: String(p?.name ?? "").trim(),
+      channel: String(p?.tv_channel ?? "").trim(),
+      at: String(p?.recent_broadcast_start_datetime ?? "").trim(),
+    }))
+    .filter((p) => p.name)
     .slice(0, 10);
-  return { keyword, kind: "ingredient", broadcastCount: past.length, recentTitles };
 }
 
 /** 원료 키워드별로 홈쇼핑모아 최근 방송 지표 수집 (매너 딜레이·개별 실패는 로그만). */
@@ -114,7 +150,9 @@ async function crawlBroadcastLive(keywords: string[]): Promise<BroadcastStat[]> 
     try {
       const stat = await fetchBroadcastStat(keywords[i]);
       out.push(stat);
-      console.log(`    · ${stat.keyword} — 방송 ${stat.broadcastCount}건 · 최근 ${stat.recentTitles.length}`);
+      console.log(
+        `    · ${stat.keyword} — 방송 ${stat.broadcastCount}건 · 예정 ${stat.upcoming.length}건`,
+      );
     } catch (err) {
       console.warn(`    ✗ ${keywords[i]}: ${errMsg(err)}`);
     }
