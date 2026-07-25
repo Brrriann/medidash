@@ -10,7 +10,8 @@
 import { TAXONOMY } from "@/lib/taxonomy/data";
 import { SAMPLE_INGREDIENTS } from "@/lib/data/sample-ingredients";
 import { sanitize, hasBannedTerms } from "./compliance";
-import { scoreExposure, type ExposureFactors } from "./scoring";
+import { scoreExposure, coverageOf, type ExposureFactors } from "./scoring";
+import { usableRelated } from "./related";
 import type { Platform, TitleInput, TitleTagsResult, TitleVariant } from "./types";
 
 const TARGET_TAGS = ["4050영양제", "직장인", "부모님선물"];
@@ -24,8 +25,16 @@ export function generateTitleTags(input: TitleInput): TitleTagsResult {
   const spec = (input.spec ?? "").trim();
   const bodyEffect = bodyPart.replace(/\s+/g, ""); // "눈 건강" → "눈건강"
 
-  const rawTitles = buildTitles({ ingredient, bodyEffect, brand, spec, platform: input.platform });
-  const rawTags = buildTags(ingredient, bodyPart, bodyEffect);
+  // 네이버 실측 연관어 중 셀러가 따라 써도 되는 것만 (타사 브랜드·제형어 제외)
+  const related = input.keywordStat
+    ? usableRelated(input.keywordStat.related, ingredient)
+    : [];
+  const relatedTerms = related.map((r) => r.term);
+
+  const rawTitles = buildTitles({
+    ingredient, bodyEffect, brand, spec, platform: input.platform, relatedTerms,
+  });
+  const rawTags = buildTags(ingredient, bodyPart, bodyEffect, relatedTerms);
 
   // 금지어 검사·치환 (입력 특징 + 생성 결과)
   let sanitized = hasBannedTerms(
@@ -45,7 +54,14 @@ export function generateTitleTags(input: TitleInput): TitleTagsResult {
     20,
   );
 
-  return { titles, tags, sanitized, source: "rule" };
+  return {
+    titles,
+    tags,
+    sanitized,
+    source: "rule",
+    keywordStat: input.keywordStat ?? null,
+    usableRelated: related,
+  };
 }
 
 // ── 상품명 ─────────────────────────────────────────────────────
@@ -53,14 +69,34 @@ export function generateTitleTags(input: TitleInput): TitleTagsResult {
 /** 플랫폼별 요소 순서로 렌더 (빈 요소는 생략) */
 function render(
   platform: Platform,
-  parts: { brand: string; ingredient: string; bodyEffect: string; spec: string },
+  parts: {
+    brand: string;
+    ingredient: string;
+    /** 시장 연관어 — 원료 바로 뒤가 가장 자연스럽다 ("루테인 지아잔틴 …") */
+    keywords: string;
+    bodyEffect: string;
+    spec: string;
+  },
 ): string {
   // 쿠팡: 브랜드 + 원료 + 효능 + 규격 / 스마트스토어: 원료 + 효능 + 브랜드 + 규격(키워드 우선)
   const order: string[] =
     platform === "coupang"
-      ? [parts.brand, parts.ingredient, parts.bodyEffect, parts.spec]
-      : [parts.ingredient, parts.bodyEffect, parts.brand, parts.spec];
-  return order.filter((s) => s.trim().length > 0).join(" ").replace(/\s{2,}/g, " ").trim();
+      ? [parts.brand, parts.ingredient, parts.keywords, parts.bodyEffect, parts.spec]
+      : [parts.ingredient, parts.keywords, parts.bodyEffect, parts.brand, parts.spec];
+
+  // 앞에 이미 나온 말은 다시 붙이지 않는다.
+  // 연관어 "간건강"과 부위 "간"이 겹쳐 "… 간건강 간 60캡슐"이 되는 걸 막는다.
+  const out: string[] = [];
+  let acc = "";
+  for (const seg of order) {
+    const s = seg.trim();
+    if (!s) continue;
+    const words = s.split(/\s+/).filter((w) => !acc.includes(w));
+    if (!words.length) continue;
+    out.push(words.join(" "));
+    acc += ` ${words.join(" ")}`;
+  }
+  return out.join(" ").replace(/\s{2,}/g, " ").trim();
 }
 
 function buildTitles(el: {
@@ -69,11 +105,23 @@ function buildTitles(el: {
   brand: string;
   spec: string;
   platform: Platform;
+  relatedTerms: string[];
 }): TitleVariant[] {
-  const { ingredient, bodyEffect, brand, spec, platform } = el;
+  const { ingredient, bodyEffect, brand, spec, platform, relatedTerms } = el;
 
-  // 요소 포함 패턴 (원료는 항상 포함) — 완성도 높은 순
-  const patterns: { brand: boolean; bodyEffect: boolean; spec: boolean }[] = [
+  // 상위 노출 상품이 실제로 쓰는 어휘 2개까지 상품명에 끼워넣는다.
+  // 이게 없으면 생성기가 "당신 상품명은 중입니다"라고 평가만 하고 개선안을 못 준다.
+  // 예: 루테인 시장 표준은 "루테인 지아잔틴"인데 원료만 넣으면 검색에 안 걸린다.
+  const kw = relatedTerms.slice(0, 2).join(" ");
+
+  // 요소 포함 패턴 (원료는 항상 포함) — 완성도 높은 순.
+  // 연관어를 넣은 안을 앞에 둬서, 셀러가 첫 안을 그대로 써도 노출이 되게 한다.
+  const withKw = kw ? [
+    { keywords: true, brand: true, bodyEffect: true, spec: true },
+    { keywords: true, brand: false, bodyEffect: true, spec: true },
+  ] : [];
+  const patterns: { keywords?: boolean; brand: boolean; bodyEffect: boolean; spec: boolean }[] = [
+    ...withKw,
     { brand: true, bodyEffect: true, spec: true },
     { brand: false, bodyEffect: true, spec: true },
     { brand: true, bodyEffect: false, spec: true },
@@ -87,6 +135,7 @@ function buildTitles(el: {
     const parts = {
       brand: p.brand ? brand : "",
       ingredient,
+      keywords: p.keywords ? kw : "",
       bodyEffect: p.bodyEffect ? bodyEffect : "",
       spec: p.spec ? spec : "",
     };
@@ -99,6 +148,8 @@ function buildTitles(el: {
       bodyPart: parts.bodyEffect.length > 0,
       brand: parts.brand.length > 0,
       spec: parts.spec.length > 0,
+      // 상위 노출 상품이 쓰는 어휘를 이 안이 얼마나 담았는지 (실측 없으면 undefined)
+      relatedCoverage: coverageOf(text, relatedTerms, ingredient),
     };
     out.push({ text, exposure: scoreExposure(factors) });
     if (out.length >= 5) break;
@@ -108,16 +159,27 @@ function buildTitles(el: {
 
 // ── 태그 ───────────────────────────────────────────────────────
 
-function buildTags(ingredient: string, bodyPart: string, bodyEffect: string): string[] {
+function buildTags(
+  ingredient: string,
+  bodyPart: string,
+  bodyEffect: string,
+  relatedTerms: string[],
+): string[] {
   const symptoms = findSymptoms(bodyPart).slice(0, 5); // 증상 5
   const ingredientTags = ingredientVariants(ingredient).slice(0, 5); // 원료 한/영 5
   // 부위·효능 5 — "건강"이 이미 붙은 경우 중복("눈건강건강") 방지
   const effectBase = bodyEffect.replace(/건강$/, "");
-  const effectTags = bodyEffect
+  const ruleEffect = bodyEffect
     ? [bodyEffect, `${effectBase}케어`, `${effectBase}영양제`, `${effectBase}관리`, "건강기능식품"]
     : [`${ingredient}영양제`, "건강기능식품", "영양제", "건강관리", "데일리"];
+  // 네이버 실측 연관어가 있으면 하드코딩 효능어보다 앞세운다 — 실제 시장 어휘가 더 정확하다.
+  const effectTags = [...relatedTerms, ...ruleEffect].slice(0, 5);
 
-  return [...symptoms, ...ingredientTags, ...effectTags.slice(0, 5), ...TARGET_TAGS, ...SEASON_TAGS];
+  // 뒤에 연관어를 한 번 더 붙여, 중복으로 빈 자리가 생기면 무의미한 필러 대신 실측어가 채우게 한다.
+  return [
+    ...symptoms, ...ingredientTags, ...effectTags,
+    ...TARGET_TAGS, ...SEASON_TAGS, ...relatedTerms,
+  ];
 }
 
 /** bodyPart(중분류명/증상/자유어)로 관련 증상 키워드 조회 */

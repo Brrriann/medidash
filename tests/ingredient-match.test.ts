@@ -4,7 +4,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { matchIngredients, matchFromFields } from "../workers/lib/ingredient-match";
+import { matchIngredients, matchFromFields } from "../src/lib/ingredients/match";
 import type { IngredientDict } from "../workers/lib/types";
 
 const DICT: IngredientDict[] = [

@@ -11,7 +11,7 @@
  */
 import { loadEnvFiles } from "../workers/lib/env";
 import { createDb, loadIngredientDict } from "../workers/lib/db";
-import { matchFromFields } from "../workers/lib/ingredient-match";
+import { matchFromFields } from "../src/lib/ingredients/match";
 
 loadEnvFiles();
 

@@ -3,7 +3,7 @@
  * 상품명·상세 텍스트에서 `ingredients.aliases` 사전으로 원료를 찾아 id 목록을 만든다.
  * 크롤러가 채우는 `wholesale_products.ingredient_ids`의 원천.
  */
-import type { IngredientDict } from "./types";
+import type { IngredientDict } from "@/lib/ingredients/types";
 
 /** 한글/영문 혼용·공백·대소문자 차이를 흡수하기 위한 정규화 */
 function normalize(text: string): string {

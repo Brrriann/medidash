@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { loadEnvFiles } from "../workers/lib/env";
 import { createDb, loadIngredientDict, upsertProducts } from "../workers/lib/db";
-import { matchFromFields } from "../workers/lib/ingredient-match";
+import { matchFromFields } from "../src/lib/ingredients/match";
 import type { WholesaleRecord, WholesaleSource } from "../workers/lib/types";
 
 loadEnvFiles();

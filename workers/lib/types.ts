@@ -33,9 +33,6 @@ export interface CrawlOptions {
   onlySource?: WholesaleSource;
 }
 
-/** 원료 사전 항목 (매칭 입력) */
-export interface IngredientDict {
-  id: number;
-  name: string;
-  aliases: string[];
-}
+
+/** 원료 사전 항목 — 매칭 로직과 함께 src로 옮겼다(앱도 써야 해서). 기존 import 경로 유지용 재수출. */
+export type { IngredientDict } from "../../src/lib/ingredients/types";

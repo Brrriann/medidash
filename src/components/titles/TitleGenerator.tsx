@@ -5,7 +5,7 @@ import {
   generateTitlesAction,
   type TitlesState,
 } from "@/app/(dashboard)/titles/actions";
-import type { Exposure } from "@/lib/titles/types";
+import type { Exposure, KeywordStat } from "@/lib/titles/types";
 import { AI_DISCLAIMER } from "@/lib/constants";
 
 const initial: TitlesState = { result: null, error: null };
@@ -138,6 +138,8 @@ export function TitleGenerator({
               </div>
             )}
 
+            <MarketSignal stat={r.keywordStat} usable={r.usableRelated ?? []} />
+
             {/* 상품명 */}
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
@@ -198,6 +200,75 @@ export function TitleGenerator({
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * 네이버 실측 시장 신호. 노출도 등급이 왜 그렇게 나왔는지 근거를 보여준다.
+ * 수요·경쟁은 **키워드의 속성**이라 등급에는 안 섞고 여기서 따로 보여준다.
+ */
+function MarketSignal({
+  stat,
+  usable,
+}: {
+  stat: KeywordStat | null | undefined;
+  usable: { term: string; count: number }[];
+}) {
+  if (!stat) return null;
+  const demand = stat.demandIndex;
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-bold text-slate-800">시장 신호</h2>
+        <span className="text-[11px] text-slate-400">네이버 검색·쇼핑 실측 · 월 1회 갱신</span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+          <p className="text-[11px] text-slate-400">검색 수요</p>
+          <p className="mt-0.5 text-sm font-bold text-slate-800">
+            {demand == null ? "—" : `${demand.toFixed(2)}×`}
+          </p>
+          <p className="mt-0.5 text-[10px] leading-tight text-slate-400">
+            콜라겐 대비 12개월 평균
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+          <p className="text-[11px] text-slate-400">경쟁 상품수</p>
+          <p className="mt-0.5 text-sm font-bold text-slate-800">
+            {stat.competition == null ? "—" : stat.competition.toLocaleString("ko-KR")}
+          </p>
+          <p className="mt-0.5 text-[10px] leading-tight text-slate-400">
+            네이버쇼핑 등록 기준
+          </p>
+        </div>
+      </div>
+
+      {usable.length > 0 && (
+        <div className="mt-3.5">
+          <p className="mb-1.5 text-[11px] text-slate-500">
+            상위 노출 상품이 쓰는 단어 —{" "}
+            <span className="text-slate-400">상품명에 넣을수록 노출도가 올라갑니다</span>
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {usable.slice(0, 12).map((r) => (
+              <span
+                key={r.term}
+                className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+              >
+                {r.term}
+                <span className="ml-1 text-[10px] text-brand-500/70">{r.count}</span>
+              </span>
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+            타사 브랜드명·제형어(캡슐·프리미엄 등)는 자동으로 제외했습니다. 경쟁 상품수는
+            네이버쇼핑 전체 기준이라, 원료명이 일반 식품명과 겹치면(마카·녹차 등) 실제보다
+            크게 잡힐 수 있습니다.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 
