@@ -226,7 +226,38 @@ export async function getWholesaleProducts(): Promise<{
   };
 }
 
-export type BroadcastStat = { count: number; titles: string[] };
+/** 방송 1건 — 상품명·채널·방송일시 */
+export type BroadcastItem = { name: string; channel: string; at: string };
+
+export type BroadcastStat = {
+  count: number;
+  /** 상품명만 (기존 툴팁 호환) */
+  titles: string[];
+  /** 최근 방송 (채널·일시 포함) */
+  recent: BroadcastItem[];
+  /** 방송 **예정** — 앞으로 뜰 원료 신호 */
+  upcoming: BroadcastItem[];
+};
+
+/**
+ * jsonb 컬럼 → 방송 항목 배열.
+ * 종전엔 상품명 문자열 배열만 저장했고 지금은 {name, channel, at} 객체를 넣는다.
+ * 재크롤 전 행이 남아 있을 수 있어 두 형태를 모두 받는다.
+ */
+function toBroadcastItems(raw: unknown): BroadcastItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((v) =>
+      typeof v === "string"
+        ? { name: v, channel: "", at: "" }
+        : {
+            name: String((v as BroadcastItem)?.name ?? ""),
+            channel: String((v as BroadcastItem)?.channel ?? ""),
+            at: String((v as BroadcastItem)?.at ?? ""),
+          },
+    )
+    .filter((v) => v.name);
+}
 
 /**
  * 원료명 → 홈쇼핑모아 방송 지표 맵 (broadcast_stats, kind=ingredient).
@@ -237,14 +268,17 @@ export async function getBroadcastStats(): Promise<Record<string, BroadcastStat>
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("broadcast_stats")
-    .select("keyword, broadcast_count, recent_titles")
+    .select("keyword, broadcast_count, recent_titles, upcoming")
     .eq("kind", "ingredient");
   if (error || !data) return {};
   const map: Record<string, BroadcastStat> = {};
   for (const r of data) {
+    const recent = toBroadcastItems(r.recent_titles);
     map[r.keyword] = {
       count: r.broadcast_count ?? 0,
-      titles: Array.isArray(r.recent_titles) ? (r.recent_titles as string[]) : [],
+      titles: recent.map((i) => i.name),
+      recent,
+      upcoming: toBroadcastItems(r.upcoming),
     };
   }
   return map;

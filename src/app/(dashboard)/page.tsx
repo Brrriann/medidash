@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { getAllSubcategoryDetails, getRecentWorks, getTaxonomy } from "@/lib/data";
+import {
+  getAllSubcategoryDetails,
+  getBroadcastStats,
+  getRecentWorks,
+  getTaxonomy,
+} from "@/lib/data";
+import { BroadcastTrend } from "@/components/dashboard/BroadcastTrend";
 import { BodyMapExplorer } from "@/components/body-map/BodyMapExplorer";
 
 const WORK_LABELS: Record<string, string> = {
@@ -27,10 +33,11 @@ const QUICK_MENU = [
 ];
 
 export default async function DashboardPage() {
-  const [categories, details, recentWorks] = await Promise.all([
+  const [categories, details, recentWorks, broadcast] = await Promise.all([
     getTaxonomy(),
     getAllSubcategoryDetails(),
     getRecentWorks(),
+    getBroadcastStats(),
   ]);
 
   return (
@@ -44,6 +51,8 @@ export default async function DashboardPage() {
       </div>
 
       <BodyMapExplorer categories={categories} details={details} />
+
+      <BroadcastTrend broadcast={broadcast} now={Date.now()} />
 
       <div className="grid gap-5 lg:grid-cols-2">
         {/* 최근 작업 이력 */}
