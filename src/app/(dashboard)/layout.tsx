@@ -34,7 +34,8 @@ export default async function DashboardLayout({
       <Sidebar showAdmin={mock || isAdmin} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-6">
+        {/* pl-16: 모바일 햄버거(Sidebar 내 fixed 버튼) 자리 확보 */}
+        <header className="flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white pl-16 pr-6 md:px-6">
           <div className="flex items-center gap-2">
             {mock && (
               <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">

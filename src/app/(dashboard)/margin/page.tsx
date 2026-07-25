@@ -3,7 +3,7 @@ import { isMockMode } from "@/lib/supabase/env";
 import { getMarginHistory } from "@/lib/data";
 import { MarginCalculator } from "@/components/margin/MarginCalculator";
 
-export const metadata: Metadata = { title: "마진계산기" };
+export const metadata: Metadata = { title: "마진 계산" };
 
 const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
 
@@ -20,7 +20,7 @@ export default async function MarginPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">마진계산기</h1>
+        <h1 className="text-xl font-bold text-slate-900">마진 계산</h1>
         <p className="mt-1 text-sm text-slate-500">
           고객 제공 엑셀 수식(플랫폼별 수수료·부가세·종합소득세)을 그대로 적용해
           판매마진과 세금 제외 최종마진을 계산합니다.

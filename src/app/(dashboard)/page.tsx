@@ -11,17 +11,17 @@ const WORK_LABELS: Record<string, string> = {
 const QUICK_MENU = [
   {
     href: "/sourcing",
-    title: "도매몰 통합 검색",
+    title: "상품 소싱",
     desc: "3사 캐시에서 원료·키워드로 상품 찾기",
   },
   {
     href: "/titles",
-    title: "상품명·태그 추천",
+    title: "상품명·태그",
     desc: "노출도 상/중/하 상품명과 태그 20개",
   },
   {
     href: "/margin",
-    title: "마진계산기",
+    title: "마진 계산",
     desc: "도매가 기반 마진액·마진율·손익분기",
   },
 ];
@@ -36,12 +36,10 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">
-          어떤 고민을 팔아볼까요?
-        </h1>
+        <h1 className="text-xl font-bold text-slate-900">증상 지도</h1>
         <p className="mt-1 text-sm text-slate-500">
-          인체 지도에서 계통을 클릭해 부위 → 증상 키워드 → 추천 원료 순으로
-          좁혀 들어가세요.
+          어떤 고민을 팔아볼까요? 인체 지도에서 계통을 클릭해 부위 → 증상 키워드
+          → 추천 원료 순으로 좁혀 들어가세요.
         </p>
       </div>
 

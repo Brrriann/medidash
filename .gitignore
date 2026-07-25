@@ -42,3 +42,6 @@ playwright-report/
 workers/.cache/
 workers/.inspect/
 *.log
+
+# Claude Code — 개인 설정은 제외, launch.json(dev 서버 구성)은 공유
+.claude/settings.local.json
