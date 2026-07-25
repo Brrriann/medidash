@@ -124,6 +124,22 @@ npm run crawl -- --source=ggsan --limit=50
 - 재실행해도 `source_url` 기준으로 중복 없이 갱신(upsert)됩니다.
 - 완료 후 배포된 대시보드 **소싱** 화면에서 실상품을 확인하세요.
 
+### 3-0. 원료 사전을 늘렸으면 재매칭 (재크롤 불필요)
+
+`src/lib/data/sample-ingredients.ts`에 원료를 추가했다면, **이미 쌓인 상품은 예전 사전 기준 값**을 그대로 들고
+있어서 검색·태그·방송배지가 안 뜹니다. 다시 크롤할 필요 없이 DB만 훑어 갱신합니다:
+
+```bash
+npm run seed            # 늘린 사전을 ingredients 테이블에 upsert
+npm run rematch -- --dry  # 매칭률 before→after + 신규 매칭 표본 미리보기
+npm run rematch           # 실제 반영
+```
+
+- `--dry`는 아무것도 안 바꾸고 소스별 매칭률과 신규 매칭 표본 15건만 보여줍니다. **먼저 이걸로 오탐을 눈검사하세요.**
+- 멱등입니다 — 바로 다시 돌리면 "변경 0건"이 나와야 정상입니다.
+- 매칭은 **상품명만** 씁니다. 상세 텍스트는 3사 모두 성분표가 아니라 판매정책 안내문이라 오탐을 만듭니다
+  (실측 근거는 `workers/lib/ingredient-match.ts`의 `matchFromFields` 주석).
+
 ### 3-1. 적재 결과 확인 (리포트)
 크롤 후 데이터가 제대로 들어갔는지 한 줄로 확인합니다:
 ```bash
