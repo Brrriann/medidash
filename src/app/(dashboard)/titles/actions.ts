@@ -4,6 +4,24 @@ import { generateTitleTags } from "@/lib/titles/generate";
 import type { TitleInput, TitleTagsResult } from "@/lib/titles/types";
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
+import { getKeywordStat } from "@/lib/data";
+import { SAMPLE_INGREDIENTS } from "@/lib/data/sample-ingredients";
+import { matchIngredients } from "@/lib/ingredients/match";
+
+/**
+ * 사용자가 친 자유 원료명 → 사전의 정식 원료명 (keyword_stats 조회 키).
+ * 셀러는 "쏘팔메토"라고 치지만 사전 키는 "쏘팔메토 열매 추출물"이다.
+ * 크롤러가 상품에 원료를 붙일 때와 **같은 매처**를 써야 결과가 어긋나지 않는다.
+ */
+function resolveIngredientName(input: string): string | null {
+  const dict = SAMPLE_INGREDIENTS.map((i, idx) => ({
+    id: idx,
+    name: i.name,
+    aliases: i.aliases,
+  }));
+  const ids = matchIngredients(input, dict);
+  return ids.length ? dict[ids[0]].name : null;
+}
 
 export interface TitlesState {
   result: TitleTagsResult | null;
@@ -31,6 +49,10 @@ export async function generateTitlesAction(
     productHint: str(formData.get("productHint")),
     platform,
   };
+
+  // 네이버 실측 지표 주입 — 조회 실패해도 생성은 계속(규칙 기반으로 폴백)
+  const canonical = resolveIngredientName(ingredient);
+  input.keywordStat = canonical ? await getKeywordStat(canonical).catch(() => null) : null;
 
   const result = generateTitleTags(input);
 

@@ -250,6 +250,38 @@ export async function getBroadcastStats(): Promise<Record<string, BroadcastStat>
   return map;
 }
 
+/** 네이버 실측 키워드 지표 (medidash.keyword_stats) */
+export interface KeywordStat {
+  keyword: string;
+  /** 데이터랩 12개월 검색 트렌드 평균, 앵커("콜라겐")=1.0 기준. 미수집이면 null */
+  demandIndex: number | null;
+  /** 네이버쇼핑 등록 상품수 — 클수록 경쟁이 심하다 */
+  competition: number | null;
+  /** 상위 노출 상품명에 함께 쓰인 어휘 (빈도 내림차순) */
+  related: { term: string; count: number }[];
+}
+
+/** 원료명 하나의 키워드 지표. 미수집·mock이면 null → 호출부는 규칙 기반으로 폴백한다. */
+export async function getKeywordStat(keyword: string): Promise<KeywordStat | null> {
+  if (isMockMode()) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("keyword_stats")
+    .select("keyword, demand_index, competition, related_keywords")
+    .eq("kind", "ingredient")
+    .eq("keyword", keyword)
+    .maybeSingle();
+  if (error || !data) return null;
+  return {
+    keyword: data.keyword,
+    demandIndex: data.demand_index === null ? null : Number(data.demand_index),
+    competition: data.competition ?? null,
+    related: Array.isArray(data.related_keywords)
+      ? (data.related_keywords as { term: string; count: number }[])
+      : [],
+  };
+}
+
 export interface InviteCodeRow {
   code: string;
   memo: string | null;

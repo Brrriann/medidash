@@ -19,7 +19,7 @@ import type {
 } from "./lib/types";
 import { loadEnvFiles, getCredentials } from "./lib/env";
 import { createDb, loadIngredientDict, upsertProducts } from "./lib/db";
-import { matchFromFields } from "./lib/ingredient-match";
+import { matchFromFields } from "../src/lib/ingredients/match";
 import { errMsg, politeDelay, runSequential, withRetry } from "./lib/manners";
 import { PARSERS, ALL_SOURCES } from "./parsers";
 import { SAMPLE_INGREDIENTS } from "../src/lib/data/sample-ingredients";
