@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { WholesaleProduct } from "@/lib/data";
 import { calcMargin, defaultRecommendedPrice } from "@/lib/margin";
@@ -13,6 +13,8 @@ import { WHOLESALE_SOURCES } from "@/lib/constants";
  */
 
 const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
+
+const PAGE_STEP = 120; // 한 번에 렌더할 카드 수 (수천 건 동시 렌더 방지)
 
 const SOURCE_LABEL = Object.fromEntries(
   WHOLESALE_SOURCES.map((s) => [s.key, s.label]),
@@ -29,6 +31,7 @@ export function SourcingExplorer({
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [source, setSource] = useState<string | null>(null);
+  const [shown, setShown] = useState(PAGE_STEP);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -41,6 +44,10 @@ export function SourcingExplorer({
       );
     });
   }, [products, query, source]);
+
+  // 검색/필터가 바뀌면 렌더 개수 초기화
+  useEffect(() => setShown(PAGE_STEP), [query, source]);
+  const visible = filtered.slice(0, shown);
 
   return (
     <div className="space-y-4">
@@ -100,10 +107,32 @@ export function SourcingExplorer({
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+        <div className="space-y-3">
+          <p className="text-xs text-slate-500">
+            총{" "}
+            <span className="font-semibold text-slate-700">
+              {filtered.length.toLocaleString("ko-KR")}
+            </span>
+            개
+            {filtered.length > visible.length &&
+              ` 중 ${visible.length.toLocaleString("ko-KR")}개 표시`}
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {visible.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+          {filtered.length > visible.length && (
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={() => setShown((n) => n + PAGE_STEP)}
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+              >
+                더 보기 ({(filtered.length - visible.length).toLocaleString("ko-KR")}개 남음)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

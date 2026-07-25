@@ -167,13 +167,31 @@ export async function getWholesaleProducts(): Promise<{
 }> {
   if (!isMockMode()) {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("wholesale_products")
-      .select("id, source, source_url, name, price_wholesale, ingredient_ids, crawled_at")
-      .order("crawled_at", { ascending: false })
-      .limit(200);
+    const SEL =
+      "id, source, source_url, name, price_wholesale, ingredient_ids, crawled_at";
+    // Supabase는 요청당 행 상한(기본 1000)이 있어, range로 전량을 나눠 가져온다.
+    // crawled_at은 배치마다 동점이 많으므로 id를 2차 정렬키로 둬 페이지네이션을 안정화.
+    // ponytail: 카탈로그가 수만 건으로 커지면 클라 전량로드 대신 서버측 검색으로 전환.
+    const PAGE = 1000;
+    const q = () =>
+      supabase
+        .from("wholesale_products")
+        .select(SEL)
+        .order("crawled_at", { ascending: false })
+        .order("id", { ascending: false });
+    const first = await q().range(0, PAGE - 1);
+    const data = first.data ?? [];
+    const error = first.error;
+    if (!error && data.length === PAGE) {
+      for (let from = PAGE; from < 20000; from += PAGE) {
+        const more = await q().range(from, from + PAGE - 1);
+        if (more.error || !more.data?.length) break;
+        data.push(...more.data);
+        if (more.data.length < PAGE) break;
+      }
+    }
 
-    if (!error && data && data.length > 0) {
+    if (!error && data.length > 0) {
       // 원료 id → 이름 매핑
       const ids = [...new Set(data.flatMap((p) => p.ingredient_ids ?? []))];
       const { data: ings } = ids.length

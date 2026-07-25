@@ -24,6 +24,8 @@ const SELECTORS: SiteSelectors = {
   loginSubmit: "#formLogin button[type=\"submit\"]",
   loginSuccess: 'a[href*="logout.php"]',
   listUrl: "https://www.ggsan.com/goods/goods_list.php?cateCd=001",
+  // 전 카테고리 순회: 네비의 goods_list.php?cateCd= 링크(상품은 goods_view.php라 구분됨)
+  categoryLink: 'a[href*="goods_list.php?cateCd="]',
   productLink: '.item_info_cont a[href*="goods_view.php"]',
   name: ".item_detail_tit h3",
   price: ".item_info_box .item_price dd", // .item_price는 연관상품에도 11개 → 메인 정보박스로 스코프

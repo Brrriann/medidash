@@ -23,6 +23,9 @@ export interface SiteSelectors {
   loginSubmit: string;
   loginSuccess: string;
   listUrl: string;
+  /** 전 카테고리 순회용 CSS 셀렉터: listUrl 페이지 네비에서 카테고리 링크를 뽑음.
+   *  있으면 발견된 모든 카테고리를 순회, 없으면 listUrl 하나만(백워드 호환). */
+  categoryLink?: string;
   productLink: string;
   name: string;
   price: string;
@@ -53,38 +56,64 @@ function withPageParam(listUrl: string, n: number): string {
 /** 목록 페이지 순회 안전 상한(무한 루프 방지). */
 const MAX_LIST_PAGES = 100;
 
-/** 목록을 페이지별로 순회하며 상세 URL 수집. limit 도달 또는 새 링크 없음(마지막 페이지)에서 종료. */
+/** listUrl 페이지 네비에서 카테고리 URL 목록을 뽑는다(categoryLink 없으면 listUrl 하나). */
+async function discoverCategoryUrls(
+  page: Page,
+  sel: SiteSelectors,
+): Promise<string[]> {
+  if (!sel.categoryLink) return [sel.listUrl];
+  await page.goto(sel.listUrl, { waitUntil: "domcontentloaded" });
+  const found = await page.$$eval(sel.categoryLink, (els) =>
+    els.map((e) => (e as HTMLAnchorElement).href),
+  );
+  const uniq = [...new Set(found)].filter(Boolean);
+  return uniq.length ? uniq : [sel.listUrl];
+}
+
+/** (전 카테고리 ×) 페이지별로 순회하며 상세 URL 수집.
+ *  카테고리 넘나드는 중복 상품은 전역 dedupe로 한 번만 상세 크롤.
+ *  카테고리 종료 판정은 dedupe와 무관하게 "빈 페이지 또는 직전 페이지와 동일"로 한다
+ *  (겹침 때문에 조기 종료되는 것을 방지). limit 도달 시 즉시 반환. */
 export async function listUrlsWith(
   page: Page,
   sel: SiteSelectors,
   limit: number,
 ): Promise<string[]> {
+  const categoryUrls = await discoverCategoryUrls(page, sel);
+  if (sel.categoryLink) console.log(`    카테고리 ${categoryUrls.length}개 발견`);
+
   const collected: string[] = [];
   const seen = new Set<string>();
-  let pageNo = 1;
-  for (; pageNo <= MAX_LIST_PAGES; pageNo++) {
-    await page.goto(withPageParam(sel.listUrl, pageNo), {
-      waitUntil: "domcontentloaded",
-    });
-    const hrefs = (
-      await page.$$eval(sel.productLink, (els) =>
-        els.map((e) => (e as HTMLAnchorElement).href),
-      )
-    ).filter(Boolean);
-    // 새 링크가 없으면 마지막 페이지를 지났거나 page 파라미터가 무시된 것 → 종료
-    const fresh = hrefs.filter((h) => !seen.has(h));
-    if (fresh.length === 0) break;
-    for (const h of fresh) {
-      seen.add(h);
-      collected.push(h);
-      if (collected.length >= limit) return collected;
+  for (const catUrl of categoryUrls) {
+    let prevKey = "";
+    for (let pageNo = 1; pageNo <= MAX_LIST_PAGES; pageNo++) {
+      let hrefs: string[];
+      try {
+        await page.goto(withPageParam(catUrl, pageNo), {
+          waitUntil: "domcontentloaded",
+        });
+        hrefs = (
+          await page.$$eval(sel.productLink, (els) =>
+            els.map((e) => (e as HTMLAnchorElement).href),
+          )
+        ).filter(Boolean);
+      } catch {
+        break; // 개별 페이지 오류(리다이렉트로 컨텍스트 파괴·타임아웃) → 이 카테고리만 스킵하고 계속
+      }
+      // 카테고리 접근이 로그인/로그아웃으로 튕기면 세션 종료로 보고, 지금까지 수집분으로 중단
+      if (/Member\/logout|\/member\/login|\/bbs\/login/i.test(page.url())) return collected;
+      if (hrefs.length === 0) break; // 빈 페이지 = 카테고리 끝
+      const key = [...hrefs].sort().join("|");
+      if (key === prevKey) break; // 직전 페이지와 동일 = page 무시/마지막 페이지 클램프
+      prevKey = key;
+      for (const h of hrefs) {
+        if (seen.has(h)) continue; // 다른 카테고리에서 이미 수집 → 상세 중복 방지
+        seen.add(h);
+        collected.push(h);
+        if (collected.length >= limit) return collected;
+      }
+      await politeDelay(); // 페이지 사이 매너 딜레이
     }
-    await politeDelay(); // 목록 페이지 사이에도 매너 딜레이
-  }
-  if (pageNo > MAX_LIST_PAGES) {
-    console.warn(
-      `    ⚠️ 목록 페이지 상한(${MAX_LIST_PAGES}p) 도달 — 이후 페이지는 수집되지 않음`,
-    );
   }
   return collected;
 }
