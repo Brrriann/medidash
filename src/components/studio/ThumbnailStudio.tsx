@@ -3,12 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { THUMBNAIL_PRESETS, AI_DISCLAIMER } from "@/lib/constants";
 import { generateBackground, type GradientSpec } from "@/lib/thumbnail/backgrounds";
-import {
-  saveThumbnailWork,
-  generateBackgroundAction,
-  generatePersonAction,
-  loadProductImageAction,
-} from "@/app/(dashboard)/studio/actions";
+import { saveThumbnailWork, loadProductImageAction } from "@/app/(dashboard)/studio/actions";
 
 type PresetKey = (typeof THUMBNAIL_PRESETS)[number]["key"];
 
@@ -84,6 +79,9 @@ export function ThumbnailStudio({
       if (cached) return cached.complete ? cached : null;
       const img = new Image();
       img.onload = () => setImgTick((t) => t + 1);
+      // onerror가 없으면 이미지가 깨져도 화면에 아무 일도 안 일어난다.
+      // 실제로 인물 생성이 깨졌을 때 오류 표시가 없어 원인 파악이 늦어졌다.
+      img.onerror = () => setNote("이미지를 불러오지 못했습니다. 다시 시도해 주세요.");
       img.src = src;
       imgCache.current.set(src, img);
       return null;
@@ -204,24 +202,48 @@ export function ThumbnailStudio({
     setSelectedId(id);
   };
 
+  /**
+   * AI 이미지 생성 — 서버 액션이 아니라 라우트 핸들러를 부른다.
+   * 인물 컷아웃(투명 PNG)은 2MB라 서버 액션 RSC 페이로드로 넘기면 Workers에서 깨졌다.
+   * 라우트에서 원본 바이트를 받아 blob URL로 쓰면 같은 출처라 캔버스 오염도 없다.
+   */
+  const requestImage = async (body: Record<string, string>): Promise<string | null> => {
+    const res = await fetch("/api/ai/image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const msg = await res
+        .json()
+        .then((j: { error?: string }) => j.error)
+        .catch(() => `HTTP ${res.status}`);
+      setNote(`이미지 생성 실패 — ${msg}`);
+      return null;
+    }
+    return URL.createObjectURL(await res.blob());
+  };
+
   /** AI 배경 생성. 실패하면 기존 그라디언트를 그대로 두고 사유만 알린다. */
   const genBackground = async () => {
     setBusy("bg");
     setNote(null);
-    const r = await generateBackgroundAction(defaults.ingredient, defaults.part);
+    const url = await requestImage({
+      kind: "background",
+      ingredient: defaults.ingredient,
+      part: defaults.part,
+    });
     setBusy(null);
-    if (r.ok) setBgImage(r.url);
-    else setNote(`배경 생성 실패 — 테마 배경을 유지합니다. (${r.error})`);
+    if (url) setBgImage(url);
   };
 
   const genPerson = async () => {
     setBusy("person");
     setNote(null);
-    const r = await generatePersonAction(persona, outfit);
+    const url = await requestImage({ kind: "person", persona, outfit });
     setBusy(null);
     // 인물은 좌측에 크게 — 레퍼런스 구도(인물 좌측, 제품 우측)를 기본값으로
-    if (r.ok) addImage(r.url, 0.26, 0.6, 0.52);
-    else setNote(`인물 생성 실패 — ${r.error}`);
+    if (url) addImage(url, 0.26, 0.6, 0.52);
   };
 
   const addProduct = async () => {
