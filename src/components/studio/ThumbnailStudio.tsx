@@ -15,6 +15,8 @@ interface TextBlock {
   text: string;
   size: number; // 캔버스 높이 대비 비율
   color: string;
+  /** 테두리 색. 없으면(빈 문자열) 테두리를 안 그린다. */
+  stroke: string;
 }
 interface BadgeBlock {
   id: string;
@@ -56,8 +58,8 @@ export function ThumbnailStudio({
   const idRef = useRef(0);
   const nid = () => `b${idRef.current++}`;
   const [blocks, setBlocks] = useState<Block[]>(() => [
-    { id: "b_head", type: "text", x: 0.5, y: 0.22, text: defaults.ingredient || "원료명", size: 0.1, color: "#ffffff" },
-    { id: "b_copy", type: "text", x: 0.5, y: 0.82, text: "하루 한 알 건강 관리", size: 0.052, color: "#ffffff" },
+    { id: "b_head", type: "text", x: 0.5, y: 0.22, text: defaults.ingredient || "원료명", size: 0.1, color: "#ffffff", stroke: "#000000" },
+    { id: "b_copy", type: "text", x: 0.5, y: 0.82, text: "하루 한 알 건강 관리", size: 0.052, color: "#ffffff", stroke: "#000000" },
   ]);
   const [selectedId, setSelectedId] = useState<string | null>("b_head");
   const [savedNote, setSavedNote] = useState<string | null>(null);
@@ -191,7 +193,7 @@ export function ThumbnailStudio({
   // ── 블록 조작 ──
   const addText = () => {
     const id = nid();
-    setBlocks((bs) => [...bs, { id, type: "text", x: 0.5, y: 0.5, text: "텍스트", size: 0.06, color: "#ffffff" }]);
+    setBlocks((bs) => [...bs, { id, type: "text", x: 0.5, y: 0.5, text: "텍스트", size: 0.06, color: "#ffffff", stroke: "#000000" }]);
     setSelectedId(id);
   };
   const addBadge = () => {
@@ -528,12 +530,29 @@ export function ThumbnailStudio({
                       />
                     </label>
                     <label className="flex items-center gap-1.5 text-xs text-slate-500">
-                      색상
+                      글자
                       <input
                         type="color"
                         value={selected.color}
                         onChange={(e) => patch(selected.id, { color: e.target.value })}
                         className="h-7 w-9 rounded border border-slate-200"
+                      />
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-500">
+                      테두리
+                      <input
+                        type="color"
+                        value={selected.stroke || "#000000"}
+                        onChange={(e) => patch(selected.id, { stroke: e.target.value })}
+                        disabled={!selected.stroke}
+                        className="h-7 w-9 rounded border border-slate-200 disabled:opacity-40"
+                      />
+                      <input
+                        type="checkbox"
+                        checked={!!selected.stroke}
+                        onChange={(e) => patch(selected.id, { stroke: e.target.checked ? "#000000" : "" })}
+                        title="테두리 사용"
+                        className="h-3.5 w-3.5 accent-brand-600"
                       />
                     </label>
                   </div>
@@ -628,8 +647,10 @@ function drawText(ctx: CanvasRenderingContext2D, b: TextBlock, W: number, H: num
   const w = ctx.measureText(b.text || " ").width;
   // 가독성 외곽선
   ctx.lineWidth = px * 0.14;
-  ctx.strokeStyle = "rgba(0,0,0,0.35)";
-  ctx.strokeText(b.text, b.x * W, b.y * H);
+  if (b.stroke) {
+    ctx.strokeStyle = b.stroke;
+    ctx.strokeText(b.text, b.x * W, b.y * H);
+  }
   ctx.fillStyle = b.color;
   ctx.fillText(b.text, b.x * W, b.y * H);
   const halfW = w / 2 / W;
