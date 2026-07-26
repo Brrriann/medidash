@@ -10,6 +10,8 @@
  * 있지만, 버킷·정책·수명 관리까지 붙는다. data URL은 그 문제가 없고 저장소도 필요 없다.
  * 생성 결과를 영구 보관해야 할 요구가 생기면 그때 Storage를 붙이면 된다.
  */
+import { openaiFetch } from "./fetch";
+
 export interface ThumbnailBgInput {
   ingredient: string;
   symptom?: string;
@@ -81,7 +83,7 @@ class OpenAIImageProvider implements ImageProvider {
     opts: { transparent?: boolean } = {},
   ): Promise<{ url: string }> {
     const png = opts.transparent === true;
-    const res = await fetch("https://api.openai.com/v1/images/generations", {
+    const res = await openaiFetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

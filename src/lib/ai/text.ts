@@ -12,6 +12,8 @@
  * docs/SPEC.md §2 구현 금지 목록: "부위별 원료/기전/셀링포인트 콘텐츠 창작 —
  * 고객 제공 데이터를 적재만 한다". 상품명·태그는 셀러 자신의 상품 정보라 이 가드와 무관하다.
  */
+import { openaiFetch } from "./fetch";
+
 export type Platform = "coupang" | "smartstore";
 export type Exposure = "상" | "중" | "하";
 
@@ -84,7 +86,7 @@ class OpenAITextProvider implements TextProvider {
   async suggestTitlesAndTags(
     input: TitleSuggestInput,
   ): Promise<{ titles: string[]; tags: string[] }> {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await openaiFetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

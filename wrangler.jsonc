@@ -3,7 +3,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "medidash",
-  "main": ".open-next/worker.js",
+  "main": "worker-entry.ts",
   "compatibility_date": "2026-07-01",
   // 서버 액션의 node:crypto 등 Node.js API 사용을 위해 필수
   "compatibility_flags": ["nodejs_compat"],
@@ -15,11 +15,17 @@
   //
   // Supabase도 해외에 있어(한국에서 왕복 415ms) Worker를 백엔드 쪽으로 옮기면
   // DB 지연도 같이 줄어든다 — 손해 보는 트레이드오프가 아니다.
-  "placement": { "mode": "smart" },
+  // Smart Placement는 OpenAI 지역 차단을 못 풀었다(홍콩 엣지 유지). 지역 고정은 아래
+  // OpenAIProxy DO가 담당하므로 배치는 사용자 근처(기본값)로 되돌려 페이지 응답을 지킨다.
   // 커스텀 도메인. Cloudflare에 등록된 zone(health-seller.com)에 Worker를 붙인다.
   // custom_domain은 프록시 DNS 레코드까지 자동으로 만든다 — 대시보드에서 따로 안 해도 된다.
   // ⚠️ zone이 없는 상태로 배포하면 실패한다. 도메인을 Cloudflare에서 떼면 이 줄부터 지울 것.
   "routes": [{ "pattern": "health-seller.com", "custom_domain": true }],
+  // OpenAI 호출 전용 프록시. locationHint로 북미에 고정해 지역 차단을 피한다.
+  "durable_objects": {
+    "bindings": [{ "name": "OPENAI_PROXY", "class_name": "OpenAIProxy" }]
+  },
+  "migrations": [{ "tag": "v1", "new_classes": ["OpenAIProxy"] }],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
