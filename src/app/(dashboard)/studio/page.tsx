@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { isMockMode } from "@/lib/supabase/env";
 import { ThumbnailStudio } from "@/components/studio/ThumbnailStudio";
+import { getAiQuota } from "@/lib/ai/quota";
 
 export const metadata: Metadata = { title: "썸네일" };
 
@@ -13,6 +14,7 @@ export default async function StudioPage({
   // ref = 소싱에서 넘어온 상품 id. 이미지 URL이 아니라 id로 받아야 서버가 임의 주소를
   // 받아오는 SSRF가 안 된다 (actions.ts loadProductImageAction 주석 참고).
   const productId = Number(ref);
+  const quota = await getAiQuota();
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -31,6 +33,7 @@ export default async function StudioPage({
           productId: Number.isFinite(productId) && productId > 0 ? productId : null,
         }}
         mock={isMockMode()}
+        quota={quota}
       />
     </div>
   );

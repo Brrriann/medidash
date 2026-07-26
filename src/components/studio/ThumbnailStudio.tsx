@@ -39,9 +39,12 @@ type Box = { x0: number; y0: number; x1: number; y1: number };
 export function ThumbnailStudio({
   defaults,
   mock,
+  quota,
 }: {
   defaults: { ingredient: string; part: string; productId: number | null };
   mock: boolean;
+  /** AI 일일 한도 — 안 보여주면 왜 막혔는지 셀러가 알 수 없다 */
+  quota: { used: number; limit: number; unlimited: boolean };
 }) {
   const [presetKey, setPresetKey] = useState<PresetKey>("coupang");
   const [bgSeed, setBgSeed] = useState(0);
@@ -367,6 +370,16 @@ export function ThumbnailStudio({
             ))}
           </div>
         </Section>
+
+        {!quota.unlimited && (
+          <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+            오늘 AI 생성{" "}
+            <span className="font-semibold text-slate-700">
+              {Math.max(quota.limit - quota.used, 0)}회
+            </span>{" "}
+            남았습니다 (하루 {quota.limit}회 · 자정 초기화). 배경·인물 생성이 각 1회입니다.
+          </p>
+        )}
 
         {/* 배경 */}
         <Section title="배경">
