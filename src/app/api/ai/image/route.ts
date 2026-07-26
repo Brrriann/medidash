@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getImageProvider } from "@/lib/ai/image";
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
+import { consumeAiQuota } from "@/lib/ai/quota";
 
 /**
  * AI 이미지 생성 — **서버 액션이 아니라 라우트 핸들러인 이유**
@@ -39,6 +40,10 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
   }
+
+  // 유료 호출 직전에 한도 차감 (docs/PRODUCTION-READINESS.md P0-5)
+  const quota = await consumeAiQuota();
+  if (!quota.allowed) return NextResponse.json({ error: quota.reason }, { status: 429 });
 
   try {
     const provider = getImageProvider();

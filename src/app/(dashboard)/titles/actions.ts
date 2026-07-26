@@ -8,6 +8,7 @@ import {
 } from "@/lib/titles/generate";
 import { usableRelated } from "@/lib/titles/related";
 import { getTextProvider } from "@/lib/ai/text";
+import { consumeAiQuota } from "@/lib/ai/quota";
 import type { TitleInput, TitleTagsResult } from "@/lib/titles/types";
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
@@ -66,6 +67,11 @@ export async function generateTitlesAction(
   // AI 제안 병합 — 실패하면(키 없음·응답 이상) 규칙 기반 결과를 그대로 쓴다.
   // AI는 후보 문자열만 내고, 등급과 금지어 처리는 규칙 기반과 같은 코드가 한다.
   try {
+    // 한도를 넘으면 AI는 건너뛰고 규칙 기반 결과를 그대로 쓴다.
+    // 상품명은 AI 없이도 동작하므로, 막는 대신 조용히 규칙 기반으로 내려간다.
+    const quota = await consumeAiQuota();
+    if (!quota.allowed) throw new Error(quota.reason);
+
     const related = input.keywordStat
       ? usableRelated(input.keywordStat.related, ingredient).map((r) => r.term)
       : [];
