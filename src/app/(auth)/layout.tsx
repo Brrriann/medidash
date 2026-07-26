@@ -6,10 +6,10 @@ export default function AuthLayout({
       <div className="mb-8 text-center">
         <div className="mb-2 flex items-center justify-center gap-2">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-lg font-bold text-white">
-            M
+            H
           </span>
           <span className="text-2xl font-bold tracking-tight text-slate-900">
-            MediDash
+            헬스셀러
           </span>
         </div>
         <p className="text-sm text-slate-500">

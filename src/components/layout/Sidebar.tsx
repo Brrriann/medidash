@@ -170,10 +170,10 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">
-              M
+              H
             </span>
             <span className="text-lg font-bold tracking-tight text-slate-900">
-              MediDash
+              헬스셀러
             </span>
           </Link>
           {/* 드로어가 열리면 햄버거가 가려지므로 닫기 버튼을 안쪽에 둔다 */}

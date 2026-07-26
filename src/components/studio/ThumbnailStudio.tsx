@@ -312,7 +312,7 @@ export function ThumbnailStudio({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `medidash-thumbnail-${preset.key}.png`;
+    a.download = `health-seller-thumbnail-${preset.key}.png`;
     a.click();
     URL.revokeObjectURL(url);
 
