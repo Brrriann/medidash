@@ -41,5 +41,11 @@ as $$
 $$;
 
 -- 가입 처리는 service role로만 부른다. 일반 사용자가 직접 호출해 정원을 소진시키지 못하게 막는다.
+--
+-- ⚠️ revoke만 하면 안 된다. 함수 EXECUTE 권한은 기본으로 PUBLIC에 딸려 있어서,
+-- PUBLIC에서 회수하면 service_role도 같이 막힌다(실측: permission denied for function).
+-- 회수한 뒤 service_role에 명시적으로 다시 부여해야 한다.
 revoke all on function medidash.claim_invite_code(text) from public, anon, authenticated;
 revoke all on function medidash.release_invite_code(text) from public, anon, authenticated;
+grant execute on function medidash.claim_invite_code(text) to service_role;
+grant execute on function medidash.release_invite_code(text) to service_role;
