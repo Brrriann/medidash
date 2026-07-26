@@ -10,8 +10,13 @@ export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // mock 모드(Supabase 미설정): 인증 보호 없이 통과 — 개발/시연 전용
-  if (!url || !anon) return NextResponse.next();
+  // Supabase 미설정 — 개발에서만 mock 모드로 통과시킨다.
+  // 프로덕션에서 통과시키면 인증이 통째로 사라지므로 여기서 막는다 (src/lib/supabase/env.ts 참고).
+  if (!url || !anon) {
+    if (process.env.NODE_ENV === "production")
+      return new NextResponse("서버 설정 오류 — 관리자에게 문의하세요.", { status: 503 });
+    return NextResponse.next(); // 개발/시연 전용 mock 모드
+  }
 
   let supabaseResponse = NextResponse.next({ request });
 
