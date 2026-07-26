@@ -7,6 +7,15 @@
   "compatibility_date": "2026-07-01",
   // 서버 액션의 node:crypto 등 Node.js API 사용을 위해 필수
   "compatibility_flags": ["nodejs_compat"],
+  // Smart Placement — Worker를 백엔드(Supabase·OpenAI) 가까이 옮긴다.
+  //
+  // 이걸 켠 이유: 한국 트래픽이 Cloudflare 홍콩(HKG) PoP로 라우팅되는데 **OpenAI가 홍콩을
+  // 차단**한다(403 unsupported_country_region_territory). 사용자는 한국(지원 국가)인데
+  // Worker가 홍콩에서 나가서 막혔다.
+  //
+  // Supabase도 해외에 있어(한국에서 왕복 415ms) Worker를 백엔드 쪽으로 옮기면
+  // DB 지연도 같이 줄어든다 — 손해 보는 트레이드오프가 아니다.
+  "placement": { "mode": "smart" },
   // 커스텀 도메인. Cloudflare에 등록된 zone(health-seller.com)에 Worker를 붙인다.
   // custom_domain은 프록시 DNS 레코드까지 자동으로 만든다 — 대시보드에서 따로 안 해도 된다.
   // ⚠️ zone이 없는 상태로 배포하면 실패한다. 도메인을 Cloudflare에서 떼면 이 줄부터 지울 것.
