@@ -47,16 +47,19 @@ export async function signUpAction(
   // 수강생 코드 검증 → 회원 생성 → 프로필 → 코드 사용 처리 (service role — RLS 우회)
   const admin = createAdminClient();
 
-  const { data: codeRow } = await admin
-    .from("invite_codes")
-    .select("code, max_uses, used, expires_at")
-    .eq("code", code)
-    .maybeSingle();
-
-  const expired =
-    codeRow?.expires_at != null && new Date(codeRow.expires_at) < new Date();
-  if (!codeRow || codeRow.used >= codeRow.max_uses || expired)
+  // 코드를 **먼저** 잡는다(잔여 확인 + 차감이 DB 함수 안에서 한 번에 일어남).
+  // 종전엔 조회 후 애플리케이션에서 +1 해 덮어써서, 동시 가입 시 정원 초과가 뚫렸다.
+  // 계정을 만든 뒤에 차감하면 그 사이에 정원이 넘을 수 있으므로 순서도 뒤집었다.
+  const { data: claimed, error: claimErr } = await admin.rpc("claim_invite_code", {
+    p_code: code,
+  });
+  if (claimErr || claimed !== true)
     return { error: "유효하지 않은 수강생 코드입니다. 운영자에게 문의하세요." };
+
+  /** 이후 단계가 실패하면 잡아둔 코드를 되돌린다 (안 되돌리면 정원이 조용히 줄어든다). */
+  const release = async () => {
+    await admin.rpc("release_invite_code", { p_code: code });
+  };
 
   const { data: created, error: createErr } = await admin.auth.admin.createUser({
     email,
@@ -64,6 +67,7 @@ export async function signUpAction(
     email_confirm: true,
   });
   if (createErr || !created.user) {
+    await release();
     const already = createErr?.message?.includes("already");
     return {
       error: already
@@ -81,13 +85,9 @@ export async function signUpAction(
   if (profileErr) {
     // 프로필 생성 실패 시 고아 계정 방지
     await admin.auth.admin.deleteUser(created.user.id);
+    await release();
     return { error: `가입에 실패했습니다: ${profileErr.message}` };
   }
-
-  await admin
-    .from("invite_codes")
-    .update({ used: codeRow.used + 1 })
-    .eq("code", code);
 
   // 가입 직후 자동 로그인
   const supabase = await createClient();
