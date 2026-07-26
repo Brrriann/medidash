@@ -67,6 +67,8 @@ export function ThumbnailStudio({
   const [note, setNote] = useState<string | null>(null);
   const [persona, setPersona] = useState("40대 남성");
   const [outfit, setOutfit] = useState("깔끔한 정장");
+  /** 상품 이미지 배경제거(Cloudflare Images). 결과가 마음에 안 들 수 있어 셀러가 고르게 둔다. */
+  const [cutout, setCutout] = useState(true);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const boxes = useRef<Record<string, Box>>({});
@@ -253,7 +255,7 @@ export function ThumbnailStudio({
     if (!defaults.productId) return;
     setBusy("product");
     setNote(null);
-    const r = await loadProductImageAction(defaults.productId);
+    const r = await loadProductImageAction(defaults.productId, cutout);
     setBusy(null);
     if (r.ok) addImage(r.url, 0.7, 0.6, 0.62);
     else setNote(`상품 이미지 불러오기 실패 — ${r.error}`);
@@ -429,7 +431,16 @@ export function ThumbnailStudio({
               {busy === "person" ? "생성 중…" : "+ AI 인물"}
             </button>
           </div>
-          <div className="mt-2.5">
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs text-slate-500">
+              <input
+                type="checkbox"
+                checked={cutout}
+                onChange={(e) => setCutout(e.target.checked)}
+                className="h-3.5 w-3.5 accent-brand-600"
+              />
+              배경 제거
+            </label>
             <button
               type="button"
               onClick={addProduct}
@@ -445,8 +456,9 @@ export function ThumbnailStudio({
             </button>
           </div>
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-            인물은 AI가 만든 가상 인물이라 초상권 문제가 없습니다. 상품 이미지는 도매몰 원본을
-            그대로 올립니다 — AI로 편집하면 패키지의 표시사항이 깨져 쓸 수 없습니다.
+            인물은 AI가 만든 가상 인물이라 초상권 문제가 없습니다. 상품 이미지는 배경만 지우고
+            원본 픽셀은 그대로 둡니다 — AI로 다시 그리면 패키지의 표시사항이 깨집니다.
+            배경제거가 안 되면 원본이 그대로 올라갑니다.
           </p>
         </Section>
 
