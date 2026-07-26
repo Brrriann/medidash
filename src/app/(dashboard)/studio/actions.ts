@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
-import { getImageProvider } from "@/lib/ai/image";
 
 /** 액션 공통 결과 — 실패해도 화면은 기존 배경/레이어를 유지하고 안내만 띄운다 */
 export type ImageResult = { ok: true; url: string } | { ok: false; error: string };
@@ -11,37 +10,6 @@ function fail(e: unknown): ImageResult {
   const msg = e instanceof Error ? e.message : String(e);
   console.warn("[studio] 이미지 생성 실패:", msg);
   return { ok: false, error: msg };
-}
-
-/** AI 배경 생성 — 실패 시 호출부가 부위 테마 그라디언트를 유지한다 */
-export async function generateBackgroundAction(
-  ingredient: string,
-  part: string,
-): Promise<ImageResult> {
-  try {
-    const { url } = await getImageProvider().generateThumbnailBackground({
-      ingredient,
-      symptom: part || undefined,
-      width: 1024,
-      height: 1024,
-    });
-    return { ok: true, url };
-  } catch (e) {
-    return fail(e);
-  }
-}
-
-/** AI 인물 컷아웃 생성 (투명 PNG) */
-export async function generatePersonAction(
-  persona: string,
-  outfit: string,
-): Promise<ImageResult> {
-  try {
-    const { url } = await getImageProvider().generatePersonCutout({ persona, outfit });
-    return { ok: true, url };
-  } catch (e) {
-    return fail(e);
-  }
 }
 
 /**

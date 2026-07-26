@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "MediDash — 건강기능식품 셀러 대시보드",
-    template: "%s | MediDash",
+    default: "헬스셀러 (Health Seller) — 건강기능식품 셀러 대시보드",
+    template: "%s | 헬스셀러",
   },
   description:
     "인체 지도에서 증상을 클릭하고 추천 원료 확인, 도매몰 소싱, AI 썸네일·상품명·태그, 마진 계산까지 원스톱.",

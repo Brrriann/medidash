@@ -3,12 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { THUMBNAIL_PRESETS, AI_DISCLAIMER } from "@/lib/constants";
 import { generateBackground, type GradientSpec } from "@/lib/thumbnail/backgrounds";
-import {
-  saveThumbnailWork,
-  generateBackgroundAction,
-  generatePersonAction,
-  loadProductImageAction,
-} from "@/app/(dashboard)/studio/actions";
+import { saveThumbnailWork, loadProductImageAction } from "@/app/(dashboard)/studio/actions";
 
 type PresetKey = (typeof THUMBNAIL_PRESETS)[number]["key"];
 
@@ -84,6 +79,9 @@ export function ThumbnailStudio({
       if (cached) return cached.complete ? cached : null;
       const img = new Image();
       img.onload = () => setImgTick((t) => t + 1);
+      // onerror가 없으면 이미지가 깨져도 화면에 아무 일도 안 일어난다.
+      // 실제로 인물 생성이 깨졌을 때 오류 표시가 없어 원인 파악이 늦어졌다.
+      img.onerror = () => setNote("이미지를 불러오지 못했습니다. 다시 시도해 주세요.");
       img.src = src;
       imgCache.current.set(src, img);
       return null;
@@ -204,24 +202,48 @@ export function ThumbnailStudio({
     setSelectedId(id);
   };
 
+  /**
+   * AI 이미지 생성 — 서버 액션이 아니라 라우트 핸들러를 부른다.
+   * 인물 컷아웃(투명 PNG)은 2MB라 서버 액션 RSC 페이로드로 넘기면 Workers에서 깨졌다.
+   * 라우트에서 원본 바이트를 받아 blob URL로 쓰면 같은 출처라 캔버스 오염도 없다.
+   */
+  const requestImage = async (body: Record<string, string>): Promise<string | null> => {
+    const res = await fetch("/api/ai/image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const msg = await res
+        .json()
+        .then((j: { error?: string }) => j.error)
+        .catch(() => `HTTP ${res.status}`);
+      setNote(`이미지 생성 실패 — ${msg}`);
+      return null;
+    }
+    return URL.createObjectURL(await res.blob());
+  };
+
   /** AI 배경 생성. 실패하면 기존 그라디언트를 그대로 두고 사유만 알린다. */
   const genBackground = async () => {
     setBusy("bg");
     setNote(null);
-    const r = await generateBackgroundAction(defaults.ingredient, defaults.part);
+    const url = await requestImage({
+      kind: "background",
+      ingredient: defaults.ingredient,
+      part: defaults.part,
+    });
     setBusy(null);
-    if (r.ok) setBgImage(r.url);
-    else setNote(`배경 생성 실패 — 테마 배경을 유지합니다. (${r.error})`);
+    if (url) setBgImage(url);
   };
 
   const genPerson = async () => {
     setBusy("person");
     setNote(null);
-    const r = await generatePersonAction(persona, outfit);
+    const url = await requestImage({ kind: "person", persona, outfit });
     setBusy(null);
     // 인물은 좌측에 크게 — 레퍼런스 구도(인물 좌측, 제품 우측)를 기본값으로
-    if (r.ok) addImage(r.url, 0.26, 0.6, 0.52);
-    else setNote(`인물 생성 실패 — ${r.error}`);
+    if (url) addImage(url, 0.26, 0.6, 0.52);
   };
 
   const addProduct = async () => {
@@ -230,7 +252,7 @@ export function ThumbnailStudio({
     setNote(null);
     const r = await loadProductImageAction(defaults.productId);
     setBusy(null);
-    if (r.ok) addImage(r.url, 0.72, 0.62, 0.4);
+    if (r.ok) addImage(r.url, 0.7, 0.6, 0.62);
     else setNote(`상품 이미지 불러오기 실패 — ${r.error}`);
   };
 
@@ -252,6 +274,30 @@ export function ThumbnailStudio({
     setSelectedId(null);
   };
 
+  /**
+   * 레이어 순서. 그리는 순서가 곧 앞뒤라 배열 순서를 바꾸면 된다(뒤 원소가 위에 그려진다).
+   * 인물을 상품 뒤로 보내거나, 문구를 인물 위로 올리는 데 쓴다.
+   */
+  const move = (id: string, to: "front" | "up" | "down" | "back") => {
+    setBlocks((bs) => {
+      const i = bs.findIndex((b) => b.id === id);
+      if (i < 0) return bs;
+      const next = [...bs];
+      const [b] = next.splice(i, 1);
+      const j =
+        to === "front" ? next.length
+        : to === "back" ? 0
+        : to === "up" ? Math.min(i + 1, next.length)
+        : Math.max(i - 1, 0);
+      next.splice(j, 0, b);
+      return next;
+    });
+  };
+
+  /** 선택한 이미지를 캔버스에 꽉 차게 (가로 기준으로 키우고 가운데 정렬) */
+  const fitToCanvas = (id: string) =>
+    setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, x: 0.5, y: 0.5, size: 1 } : b)));
+
   // ── 다운로드 ──
   const preset = THUMBNAIL_PRESETS.find((p) => p.key === presetKey)!;
   const download = async () => {
@@ -266,7 +312,7 @@ export function ThumbnailStudio({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `medidash-thumbnail-${preset.key}.png`;
+    a.download = `health-seller-thumbnail-${preset.key}.png`;
     a.click();
     URL.revokeObjectURL(url);
 
@@ -443,19 +489,54 @@ export function ThumbnailStudio({
                 </>
               )}
               {(selected.type === "badge" || selected.type === "logo") && (
-                <label className="flex items-center gap-2 text-xs text-slate-500">
-                  크기
-                  <input
-                    type="range"
-                    min={0.1}
-                    max={0.5}
-                    step={0.01}
-                    value={selected.size}
-                    onChange={(e) => patch(selected.id, { size: Number(e.target.value) })}
-                    className="flex-1"
-                  />
-                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-xs text-slate-500">
+                    크기
+                    <input
+                      type="range"
+                      min={0.1}
+                      /* 상품·인물 이미지는 캔버스를 넘겨 잘라 쓰기도 하므로 1을 넘게 둔다 */
+                      max={selected.type === "logo" ? 1.6 : 0.5}
+                      step={0.01}
+                      value={selected.size}
+                      onChange={(e) => patch(selected.id, { size: Number(e.target.value) })}
+                      className="flex-1"
+                    />
+                    <span className="w-10 shrink-0 text-right tabular-nums text-slate-400">
+                      {Math.round(selected.size * 100)}%
+                    </span>
+                  </label>
+                  {selected.type === "logo" && (
+                    <button type="button" onClick={() => fitToCanvas(selected.id)} className={btn}>
+                      ⤢ 꽉 채우기
+                    </button>
+                  )}
+                </div>
               )}
+
+              {/* 레이어 순서 — 인물을 상품 뒤로, 문구를 맨 위로 같은 조정 */}
+              <div>
+                <span className="mb-1 block text-xs text-slate-500">
+                  레이어 순서{" "}
+                  <span className="text-slate-400">
+                    ({blocks.findIndex((b) => b.id === selected.id) + 1}/{blocks.length}, 클수록 위)
+                  </span>
+                </span>
+                <div className="flex gap-1.5">
+                  <button type="button" onClick={() => move(selected.id, "front")} className={btn}>
+                    맨 위
+                  </button>
+                  <button type="button" onClick={() => move(selected.id, "up")} className={btn}>
+                    ↑ 위로
+                  </button>
+                  <button type="button" onClick={() => move(selected.id, "down")} className={btn}>
+                    ↓ 아래로
+                  </button>
+                  <button type="button" onClick={() => move(selected.id, "back")} className={btn}>
+                    맨 아래
+                  </button>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => remove(selected.id)}
