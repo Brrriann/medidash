@@ -251,14 +251,40 @@ export function ThumbnailStudio({
     if (url) addImage(url, 0.26, 0.6, 0.52);
   };
 
+  /**
+   * 소싱 상품 이미지를 캔버스에 올린다.
+   *
+   * **변환은 브라우저가 직접 부른다.** 배경제거(/cdn-cgi/image/)는 Cloudflare 엣지가
+   * 처리하는데, Worker가 자기 도메인의 그 경로를 fetch하면 엣지를 안 타고 Worker로
+   * 되돌아온다(그래서 서버에서 부르면 조용히 원본이 나왔다).
+   * 우리 도메인이라 같은 출처여서 캔버스 오염(taint)도 없다.
+   */
   const addProduct = async () => {
     if (!defaults.productId) return;
     setBusy("product");
     setNote(null);
-    const r = await loadProductImageAction(defaults.productId, cutout);
+    const r = await loadProductImageAction(defaults.productId);
+    if (!r.ok) {
+      setBusy(null);
+      setNote(`상품 이미지 불러오기 실패 — ${r.error}`);
+      return;
+    }
+    // 배경제거를 켜도 원본으로도 한 번 더 시도한다 — 누끼가 안 돼도 상품은 나와야 한다.
+    const opts = cutout ? ["segment=foreground,format=png", "format=png"] : ["format=png"];
+    for (const opt of opts) {
+      try {
+        const res = await fetch(`/cdn-cgi/image/${opt}/${r.url}`);
+        if (!res.ok) continue;
+        addImage(URL.createObjectURL(await res.blob()), 0.7, 0.6, 0.62);
+        setBusy(null);
+        if (cutout && opt === "format=png") setNote("배경제거가 안 돼 원본을 올렸습니다.");
+        return;
+      } catch {
+        /* 다음 방식으로 */
+      }
+    }
     setBusy(null);
-    if (r.ok) addImage(r.url, 0.7, 0.6, 0.62);
-    else setNote(`상품 이미지 불러오기 실패 — ${r.error}`);
+    setNote("상품 이미지를 불러오지 못했습니다.");
   };
 
   const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
