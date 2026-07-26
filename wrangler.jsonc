@@ -25,7 +25,9 @@
   "durable_objects": {
     "bindings": [{ "name": "OPENAI_PROXY", "class_name": "OpenAIProxy" }]
   },
-  "migrations": [{ "tag": "v1", "new_classes": ["OpenAIProxy"] }],
+  // new_sqlite_classes로 선언한다. Workers 무료 플랜은 KV 방식 DO(new_classes)를 지원하지
+  // 않아 배포가 실패한다. 이 DO는 저장소를 안 쓰지만 방식 선언은 필요하다.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["OpenAIProxy"] }],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
