@@ -15,17 +15,26 @@
 
 ### 2. 스키마 만들기 (마이그레이션) + 스키마 노출
 좌측 **SQL Editor** → **New query** → 아래 5개 파일을 **번호 순서대로** 하나씩 전체 복사·붙여넣기 → **Run**
-(각 파일마다 "Success"를 확인하고 다음으로 넘어갑니다. 재실행해도 안전합니다.)
+(각 파일마다 "Success"를 확인하고 다음으로 넘어갑니다.)
 
-| 순서 | 파일 | 들어가는 것 |
-|---|---|---|
-| 1 | [`0001_init.sql`](../supabase/migrations/0001_init.sql) | `medidash` 스키마·테이블·RLS·권한 |
-| 2 | [`0002_keyword_stats.sql`](../supabase/migrations/0002_keyword_stats.sql) | 키워드 통계 테이블 |
-| 3 | [`0003_broadcast_upcoming.sql`](../supabase/migrations/0003_broadcast_upcoming.sql) | 방송 편성 테이블 |
-| 4 | [`0004_claim_invite_code.sql`](../supabase/migrations/0004_claim_invite_code.sql) | **수강생 코드 가입 RPC — 빠뜨리면 회원가입이 전부 실패합니다** |
-| 5 | [`0005_ai_daily_quota.sql`](../supabase/migrations/0005_ai_daily_quota.sql) | **AI 일일 한도 RPC — 빠뜨리면 AI 기능이 막힙니다** |
+| 순서 | 파일 | 들어가는 것 | 재실행 |
+|---|---|---|---|
+| 1 | [`0001_init.sql`](../supabase/migrations/0001_init.sql) | `medidash` 스키마·테이블·RLS·권한 | 최초 1회만 |
+| 2 | [`0002_keyword_stats.sql`](../supabase/migrations/0002_keyword_stats.sql) | 키워드 통계 테이블 | 최초 1회만 |
+| 3 | [`0003_broadcast_upcoming.sql`](../supabase/migrations/0003_broadcast_upcoming.sql) | 방송 편성 컬럼 | 안전 |
+| 4 | [`0004_claim_invite_code.sql`](../supabase/migrations/0004_claim_invite_code.sql) | **수강생 코드 가입 RPC — 빠뜨리면 회원가입이 전부 실패합니다** | 안전 |
+| 5 | [`0005_ai_daily_quota.sql`](../supabase/migrations/0005_ai_daily_quota.sql) | **AI 일일 한도 RPC — 빠뜨리면 AI 생성이 막힙니다** | 안전 |
 
 > ⚠️ 0001만 실행하면 앱은 뜨지만 **가입·AI 생성이 동작하지 않습니다.** 5개 모두 실행하세요.
+> ("최초 1회만" 표시된 1·2는 이미 실행된 DB에 다시 돌리면 `already exists` 오류가 납니다 — 정상이며, 이미 적용됐다는 뜻입니다.)
+
+**이미 운영 중인 DB라면** — 무엇이 빠졌는지부터 확인하세요. SQL Editor에 붙여넣고 Run:
+```sql
+select
+  to_regprocedure('medidash.claim_invite_code(text)') is not null as "0004_적용됨",
+  to_regprocedure('medidash.consume_ai_quota(uuid,int)') is not null as "0005_적용됨";
+```
+`false`가 나온 쪽의 파일(4·5번)만 실행하면 됩니다. 둘 다 재실행 안전합니다.
 
 **중요 — 스키마 노출**: **Project Settings → API → Data API → Exposed schemas** 에서
 `medidash` 를 추가(체크)하고 저장하세요. (기본은 `public`만 노출 → 이걸 안 하면 앱이 데이터에 접근 못 합니다.)
