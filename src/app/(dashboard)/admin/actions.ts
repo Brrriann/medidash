@@ -43,7 +43,12 @@ export async function createInviteCode(
   const memo = String(formData.get("memo") ?? "").trim() || null;
   const maxUses = Math.max(1, Number(formData.get("maxUses")) || 1);
   const expiresRaw = String(formData.get("expiresAt") ?? "").trim();
-  const expiresAt = expiresRaw ? new Date(expiresRaw).toISOString() : null;
+  // 잘못된 날짜 문자열이면 toISOString()이 RangeError를 던져 액션 전체가 죽는다. 브라우저
+  // date 입력을 거치지 않는 요청(직접 POST)도 있으므로 서버에서 확인한다.
+  const expires = expiresRaw ? new Date(expiresRaw) : null;
+  if (expires && Number.isNaN(expires.getTime()))
+    return { ok: false, error: "만료일 형식이 올바르지 않습니다." };
+  const expiresAt = expires?.toISOString() ?? null;
 
   const code = `MEDI-${randomBytes(2).toString("hex").toUpperCase()}-${randomBytes(2)
     .toString("hex")

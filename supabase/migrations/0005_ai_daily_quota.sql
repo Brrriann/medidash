@@ -16,6 +16,10 @@ create table if not exists medidash.ai_usage (
 alter table medidash.ai_usage enable row level security;
 
 -- 본인 사용량만 조회 (남은 횟수 표시용). 쓰기는 아래 함수(service role)로만.
+-- drop 먼저: create policy는 if not exists를 지원하지 않아, 이게 없으면 재실행이
+-- "42710 policy already exists"로 죽는다. 이 파일은 운영 중인 DB에 뒤늦게 적용하는
+-- 경우가 있어(0001만 실행된 배포) 재실행 안전성이 필요하다.
+drop policy if exists "read own ai usage" on medidash.ai_usage;
 create policy "read own ai usage" on medidash.ai_usage
   for select to authenticated using (user_id = auth.uid());
 

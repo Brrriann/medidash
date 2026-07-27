@@ -54,10 +54,17 @@ export async function consumeAiQuota(): Promise<QuotaResult> {
     p_limit: AI_DAILY_LIMIT,
   });
   if (error) {
-    // 한도 확인이 안 되면 막지 않는다 — 과금 방어보다 서비스가 도는 게 우선이고,
-    // 조회 실패로 전원이 못 쓰게 되는 쪽이 더 나쁘다. 대신 로그는 남긴다.
-    console.warn("[quota] 확인 실패, 통과시킴:", error.message);
-    return { allowed: true, used: 0, limit: AI_DAILY_LIMIT };
+    // 한도 확인이 안 되면 **막는다**(fail-closed).
+    // 종전엔 통과시켰는데, 이 RPC가 없는 상태(0005 마이그레이션 미실행)가 곧 "한도 영구 무효"라
+    // 비용 방어선이 있으나 마나였다. 실패가 상시화되는 유일한 원인이 '설정 누락'인 이상,
+    // 통과시키는 쪽은 방어가 아니라 방어가 없는 것과 같다.
+    console.error("[quota] 확인 실패, 차단:", error.message);
+    return {
+      allowed: false,
+      used: 0,
+      limit: AI_DAILY_LIMIT,
+      reason: "AI 사용량을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    };
   }
   if (data === true) return { allowed: true, used: await usedToday(user.id), limit: AI_DAILY_LIMIT };
   return {
