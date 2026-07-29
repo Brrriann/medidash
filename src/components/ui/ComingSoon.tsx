@@ -14,7 +14,7 @@ export function ComingSoon({
 }) {
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="card p-8">
         <span className="rounded-full bg-accent-100 px-2.5 py-1 text-[11px] font-bold text-accent-700">
           {week} 구현 예정
         </span>

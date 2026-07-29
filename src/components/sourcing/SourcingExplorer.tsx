@@ -181,7 +181,7 @@ function ProductCard({
   });
 
   return (
-    <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300">
+    <article className="flex flex-col card p-4 transition hover:border-brand-300">
       <ProductThumb src={product.imageUrl} alt={product.name} />
       <div className="mb-2 flex items-start justify-between gap-2">
         {/* 도매몰·방송·수요 3종이 겹치므로 좁은 카드에선 줄바꿈시킨다 */}

@@ -43,7 +43,7 @@ export function DetailPanel({
   return (
     <section
       aria-label={`${subcategory.name} 상세 패널`}
-      className="rounded-2xl border border-slate-200 bg-white shadow-sm"
+      className="card"
     >
       {/* 헤더 */}
       <header className="flex items-start justify-between gap-2 border-b border-slate-100 px-5 pb-3 pt-4">

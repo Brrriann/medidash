@@ -364,7 +364,7 @@ export function ThumbnailStudio({
   return (
     <div className="grid gap-5 lg:grid-cols-[auto_1fr]">
       {/* 미리보기 캔버스 */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="card p-4">
         <canvas
           ref={canvasRef}
           width={DISPLAY}
@@ -625,7 +625,7 @@ export function ThumbnailStudio({
         )}
 
         {/* 다운로드 */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="card p-4">
           <button type="button" onClick={download} className="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700">
             {preset.label} PNG 다운로드 ({preset.width}×{preset.height})
           </button>
@@ -726,7 +726,7 @@ function pill(active: boolean) {
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="card p-4">
       <h2 className="mb-2.5 text-sm font-bold text-slate-800">{title}</h2>
       {children}
     </section>

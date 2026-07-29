@@ -16,7 +16,7 @@ export default function AuthLayout({
           건강기능식품 셀러를 위한 원스톱 판매 보조 대시보드
         </p>
       </div>
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-sm card p-8">
         {children}
       </div>
     </div>

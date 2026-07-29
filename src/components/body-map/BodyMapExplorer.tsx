@@ -45,7 +45,7 @@ export function BodyMapExplorer({
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(300px,5fr)_7fr]">
       {/* ── 좌: 인체 지도 ── */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="card p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">인체 지도</h2>
           <span className="text-[11px] text-slate-400">
@@ -106,7 +106,7 @@ export function BodyMapExplorer({
         )}
 
         {category && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="card p-5">
             <div className="mb-3 flex items-baseline justify-between">
               <h2 className="text-sm font-bold text-slate-800">
                 {category.name}{" "}

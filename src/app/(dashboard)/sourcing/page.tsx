@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getWholesaleProducts, getBroadcastStats, getKeywordStats } from "@/lib/data";
 import { SourcingExplorer } from "@/components/sourcing/SourcingExplorer";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { StatTiles } from "@/components/ui/StatTiles";
 
 export const metadata: Metadata = { title: "상품 소싱" };
 
@@ -21,27 +23,43 @@ export default async function SourcingPage({
 
   return (
     <div className="mx-auto max-w-6xl space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">상품 소싱</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            건온연B2B · 건강산 · 유픽B2B 상품 캐시를 한 번에 검색합니다.
-            실시간 조회가 아닌 <strong>월 1회 배치 캐시</strong> 기준입니다.
-          </p>
-        </div>
-        <div className="text-right text-[11px] leading-relaxed text-slate-400">
-          <p>
-            캐시 갱신일:{" "}
-            {crawledAt
-              ? new Date(crawledAt).toLocaleDateString("ko-KR")
-              : "갱신 이력 없음"}
-          </p>
-          {isSample && (
-            <p className="font-semibold text-amber-600">
-              샘플 데이터 — W2 크롤러 연결 시 실데이터로 대체
-            </p>
-          )}
-        </div>
+      <PageHeader
+        overline="Wholesale Sourcing"
+        title="상품 소싱"
+        description={
+          <>
+            건온연B2B · 건강산 · 유픽B2B 상품 캐시를 한 번에 검색합니다. 실시간
+            조회가 아닌 <strong>월 1회 배치 캐시</strong> 기준입니다.
+          </>
+        }
+        aside={
+          isSample ? (
+            <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
+              샘플 데이터 — 크롤러 연결 시 실데이터로 대체
+            </span>
+          ) : undefined
+        }
+      />
+
+      <div className="card p-5">
+        <StatTiles
+          items={[
+            { label: "상품 수", value: products.length.toLocaleString("ko-KR") },
+            { label: "도매몰", value: "3사", hint: "건온연 · 건강산 · 유픽" },
+            {
+              label: "캐시 갱신일",
+              value: crawledAt
+                ? new Date(crawledAt).toLocaleDateString("ko-KR")
+                : "없음",
+              hint: "월 1회 배치",
+            },
+            {
+              label: "키워드 지표",
+              value: Object.keys(keywords).length.toLocaleString("ko-KR"),
+              hint: "네이버 검색량 수집분",
+            },
+          ]}
+        />
       </div>
 
       <SourcingExplorer

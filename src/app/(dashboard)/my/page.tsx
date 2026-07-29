@@ -4,6 +4,7 @@ import { isMockMode } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { getMarginHistory, getRecentWorks } from "@/lib/data";
 import { signOutAction } from "@/app/(auth)/actions";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = { title: "내 계정" };
 
@@ -42,17 +43,16 @@ export default async function MyPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">내 계정</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          내 작업 이력과 계정을 관리합니다.
-        </p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-5">
+      <PageHeader
+        overline="My Page"
+        title="내 계정"
+        description="내 작업 이력과 계정을 관리합니다."
+      />
 
       <div className="grid gap-5 lg:grid-cols-[2fr_3fr]">
         {/* 계정 */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">계정</h2>
           {mock ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800">
@@ -94,7 +94,7 @@ export default async function MyPage() {
         </section>
 
         {/* 작업 이력 */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">작업 이력</h2>
           {works.length === 0 ? (
             <div className="flex h-32 flex-col items-center justify-center text-center">
@@ -121,7 +121,7 @@ export default async function MyPage() {
       </div>
 
       {/* 마진 계산 이력 */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="card p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">마진 계산 이력</h2>
           <Link
