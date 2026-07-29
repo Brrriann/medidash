@@ -1,9 +1,14 @@
 /**
- * 홈쇼핑모아 방송 지표 크롤러 워커 (docs/SPEC.md §6.3) — 월 1회 운영 전제.
+ * 홈쇼핑모아 방송 지표 크롤러 워커 (docs/SPEC.md §6.3) — 하루 1회 운영.
  *
  * 실행:
  *   npm run crawl:broadcast              # 실크롤 (Supabase 키 필요)
  *   npm run crawl:broadcast -- --dry-run # 파이프라인 검증(픽스처)
+ *
+ * 자동 실행은 .github/workflows/crawl-broadcast.yml (매일 05:00 KST).
+ * **방송 예정(upcoming)이 핵심 산출물이라 월 1회로는 의미가 없다** — 오늘 잡힌 편성을
+ * 다음 달에 알려주면 이미 지난 정보다. 원료 87개 × 2~5초 딜레이 ≈ 5분이라 매일 돌려도
+ * 상대 사이트에 부담이 되지 않는다.
  *
  * 원료 사전 전체에 대해 홈쇼핑모아 검색 → 방송 지표를 broadcast_stats에 upsert.
  *
