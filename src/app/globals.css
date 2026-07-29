@@ -31,3 +31,17 @@
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
+
+/* 카드 표면. 화면마다 rounded-2xl border … shadow-sm를 반복하지 않으려고 한 곳에 둔다. */
+@utility card {
+  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+
+/* 본문에 깔리는 24px 그리드. 카드가 떠 보이게 하는 용도라 거의 안 보일 만큼 흐리게 한다. */
+@utility grid-surface {
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(to right, rgb(15 23 42 / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(15 23 42 / 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}

@@ -75,7 +75,7 @@ export function BroadcastTrend({
   if (!hot.length && !upcoming.length) return null;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="card p-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-800">📺 홈쇼핑 방송 트렌드</h2>
         <span className="text-[11px] text-slate-400">홈쇼핑모아 · 월 1회 갱신</span>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { isMockMode } from "@/lib/supabase/env";
 import { ThumbnailStudio } from "@/components/studio/ThumbnailStudio";
 import { getAiQuota } from "@/lib/ai/quota";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = { title: "썸네일" };
 
@@ -17,14 +18,12 @@ export default async function StudioPage({
   const quota = await getAiQuota();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">썸네일</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          AI 배경·인물과 소싱한 상품 이미지를 얹고, 텍스트·건강기능식품 배지를 드래그로
-          배치해 플랫폼 프리셋 크기의 PNG로 내려받습니다.
-        </p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-5">
+      <PageHeader
+        overline="Thumbnail Studio"
+        title="썸네일"
+        description="AI 배경·인물과 소싱한 상품 이미지를 얹고, 텍스트·건강기능식품 배지를 드래그로 배치해 플랫폼 프리셋 크기의 PNG로 내려받습니다."
+      />
 
       <ThumbnailStudio
         defaults={{

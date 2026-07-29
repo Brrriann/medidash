@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 interface NavItem {
   href: string;
   label: string;
+  /** 메뉴 아래 한 줄 설명. 이름만으로는 뭘 하는 화면인지 안 잡혀서 항상 붙인다. */
+  desc: string;
   icon: React.ReactNode;
 }
 interface NavGroup {
@@ -28,11 +30,28 @@ const iconProps = {
 /** 셀러의 작업 순서(찾기 → 만들기 → 정산)를 메뉴 구조로 그대로 드러낸다. */
 const GROUPS: NavGroup[] = [
   {
-    title: "찾기",
+    title: "시작",
     items: [
       {
         href: "/",
+        label: "홈",
+        desc: "오늘 할 작업 고르기",
+        icon: (
+          <svg {...iconProps} aria-hidden>
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5.5 9.5V20h13V9.5" />
+          </svg>
+        ),
+      },
+    ],
+  },
+  {
+    title: "찾기",
+    items: [
+      {
+        href: "/map",
         label: "증상 지도",
+        desc: "인체 지도에서 원료 찾기",
         icon: (
           <svg {...iconProps} aria-hidden>
             <circle cx="12" cy="5" r="2.5" />
@@ -43,6 +62,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/sourcing",
         label: "상품 소싱",
+        desc: "도매 3사 상품 캐시 검색",
         icon: (
           <svg {...iconProps} aria-hidden>
             <circle cx="11" cy="11" r="7" />
@@ -58,6 +78,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/studio",
         label: "썸네일",
+        desc: "AI 배경·인물로 대표 이미지",
         icon: (
           <svg {...iconProps} aria-hidden>
             <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -69,6 +90,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/titles",
         label: "상품명·태그",
+        desc: "노출도 등급 상품명과 태그",
         icon: (
           <svg {...iconProps} aria-hidden>
             <path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-9 9-9-9Z" />
@@ -84,6 +106,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/margin",
         label: "마진 계산",
+        desc: "수수료·세금 뺀 실제 마진",
         icon: (
           <svg {...iconProps} aria-hidden>
             <rect x="5" y="3" width="14" height="18" rx="2" />
@@ -98,6 +121,7 @@ const GROUPS: NavGroup[] = [
 const MY_ITEM: NavItem = {
   href: "/my",
   label: "내 계정",
+  desc: "작업 이력과 계정 정보",
   icon: (
     <svg {...iconProps} aria-hidden>
       <circle cx="12" cy="8" r="4" />
@@ -109,6 +133,7 @@ const MY_ITEM: NavItem = {
 const ADMIN_ITEM: NavItem = {
   href: "/admin",
   label: "관리자",
+  desc: "초대코드와 데이터 갱신",
   icon: (
     <svg {...iconProps} aria-hidden>
       <path d="M12 3 4.5 6v5c0 4.5 3 8.5 7.5 10 4.5-1.5 7.5-5.5 7.5-10V6L12 3Z" />
@@ -163,17 +188,22 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-56 shrink-0 flex-col border-r border-slate-200 bg-white transition-transform md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-transform md:static md:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-sm font-bold text-white">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-sm font-bold text-white">
               H
             </span>
-            <span className="text-lg font-bold tracking-tight text-slate-900">
-              헬스셀러
+            <span className="min-w-0">
+              <span className="block text-[9px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+                Health Seller
+              </span>
+              <span className="block text-lg font-bold tracking-tight text-slate-900">
+                헬스셀러
+              </span>
             </span>
           </Link>
           {/* 드로어가 열리면 햄버거가 가려지므로 닫기 버튼을 안쪽에 둔다 */}
@@ -192,7 +222,7 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
         <nav className="flex-1 space-y-4 px-3">
           {groups.map((group) => (
             <div key={group.title}>
-              <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400">
+              <p className="px-3 pb-1.5 text-[10px] font-bold tracking-[0.14em] text-slate-400">
                 {group.title}
               </p>
               <div className="space-y-0.5">
@@ -206,14 +236,32 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
                       key={item.href}
                       href={item.href}
                       aria-current={active ? "page" : undefined}
-                      className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                      className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition ${
                         active
-                          ? "bg-brand-50 text-brand-700"
+                          ? "bg-slate-900 text-white shadow-sm"
                           : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                       }`}
                     >
-                      {item.icon}
-                      <span className="flex-1">{item.label}</span>
+                      <span className={active ? "text-white" : "text-slate-400"}>
+                        {item.icon}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold">
+                          {item.label}
+                        </span>
+                        <span
+                          className={`block truncate text-[11px] ${
+                            active ? "text-white/60" : "text-slate-400"
+                          }`}
+                        >
+                          {item.desc}
+                        </span>
+                      </span>
+                      {active && (
+                        <svg {...iconProps} width={14} height={14} aria-hidden>
+                          <path d="m9 6 6 6-6 6" />
+                        </svg>
+                      )}
                     </Link>
                   );
                 })}

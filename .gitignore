@@ -48,3 +48,6 @@ workers/.inspect/
 
 # wrangler 로컬 시크릿
 .dev.vars
+
+# 작업 트리에 남은 중첩 클론 — 저장소에 들어가면 안 된다
+/medidash/

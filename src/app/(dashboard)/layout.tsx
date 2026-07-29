@@ -67,7 +67,7 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-6 py-6">{children}</main>
+        <main className="grid-surface min-w-0 flex-1 px-6 py-6">{children}</main>
       </div>
     </div>
   );

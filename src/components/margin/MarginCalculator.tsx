@@ -64,7 +64,7 @@ export function MarginCalculator({
   return (
     <div className="grid gap-5 lg:grid-cols-[5fr_4fr]">
       {/* ── 입력 ── */}
-      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="space-y-4 card p-6">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">입력</h2>
           {/* 플랫폼 */}

@@ -42,7 +42,7 @@ export function TitleGenerator({
   return (
     <div className="grid gap-5 lg:grid-cols-[5fr_7fr]">
       {/* 입력 */}
-      <form action={action} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form action={action} className="space-y-4 card p-6">
         <h2 className="text-sm font-bold text-slate-800">입력</h2>
 
         <Field label="대표 원료" required>
@@ -141,7 +141,7 @@ export function TitleGenerator({
             <MarketSignal stat={r.keywordStat} usable={r.usableRelated ?? []} />
 
             {/* 상품명 */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-800">상품명 {r.titles.length}안</h2>
                 <span className="text-[11px] text-slate-400">노출도 상/중/하</span>
@@ -165,7 +165,7 @@ export function TitleGenerator({
             </section>
 
             {/* 태그 */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-800">태그 {r.tags.length}개</h2>
                 <button
@@ -217,7 +217,7 @@ function MarketSignal({
   if (!stat) return null;
   const demand = stat.demandIndex;
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="card p-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-800">시장 신호</h2>
         <span className="text-[11px] text-slate-400">네이버 검색·쇼핑 실측 · 월 1회 갱신</span>

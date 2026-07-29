@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminData, getWholesaleProducts } from "@/lib/data";
 import { InviteCodeForm } from "@/components/admin/InviteCodeForm";
 import { deleteInviteCode } from "./actions";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = { title: "관리자" };
 
@@ -32,22 +33,23 @@ export default async function AdminPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">관리자</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          수강생 코드 발급·회원 관리·데이터 갱신을 수행합니다.
-          {mock && (
-            <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+    <div className="mx-auto max-w-6xl space-y-5">
+      <PageHeader
+        overline="Admin"
+        title="관리자"
+        description="수강생 코드 발급·회원 관리·데이터 갱신을 수행합니다."
+        aside={
+          mock ? (
+            <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
               Mock 모드 — 샘플 데이터 표시 중
             </span>
-          )}
-        </p>
-      </div>
+          ) : undefined
+        }
+      />
 
       <div className="grid gap-5 lg:grid-cols-[2fr_3fr]">
         {/* 코드 발급 */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">
             수강생 코드 발급
           </h2>
@@ -55,7 +57,7 @@ export default async function AdminPage() {
         </section>
 
         {/* 코드 목록 */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">
             발급된 코드 <span className="font-normal text-slate-400">({codes.length})</span>
           </h2>
@@ -134,7 +136,7 @@ export default async function AdminPage() {
       </div>
 
       {/* 회원 목록 */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="card p-5">
         <h2 className="mb-3 text-sm font-bold text-slate-800">
           회원 목록 <span className="font-normal text-slate-400">({members.length})</span>
         </h2>
@@ -181,7 +183,7 @@ export default async function AdminPage() {
       </section>
 
       {/* 데이터 갱신 */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="card p-5">
         <h2 className="mb-3 text-sm font-bold text-slate-800">데이터 갱신 (월 1회 배치)</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-200 p-4">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { isMockMode } from "@/lib/supabase/env";
 import { getMarginHistory } from "@/lib/data";
 import { MarginCalculator } from "@/components/margin/MarginCalculator";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = { title: "마진 계산" };
 
@@ -18,19 +19,19 @@ export default async function MarginPage({
   const history = await getMarginHistory();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">마진 계산</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          고객 제공 엑셀 수식(플랫폼별 수수료·부가세·종합소득세)을 그대로 적용해
-          판매마진과 세금 제외 최종마진을 계산합니다.
-          {initialCost && (
-            <span className="ml-1 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">
+    <div className="mx-auto max-w-5xl space-y-5">
+      <PageHeader
+        overline="Margin Calculator"
+        title="마진 계산"
+        description="고객 제공 엑셀 수식(플랫폼별 수수료·부가세·종합소득세)을 그대로 적용해 판매마진과 세금 제외 최종마진을 계산합니다."
+        aside={
+          initialCost ? (
+            <span className="inline-flex rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold text-brand-700">
               도매몰 카드에서 원가 {won(initialCost)} 자동 입력됨
             </span>
-          )}
-        </p>
-      </div>
+          ) : undefined
+        }
+      />
 
       <MarginCalculator
         initialCost={initialCost}
@@ -38,7 +39,7 @@ export default async function MarginPage({
         mock={isMockMode()}
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="card p-6">
         <h2 className="mb-3 text-sm font-bold text-slate-800">계산 히스토리</h2>
         {history.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400">
