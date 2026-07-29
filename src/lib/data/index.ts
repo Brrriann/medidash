@@ -260,11 +260,67 @@ function toBroadcastItems(raw: unknown): BroadcastItem[] {
 }
 
 /**
+ * mock 모드용 방송 지표 샘플.
+ *
+ * 종전엔 빈 맵이라 mock에서 방송 트렌드 섹션이 통째로 안 보였다 — 화면 구조를
+ * 확인하려고 mock을 두는 건데 정작 이 섹션만 확인이 안 됐다.
+ *
+ * 리드타임이 핵심이라 일시는 **실행 시점 기준 상대값**으로 만든다. 고정 날짜를 박으면
+ * 하루만 지나도 전부 과거가 돼서 다시 빈 화면이 된다. 남은 일수는 실측 분포를 따라
+ * 오늘에 몰리고 열흘을 넘지 않게 잡았다.
+ */
+function mockBroadcastStats(): Record<string, BroadcastStat> {
+  const now = Date.now();
+  const at = (days: number) => new Date(now + days * 86_400_000).toISOString();
+  const mk = (
+    upcoming: [string, string, number][],
+    recent: string[],
+  ): BroadcastStat => ({
+    count: recent.length,
+    titles: recent,
+    recent: recent.map((name) => ({ name, channel: "cjmall", at: at(-2) })),
+    upcoming: upcoming.map(([name, channel, d]) => ({ name, channel, at: at(d) })),
+  });
+
+  return {
+    멜라토닌: mk(
+      [
+        ["[12+6개월] 식물성 멜라토닌 함유 멜라바인 18박스", "gsshop", 9.4],
+        ["[6개월] 식물성 멜라토닌 멜라바인 6박스", "hmall", 6.1],
+      ],
+      ["수면 멜라토닌 90정", "멜라토닌 구미 30입"],
+    ),
+    "빌베리 추출물": mk(
+      [["야생 빌베리 퓨레 100% 1박스(10포)", "lotteimall", 8.8]],
+      ["빌베리 루테인 6개월분"],
+    ),
+    히알루론산: mk(
+      [
+        ["히알루론산 캡슐 앰플 시즌4", "nsmall", 5.2],
+        ["먹는 히알루론산 콜라겐 3박스", "cjmall", 1.4],
+      ],
+      ["히알루론산 1000mg 90캡슐"],
+    ),
+    "밀크씨슬 추출물": mk(
+      [
+        ["올인원 멀티비타민&루테인&밀크씨슬 5개월분", "hnsmall", 3.3],
+        ["밀크씨슬 간건강 2개월분", "kshop", 0.3],
+      ],
+      ["밀크씨슬 실리마린 6개월분", "간건강 밀크씨슬 90정"],
+    ),
+    유산균사균체: mk(
+      [["사균체 유산균 6박스", "shopnt", 0.6]],
+      ["장건강 유산균 30포", "사균체 유산균 3개월분"],
+    ),
+  };
+}
+
+/**
  * 원료명 → 홈쇼핑모아 방송 지표 맵 (broadcast_stats, kind=ingredient).
- * count는 최근 방송 상품 수(≤10, hsmoa 상위 제공분). mock/오류/없음 시 빈 맵.
+ * count는 최근 방송 상품 수(≤10, hsmoa 상위 제공분). 오류·없음 시 빈 맵.
  */
 export async function getBroadcastStats(): Promise<Record<string, BroadcastStat>> {
-  if (isMockMode()) return {};
+  if (isMockMode()) return mockBroadcastStats();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("broadcast_stats")
