@@ -32,6 +32,20 @@ export async function POST(req: Request) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+
+    // 로그인만으로는 부족하다 — 소셜 계정은 수강생 코드 없이도 만들어진다.
+    // 프로필이 있어야(=코드를 냈어야) 유료 API를 쓸 수 있다. 화면 차단(대시보드 레이아웃)만
+    // 믿으면 이 엔드포인트를 직접 호출해 우회할 수 있다.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!profile)
+      return NextResponse.json(
+        { error: "수강생 코드 확인이 필요합니다." },
+        { status: 403 },
+      );
   }
 
   let body: { kind?: string; ingredient?: string; part?: string; persona?: string; outfit?: string };

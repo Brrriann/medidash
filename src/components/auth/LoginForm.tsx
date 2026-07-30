@@ -10,9 +10,8 @@ export function LoginForm() {
   const [state, formAction, pending] = useActionState(signInAction, initialState);
 
   return (
+    // 제목은 페이지가 그린다 — 소셜 버튼이 이메일 폼 위에 오므로 여기 두면 순서가 어긋난다.
     <form action={formAction} className="space-y-4">
-      <h1 className="text-lg font-semibold text-slate-900">로그인</h1>
-
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-700">이메일</span>
         <input
