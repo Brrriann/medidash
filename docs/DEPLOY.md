@@ -109,6 +109,8 @@ Supabase **Authentication → URL Configuration → Site URL** 에 배포 URL �
 
 버튼은 이미 로그인 화면에 있지만, **아래 설정을 하기 전까지는 눌러도 Supabase 오류로 떨어집니다.**
 
+> 브라우저 에이전트에게 맡길 경우 단계별 지시서: [`RUNBOOK-oauth-setup.md`](RUNBOOK-oauth-setup.md)
+
 ### 수강생 코드 관문은 그대로입니다
 소셜로 로그인해도 대시보드가 바로 열리지 않습니다. `profiles` 행이 입장권이고 그 행은 수강생 코드를 낸 사람에게만 생기므로, 첫 소셜 로그인은 **`/onboarding` 코드 입력 화면**으로 갑니다. 코드가 맞아야 대시보드가 열립니다.
 
