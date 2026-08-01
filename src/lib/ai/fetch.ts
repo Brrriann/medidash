@@ -39,19 +39,47 @@ async function proxyStub(): Promise<{ fetch: typeof fetch } | null> {
   }
 }
 
+/** ArrayBuffer → base64 (workerd에는 Buffer가 없다). 한 번에 넘기면 스택이 터져 잘라 넣는다. */
+function toBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let s = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK)
+    s += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  return btoa(s);
+}
+
 export async function openaiFetch(url: string, init: RequestInit): Promise<Response> {
   const stub = await proxyStub();
   if (!stub) return fetch(url, init);
 
-  // DO에 (url, init)을 넘기고 응답을 그대로 받는다. 본문은 스트림으로 흘러가므로
-  // 2MB 이미지도 문자열로 부풀리지 않는다.
   const headers: Record<string, string> = {};
   new Headers(init.headers).forEach((v, k) => (headers[k] = v));
+
+  let body: string | undefined;
+  let bodyB64: string | undefined;
+
+  if (init.body instanceof FormData) {
+    // **multipart는 JSON 봉투에 문자열로 못 싣는다.** JSON.stringify(FormData)는 `{}`가 되어
+    // 본문이 통째로 사라지고, Content-Type도 안 붙어 OpenAI가 text/plain으로 받는다
+    // (실측: 씬 생성이 HTTP 400 "Unsupported content type: 'text/plain'"으로 죽었다).
+    //
+    // 인코딩은 플랫폼에 맡긴다 — Request가 boundary까지 붙여 주므로 그 바이트를 그대로
+    // base64로 넘기고 DO에서 되돌린다.
+    const encoded = new Request(url, { method: "POST", body: init.body });
+    const ct = encoded.headers.get("content-type");
+    if (ct) headers["content-type"] = ct;
+    bodyB64 = toBase64(await encoded.arrayBuffer());
+  } else if (init.body != null) {
+    body = init.body as string;
+  }
+
   return stub.fetch("https://openai-proxy.internal/", {
     method: "POST",
     body: JSON.stringify({
       url,
-      init: { method: init.method ?? "GET", headers, body: init.body as string | undefined },
+      init: { method: init.method ?? "GET", headers, body },
+      bodyB64,
     }),
   });
 }
