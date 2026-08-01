@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MOCK_CONTENTS } from "./mock-contents";
 import { SAMPLE_INGREDIENTS } from "./sample-ingredients";
 import { SAMPLE_PRODUCTS, type SampleProduct } from "./sample-products";
+import { EMPTY_OPS_PROFILE, toOpsProfile, type OpsProfile } from "@/lib/ops-profile";
 
 /**
  * 데이터 저장소 (서버 전용).
@@ -122,6 +123,59 @@ export async function getRecentWorks(): Promise<
     .order("created_at", { ascending: false })
     .limit(5);
   return (data ?? []).map((w) => ({ kind: w.kind, createdAt: w.created_at }));
+}
+
+/**
+ * 내 운영 프로필 (profiles.ops_profile).
+ * RLS로 본인 행만 읽히므로 별도 필터가 필요 없다. 미로그인·mock이면 빈 프로필.
+ */
+export async function getOpsProfile(): Promise<OpsProfile> {
+  if (isMockMode()) return EMPTY_OPS_PROFILE;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return EMPTY_OPS_PROFILE;
+  const { data } = await supabase
+    .from("profiles")
+    .select("ops_profile")
+    .eq("id", user.id)
+    .maybeSingle();
+  return toOpsProfile(data?.ops_profile);
+}
+
+export interface AiLogItem {
+  id: number;
+  kind: string;
+  ok: boolean;
+  error: string | null;
+  meta: Record<string, unknown>;
+  createdAt: string;
+}
+
+/**
+ * AI 호출 이력 (본인 것만 — RLS).
+ *
+ * 성공·실패를 모두 담는다. 할당량은 유료 호출 **직전**에 차감하므로 실패한 호출도
+ * 1회를 쓴다 — 성공만 보여주면 줄어든 횟수가 설명되지 않는다.
+ */
+export async function getAiLogs(limit = 30): Promise<AiLogItem[]> {
+  if (isMockMode()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("ai_logs")
+    .select("id, kind, ok, error, meta, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    ok: r.ok,
+    error: r.error,
+    meta: (r.meta ?? {}) as Record<string, unknown>,
+    createdAt: r.created_at,
+  }));
 }
 
 export interface MarginHistoryItem {

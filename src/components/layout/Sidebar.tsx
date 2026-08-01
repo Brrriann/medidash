@@ -101,8 +101,18 @@ const GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: "정산",
+    title: "운영",
     items: [
+      {
+        href: "/cs",
+        label: "CS 답변",
+        desc: "고객 문의 답변 초안 생성",
+        icon: (
+          <svg {...iconProps} aria-hidden>
+            <path d="M21 11.5a8.4 8.4 0 0 1-9 8.3L3 21l1.2-4.2A8.4 8.4 0 1 1 21 11.5Z" />
+          </svg>
+        ),
+      },
       {
         href: "/margin",
         label: "마진 계산",

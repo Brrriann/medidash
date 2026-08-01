@@ -3,8 +3,16 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
-/** 로그인 없이 접근 가능한 경로 */
+/** 로그인 없이 접근 가능한 경로 — 로그인한 사용자가 오면 대시보드로 되돌린다 */
 const PUBLIC_PATHS = ["/login", "/signup"];
+
+/**
+ * 세션 유무와 무관하게 항상 통과시키는 경로.
+ *
+ * 소셜 콜백은 **세션이 아직 없는 상태로** 들어와서 거기서 세션을 만든다. PUBLIC_PATHS에
+ * 넣으면 세션이 생기는 순간의 재방문이 `/`로 튕겨 코드 교환이 끊긴다.
+ */
+const ALWAYS_ALLOW = ["/auth/callback"];
 
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,6 +24,10 @@ export async function middleware(request: NextRequest) {
     if (process.env.NODE_ENV === "production")
       return new NextResponse("서버 설정 오류 — 관리자에게 문의하세요.", { status: 503 });
     return NextResponse.next(); // 개발/시연 전용 mock 모드
+  }
+
+  if (ALWAYS_ALLOW.some((p) => request.nextUrl.pathname.startsWith(p))) {
+    return NextResponse.next({ request });
   }
 
   let supabaseResponse = NextResponse.next({ request });

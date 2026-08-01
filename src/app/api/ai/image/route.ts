@@ -3,6 +3,7 @@ import { getImageProvider } from "@/lib/ai/image";
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
 import { consumeAiQuota } from "@/lib/ai/quota";
+import { logAi, type AiKind } from "@/lib/ai/log";
 
 /**
  * AI 이미지 생성 — **서버 액션이 아니라 라우트 핸들러인 이유**
@@ -32,6 +33,20 @@ export async function POST(req: Request) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+
+    // 로그인만으로는 부족하다 — 소셜 계정은 수강생 코드 없이도 만들어진다.
+    // 프로필이 있어야(=코드를 냈어야) 유료 API를 쓸 수 있다. 화면 차단(대시보드 레이아웃)만
+    // 믿으면 이 엔드포인트를 직접 호출해 우회할 수 있다.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!profile)
+      return NextResponse.json(
+        { error: "수강생 코드 확인이 필요합니다." },
+        { status: 403 },
+      );
   }
 
   let body: { kind?: string; ingredient?: string; part?: string; persona?: string; outfit?: string };
@@ -42,8 +57,14 @@ export async function POST(req: Request) {
   }
 
   // 유료 호출 직전에 한도 차감 (docs/PRODUCTION-READINESS.md P0-5)
-  const quota = await consumeAiQuota();
-  if (!quota.allowed) return NextResponse.json({ error: quota.reason }, { status: 429 });
+  const quota = await consumeAiQuota("image");
+  const kind: AiKind = body.kind === "person" ? "person_cutout" : "thumbnail_bg";
+  const meta = { ingredient: body.ingredient ?? null, part: body.part ?? null };
+  if (!quota.allowed) {
+    // 한도 초과도 이력에 남긴다 — 사용자가 마이페이지에서 "왜 안 됐는지"를 볼 수 있어야 한다.
+    await logAi(kind, false, { error: quota.reason, meta });
+    return NextResponse.json({ error: quota.reason }, { status: 429 });
+  }
 
   try {
     const provider = getImageProvider();
@@ -65,6 +86,8 @@ export async function POST(req: Request) {
     const type = head.match(/^data:([^;]+)/)?.[1] ?? "image/png";
     const bytes = Buffer.from(b64, "base64");
 
+    await logAi(kind, true, { meta: { ...meta, bytes: bytes.byteLength } });
+
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "Content-Type": type,
@@ -76,6 +99,7 @@ export async function POST(req: Request) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.warn("[api/ai/image] 생성 실패:", msg);
+    await logAi(kind, false, { error: msg, meta });
     return NextResponse.json({ error: msg }, { status: 502 });
   }
 }

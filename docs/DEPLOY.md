@@ -105,6 +105,55 @@ Supabase **Authentication → URL Configuration → Site URL** 에 배포 URL �
 
 ---
 
+## C. 소셜 로그인 (카카오·구글)
+
+버튼은 이미 로그인 화면에 있지만, **아래 설정을 하기 전까지는 눌러도 Supabase 오류로 떨어집니다.**
+
+> 브라우저 에이전트에게 맡길 경우 단계별 지시서: [`RUNBOOK-oauth-setup.md`](RUNBOOK-oauth-setup.md)
+
+### 수강생 코드 관문은 그대로입니다
+소셜로 로그인해도 대시보드가 바로 열리지 않습니다. `profiles` 행이 입장권이고 그 행은 수강생 코드를 낸 사람에게만 생기므로, 첫 소셜 로그인은 **`/onboarding` 코드 입력 화면**으로 갑니다. 코드가 맞아야 대시보드가 열립니다.
+
+### 1. Supabase에 콜백 주소 등록 (공통)
+**Authentication → URL Configuration → Redirect URLs** 에 아래를 모두 추가합니다. 하나라도 빠지면 그 환경에서만 로그인이 실패합니다.
+
+```
+https://health-seller.com/auth/callback
+http://localhost:3000/auth/callback
+```
+
+### 2. 카카오
+1. [Kakao Developers](https://developers.kakao.com) → 내 애플리케이션 → 애플리케이션 추가
+2. **앱 키 → REST API 키** 복사 (= client ID)
+3. **카카오 로그인 → 활성화 ON**
+4. **카카오 로그인 → Redirect URI** 에 Supabase가 알려주는 주소를 넣습니다 (아래 5번에서 확인)
+5. **보안 → Client Secret** 생성 후 **활성화 상태 ON** (생성만 하고 켜지 않으면 Supabase가 거부합니다)
+6. **카카오 로그인 → 동의항목**: 닉네임·카카오계정(이메일)을 필수 동의로 설정
+7. Supabase **Authentication → Sign In / Providers → Kakao** → 활성화 후 REST API 키·Client Secret 붙여넣기. 이 화면에 표시된 **Callback URL**을 4번에 넣습니다
+
+### 3. 구글
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → 사용자 인증 정보 → **OAuth 클라이언트 ID 만들기 → 웹 애플리케이션**
+2. **승인된 리디렉션 URI** 에 Supabase가 알려주는 Callback URL 추가 (4번에서 확인)
+3. 클라이언트 ID·보안 비밀번호 복사
+4. Supabase **Authentication → Sign In / Providers → Google** → 활성화 후 붙여넣기. 표시된 **Callback URL**을 2번에 넣습니다
+
+### 4. 확인
+배포 URL의 `/login` → 각 버튼 → 동의 → `/onboarding` 으로 오면 성공입니다. 코드를 넣으면 대시보드가 열립니다.
+
+### 네이버는 아직 안 붙였습니다
+Supabase 기본 제공자 19종에 **네이버는 없습니다.** Custom OAuth2로 붙일 수는 있고 무료 플랜에서 3개까지 됩니다:
+
+| 항목 | 값 |
+|---|---|
+| Authorization URL | `https://nid.naver.com/oauth2.0/authorize` |
+| Token URL | `https://nid.naver.com/oauth2.0/token` |
+| Userinfo URL | `https://openapi.naver.com/v1/nid/me` |
+| 식별자 | `custom:naver` |
+
+다만 네이버 userinfo 응답이 `{resultcode, message, response:{id, email, name}}`처럼 **한 겹 감싸여 있는데 Custom OAuth2에는 중첩 필드 매핑 기능이 문서에 없습니다.** 사용자 id·이메일을 못 읽어 실패할 가능성이 있어, 위 값으로 실제 설정해 동작을 확인한 뒤 `src/lib/auth.ts`의 `SOCIAL_PROVIDERS`에 `"custom:naver"`를 추가하는 순서로 진행합니다. 확인 전에는 버튼을 넣지 않습니다 — 눌러서 오류가 나는 버튼이 없는 것보다 나쁩니다.
+
+---
+
 ## 참고
 
 - **무료 티어 주의**: Supabase 무료 프로젝트는 1주 미사용 시 자동 일시정지됩니다. 실서비스는 Pro 권장 — [`docs/PRODUCTION-READINESS.md`](PRODUCTION-READINESS.md) 참고.

@@ -9,6 +9,7 @@ import {
 import { usableRelated } from "@/lib/titles/related";
 import { getTextProvider } from "@/lib/ai/text";
 import { consumeAiQuota } from "@/lib/ai/quota";
+import { logAi } from "@/lib/ai/log";
 import type { TitleInput, TitleTagsResult } from "@/lib/titles/types";
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
@@ -69,7 +70,7 @@ export async function generateTitlesAction(
   try {
     // 한도를 넘으면 AI는 건너뛰고 규칙 기반 결과를 그대로 쓴다.
     // 상품명은 AI 없이도 동작하므로, 막는 대신 조용히 규칙 기반으로 내려간다.
-    const quota = await consumeAiQuota();
+    const quota = await consumeAiQuota("text");
     if (!quota.allowed) throw new Error(quota.reason);
 
     const related = input.keywordStat
@@ -94,8 +95,13 @@ export async function generateTitlesAction(
       sanitized: result.sanitized || scored.sanitized || merged.sanitized,
       source: "ai",
     };
+    await logAi("title_tags", true, { meta: { ingredient, platform } });
   } catch (e) {
-    console.warn("[titles] AI 제안 실패 — 규칙 기반 결과 사용:", e instanceof Error ? e.message : e);
+    const msg = e instanceof Error ? e.message : String(e);
+    console.warn("[titles] AI 제안 실패 — 규칙 기반 결과 사용:", msg);
+    // 사용자는 결과를 받지만(규칙 기반 폴백) 할당량은 이미 빠졌다. 그 사실이 이력에 남아야
+    // "왜 줄었는지"를 마이페이지에서 확인할 수 있다.
+    await logAi("title_tags", false, { error: msg, meta: { ingredient, platform } });
   }
 
   // 로그인 사용자면 작업 이력 저장 (실패해도 결과는 반환)
