@@ -31,6 +31,8 @@ export interface PersonCutoutInput {
 export interface ImageProvider {
   /** url은 `data:image/jpeg;base64,...` 형태의 data URL이다 (위 주석 참고) */
   generateThumbnailBackground(input: ThumbnailBgInput): Promise<{ url: string }>;
+  /** 후킹페이지(세로 860×1080) 배경 — 가운데를 비워 제품이 들어갈 자리를 남긴다 */
+  generateHookBackground(input: ThumbnailBgInput): Promise<{ url: string }>;
   /**
    * 배경이 투명한 인물 컷아웃 (data:image/png).
    *
@@ -71,6 +73,34 @@ function buildPrompt(input: ThumbnailBgInput): string {
     .join("\n");
 }
 
+/**
+ * 후킹페이지 배경 프롬프트 — **상품의 특성을 반영한다.**
+ *
+ * 썸네일용 `buildPrompt`와 다른 점:
+ *  - 세로 구도(1024×1536). 캔버스와 같은 크기라 리샘플링이 없다.
+ *  - **가운데 가로 띠를 비운다.** 그 자리에 실제 상품 사진이 합성된다(render.ts BAND_TOP).
+ *    비워두라고 말하지 않으면 소재가 화면 전체에 깔려 제품이 묻힌다.
+ *  - 원료의 원물을 상·하단 모서리에 배치해 레퍼런스 상세페이지의 구성을 따른다.
+ *
+ * 규칙은 썸네일과 같다 — **부정문을 나열하지 않는다.** 이미지 모델은 "캡슐을 그리지
+ * 마세요"를 잘 못 지키고 오히려 그 단어에 반응한다. 원하는 것만 적으면 제형은 알아서 빠진다.
+ * 글자 금지만 예외로 남긴다(실측에서 잘 지켜졌고 타협할 수 없는 조건).
+ */
+function buildHookPrompt(input: ThumbnailBgInput): string {
+  const material = input.ingredient || "건강 원물";
+  return [
+    "건강기능식품 상세페이지 상단용 세로 배경 이미지.",
+    `${material}의 원물 — 신선한 열매·잎·씨앗·결정 — 을 화면 위쪽 모서리와 아래쪽 모서리에 나눠 배치한 광고 사진.`,
+    "화면 한가운데 가로로 넓은 띠는 부드러운 단색으로 비워 둡니다. 그 자리에 제품이 놓입니다.",
+    input.symptom ? `${input.symptom}을 떠올리게 하는 맑고 정돈된 분위기.` : "",
+    "은은한 파스텔 그라디언트 배경, 부드러운 확산광, 미세한 빛번짐, 고급스러운 제품 광고 톤.",
+    "글자·숫자·로고·워터마크는 넣지 않습니다.",
+    input.extraPrompt,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 class OpenAIImageProvider implements ImageProvider {
   constructor(
     private key: string,
@@ -80,7 +110,7 @@ class OpenAIImageProvider implements ImageProvider {
   /** images/generations 공통 호출 — b64를 data URL로 돌려준다 */
   private async generate(
     prompt: string,
-    opts: { transparent?: boolean } = {},
+    opts: { transparent?: boolean; size?: string } = {},
   ): Promise<{ url: string }> {
     const png = opts.transparent === true;
     const res = await openaiFetch("https://api.openai.com/v1/images/generations", {
@@ -92,7 +122,7 @@ class OpenAIImageProvider implements ImageProvider {
       body: JSON.stringify({
         model: this.model,
         prompt,
-        size: "1024x1024",
+        size: opts.size ?? "1024x1024",
         quality: process.env.AI_IMAGE_QUALITY ?? "medium",
         n: 1,
         // 투명은 png만 지원. 배경은 무손실이 필요 없어 jpeg로 받아 응답 크기를 줄인다
@@ -128,6 +158,11 @@ class OpenAIImageProvider implements ImageProvider {
   async generateThumbnailBackground(input: ThumbnailBgInput): Promise<{ url: string }> {
     // 프리셋이 전부 정사각형(1000·1080)이라 1024 정사각으로 받아 캔버스에서 늘린다.
     return this.generate(buildPrompt(input));
+  }
+
+  async generateHookBackground(input: ThumbnailBgInput): Promise<{ url: string }> {
+    // 캔버스가 1024×1536이라 같은 크기로 받는다 — 리샘플링 없이 1:1로 들어간다.
+    return this.generate(buildHookPrompt(input), { size: "1024x1536" });
   }
 }
 

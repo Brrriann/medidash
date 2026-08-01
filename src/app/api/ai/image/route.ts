@@ -58,7 +58,12 @@ export async function POST(req: Request) {
 
   // 유료 호출 직전에 한도 차감 (docs/PRODUCTION-READINESS.md P0-5)
   const quota = await consumeAiQuota("image");
-  const kind: AiKind = body.kind === "person" ? "person_cutout" : "thumbnail_bg";
+  const kind: AiKind =
+    body.kind === "person"
+      ? "person_cutout"
+      : body.kind === "hook_bg"
+        ? "hook_bg"
+        : "thumbnail_bg";
   const meta = { ingredient: body.ingredient ?? null, part: body.part ?? null };
   if (!quota.allowed) {
     // 한도 초과도 이력에 남긴다 — 사용자가 마이페이지에서 "왜 안 됐는지"를 볼 수 있어야 한다.
@@ -68,18 +73,21 @@ export async function POST(req: Request) {
 
   try {
     const provider = getImageProvider();
+    const bgInput = {
+      ingredient: body.ingredient ?? "",
+      symptom: body.part || undefined,
+      width: 1024,
+      height: body.kind === "hook_bg" ? 1536 : 1024,
+    };
     const { url } =
       body.kind === "person"
         ? await provider.generatePersonCutout({
             persona: body.persona ?? "40대 남성",
             outfit: body.outfit,
           })
-        : await provider.generateThumbnailBackground({
-            ingredient: body.ingredient ?? "",
-            symptom: body.part || undefined,
-            width: 1024,
-            height: 1024,
-          });
+        : body.kind === "hook_bg"
+          ? await provider.generateHookBackground(bgInput)
+          : await provider.generateThumbnailBackground(bgInput);
 
     // data:image/png;base64,.... → 원본 바이트로 되돌려 그대로 내보낸다
     const [head, b64] = url.split(",");

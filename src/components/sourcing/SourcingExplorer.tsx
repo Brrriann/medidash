@@ -282,6 +282,15 @@ function ProductCard({
         >
           상품명 만들기
         </Link>
+        {/* 후킹페이지는 상품 정보를 DB에서 다시 읽으므로 id가 있어야 한다 — 샘플엔 없다 */}
+        {!product.isSample && (
+          <Link
+            href={`/hook?ref=${product.id}`}
+            className="col-span-2 rounded-lg border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+          >
+            후킹페이지 만들기
+          </Link>
+        )}
       </div>
     </article>
   );
