@@ -50,7 +50,7 @@ export function BodyMapExplorer({
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(300px,5fr)_7fr]">
+    <div className="grid gap-5 md:grid-cols-[minmax(300px,5fr)_7fr]">
       {/* ── 좌: 인체 지도 ── */}
       <div className="card p-5">
         <div className="mb-3 flex items-center justify-between">

@@ -69,7 +69,7 @@ export function BroadcastTrend({
         </Link>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         {hot.length > 0 && (
           <div>
             <p className="mb-2 text-[11px] text-slate-500">

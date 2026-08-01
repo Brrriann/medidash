@@ -320,7 +320,7 @@ export function HookStudio({
       {/* 스타일 */}
       <section className="card p-5">
         <h2 className="mb-3 text-sm font-bold text-slate-800">글자·불릿 스타일</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           <Field label="폰트">
             <select
               value={style.font}
@@ -404,7 +404,7 @@ export function HookStudio({
       </section>
 
       {/* 2장 */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         {([0, 1] as const).map((i) => (
           <section key={i} className="card overflow-hidden">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">

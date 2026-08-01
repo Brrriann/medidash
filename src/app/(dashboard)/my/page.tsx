@@ -65,7 +65,7 @@ export default async function MyPage() {
         description="내 작업 이력과 계정을 관리합니다."
       />
 
-      <div className="grid gap-5 lg:grid-cols-[2fr_3fr]">
+      <div className="grid gap-5 md:grid-cols-[2fr_3fr]">
         {/* 계정 */}
         <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">계정</h2>

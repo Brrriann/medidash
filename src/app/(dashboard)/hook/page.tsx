@@ -45,7 +45,7 @@ export default async function HookPage({
           {/* 어떤 정보로 문구를 만드는지 먼저 보여준다 — 결과가 이상하면 여기가 원인이다. */}
           <section className="card p-5">
             <h2 className="mb-3 text-sm font-bold text-slate-800">이 상품 정보로 만듭니다</h2>
-            <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <dl className="grid gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
               <div>
                 <dt className="text-xs text-slate-400">상품</dt>
                 <dd className="font-semibold text-slate-800">{loaded.ctx.spec.core}</dd>

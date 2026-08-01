@@ -62,7 +62,7 @@ export function MarginCalculator({
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[5fr_4fr]">
+    <div className="grid gap-5 md:grid-cols-[5fr_4fr]">
       {/* ── 입력 ── */}
       <div className="space-y-4 card p-6">
         <div className="flex items-center justify-between">

@@ -46,7 +46,7 @@ export default async function AdminPage() {
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[2fr_3fr]">
+      <div className="grid gap-5 md:grid-cols-[2fr_3fr]">
         {/* 코드 발급 */}
         <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">

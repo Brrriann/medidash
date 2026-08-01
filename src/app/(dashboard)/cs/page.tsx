@@ -27,7 +27,7 @@ export default async function CsPage() {
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_2fr]">
+      <div className="grid gap-5 md:grid-cols-[1fr_2fr]">
         {/* 답변의 근거가 되는 프로필을 옆에 띄워둔다 — 답이 이상하면 여기가 원인이다. */}
         <section className="card h-fit p-5">
           <div className="mb-3 flex items-center justify-between">

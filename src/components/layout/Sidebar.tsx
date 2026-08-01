@@ -3,11 +3,30 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOutAction } from "@/app/(auth)/actions";
+
+/**
+ * 좌측 길잡이.
+ *
+ * **넓은 사이드바를 레일로 줄였다.** 종전 `w-64`(256px)는 창 크기와 무관하게 폭을 먼저
+ * 가져갔다 — 1280px 노트북에서 본문에 남는 폭이 976px이었다. 캔버스가 필요한 스튜디오와
+ * 표가 넓어야 하는 편성·소싱이 전부 여기서 손해를 봤다.
+ *
+ * 아이콘만 남기지 않고 **짧은 한글 라벨을 함께 둔다.** 수강생 대부분이 초보라
+ * 아이콘 열 개를 해독하게 하면 안 된다. 64px에 4글자까지 들어간다.
+ *
+ * 갈래(찾기·만들기·운영)는 제목 대신 **가는 괘선**으로 나눈다 — 64px에 그룹 제목은
+ * 안 들어가지만, 묶여 있다는 사실은 남겨야 한다. 그 묶음이 셀러의 작업 순서다.
+ *
+ * 모바일은 종전 드로어를 그대로 쓴다. 좁은 화면에서는 폭보다 설명이 아쉽다.
+ */
 
 interface NavItem {
   href: string;
   label: string;
-  /** 메뉴 아래 한 줄 설명. 이름만으로는 뭘 하는 화면인지 안 잡혀서 항상 붙인다. */
+  /** 레일용 짧은 이름 — 64px에 들어가야 한다 */
+  short: string;
+  /** 드로어에서 이름 아래 붙는 한 줄 설명 */
   desc: string;
   icon: React.ReactNode;
 }
@@ -17,8 +36,8 @@ interface NavGroup {
 }
 
 const iconProps = {
-  width: 17,
-  height: 17,
+  width: 18,
+  height: 18,
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
@@ -27,7 +46,7 @@ const iconProps = {
   strokeLinejoin: "round",
 } as const;
 
-/** 셀러의 작업 순서(찾기 → 만들기 → 정산)를 메뉴 구조로 그대로 드러낸다. */
+/** 셀러의 작업 순서(찾기 → 만들기 → 운영 → 정산)를 메뉴 구조로 그대로 드러낸다. */
 const GROUPS: NavGroup[] = [
   {
     title: "시작",
@@ -35,6 +54,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/",
         label: "홈",
+        short: "홈",
         desc: "오늘 할 작업 고르기",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -51,6 +71,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/map",
         label: "증상 지도",
+        short: "증상지도",
         desc: "인체 지도에서 원료 찾기",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -62,6 +83,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/sourcing",
         label: "상품 소싱",
+        short: "상품소싱",
         desc: "도매 3사 상품 캐시 검색",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -73,6 +95,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/broadcast",
         label: "홈쇼핑 편성",
+        short: "홈쇼핑",
         desc: "예정 방송 · 준비 기간 순",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -89,6 +112,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/studio",
         label: "썸네일",
+        short: "썸네일",
         desc: "AI 배경·인물로 대표 이미지",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -101,6 +125,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/titles",
         label: "상품명·태그",
+        short: "상품명",
         desc: "노출도 등급 상품명과 태그",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -112,6 +137,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/hook",
         label: "후킹페이지",
+        short: "후킹",
         desc: "상세페이지 상단 2장",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -128,6 +154,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/cs",
         label: "CS 답변",
+        short: "CS답변",
         desc: "고객 문의 답변 초안 생성",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -138,6 +165,7 @@ const GROUPS: NavGroup[] = [
       {
         href: "/margin",
         label: "마진 계산",
+        short: "마진",
         desc: "수수료·세금 뺀 실제 마진",
         icon: (
           <svg {...iconProps} aria-hidden>
@@ -153,6 +181,7 @@ const GROUPS: NavGroup[] = [
 const MY_ITEM: NavItem = {
   href: "/my",
   label: "내 계정",
+  short: "내계정",
   desc: "작업 이력과 계정 정보",
   icon: (
     <svg {...iconProps} aria-hidden>
@@ -165,6 +194,7 @@ const MY_ITEM: NavItem = {
 const ADMIN_ITEM: NavItem = {
   href: "/admin",
   label: "관리자",
+  short: "관리자",
   desc: "초대코드와 데이터 갱신",
   icon: (
     <svg {...iconProps} aria-hidden>
@@ -173,9 +203,25 @@ const ADMIN_ITEM: NavItem = {
   ),
 };
 
-export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
+function useActive() {
+  const pathname = usePathname();
+  return (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
+export function Sidebar({
+  showAdmin,
+  email,
+  mock,
+}: {
+  showAdmin: boolean;
+  /** 로그인한 사용자 이메일 — 없으면 로그인 링크를 보인다 */
+  email: string | null;
+  mock: boolean;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const isActive = useActive();
 
   // 메뉴로 이동하면 모바일 드로어를 닫는다
   useEffect(() => setOpen(false), [pathname]);
@@ -190,21 +236,18 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
 
   const groups: NavGroup[] = [
     ...GROUPS,
-    {
-      title: "내 정보",
-      items: showAdmin ? [MY_ITEM, ADMIN_ITEM] : [MY_ITEM],
-    },
+    { title: "내 정보", items: showAdmin ? [MY_ITEM, ADMIN_ITEM] : [MY_ITEM] },
   ];
 
   return (
     <>
-      {/* 모바일 햄버거 — 헤더 왼쪽 여백(pl-16)에 얹힌다 */}
+      {/* ── 모바일 햄버거 ── */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="메뉴 열기"
         aria-expanded={open}
-        className="fixed left-3 top-3 z-30 rounded-lg border border-slate-200 bg-white p-2 text-slate-600 shadow-sm md:hidden"
+        className="fixed left-3 top-3 z-30 rounded-md border border-slate-200 bg-white p-2 text-slate-600 md:hidden"
       >
         <svg {...iconProps} width={18} height={18} aria-hidden>
           <path d="M4 7h16M4 12h16M4 17h16" />
@@ -219,31 +262,19 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
         />
       )}
 
+      {/* ── 모바일 드로어 — 이름과 설명을 다 보여준다 ── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-transform md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-transform md:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-sm font-bold text-white">
-              H
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[9px] font-bold tracking-[0.16em] text-slate-400 uppercase">
-                Health Seller
-              </span>
-              <span className="block text-lg font-bold tracking-tight text-slate-900">
-                헬스셀러
-              </span>
-            </span>
-          </Link>
-          {/* 드로어가 열리면 햄버거가 가려지므로 닫기 버튼을 안쪽에 둔다 */}
+          <Brand />
           <button
             type="button"
             onClick={() => setOpen(false)}
             aria-label="메뉴 닫기"
-            className="-mr-1 rounded-lg p-1 text-slate-400 hover:text-slate-700 md:hidden"
+            className="-mr-1 rounded-md p-1 text-slate-400 hover:text-slate-700"
           >
             <svg {...iconProps} width={18} height={18} aria-hidden>
               <path d="M6 6l12 12M18 6L6 18" />
@@ -259,18 +290,12 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
               </p>
               <div className="space-y-0.5">
                 {group.items.map((item) => {
-                  const active =
-                    item.href === "/"
-                      ? pathname === "/"
-                      : pathname.startsWith(item.href);
+                  const active = isActive(item.href);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       aria-current={active ? "page" : undefined}
-                      /* 활성 표시를 검정 알약에서 **왼쪽 괘선 표식**으로 바꿨다.
-                         알약은 메뉴를 눌린 버튼처럼 보이게 하는데, 여기 항목은 버튼이 아니라
-                         지금 펼쳐 놓은 장(章)이다. 장부 옆에 붙이는 표식이 그 뜻에 맞다. */
                       className={`flex items-center gap-2.5 rounded-r-md border-l-2 px-3 py-2.5 transition ${
                         active
                           ? "border-brand-600 bg-brand-50/70 text-slate-900"
@@ -282,16 +307,12 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span
-                          className={`block truncate text-sm ${
-                            active ? "font-bold" : "font-semibold"
-                          }`}
+                          className={`block truncate text-sm ${active ? "font-bold" : "font-semibold"}`}
                         >
                           {item.label}
                         </span>
                         <span
-                          className={`block truncate text-[11px] ${
-                            active ? "text-slate-500" : "text-slate-400"
-                          }`}
+                          className={`block truncate text-[11px] ${active ? "text-slate-500" : "text-slate-400"}`}
                         >
                           {item.desc}
                         </span>
@@ -304,10 +325,136 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
           ))}
         </nav>
 
-        <p className="px-5 py-4 text-[11px] leading-relaxed text-slate-400">
-          인체 지도에서 시작해 마진까지 한 번에.
-        </p>
+        <Account email={email} mock={mock} wide />
+      </aside>
+
+      {/* ── 데스크톱 레일 ── */}
+      <aside className="hidden w-16 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white md:flex">
+        <Link
+          href="/"
+          className="flex h-14 items-center justify-center border-b border-slate-100"
+          title="헬스셀러"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-600 text-sm font-bold text-white">
+            H
+          </span>
+        </Link>
+
+        <nav className="flex-1 py-2">
+          {groups.map((group, gi) => (
+            <div
+              key={group.title}
+              /* 그룹 제목은 64px에 안 들어간다. 대신 괘선으로 나눠 묶음만 남긴다. */
+              className={gi > 0 ? "mt-2 border-t border-slate-100 pt-2" : ""}
+            >
+              {group.items.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    title={`${item.label} — ${item.desc}`}
+                    className={`flex flex-col items-center gap-1 border-l-2 px-1 py-2.5 transition ${
+                      active
+                        ? "border-brand-600 bg-brand-50/70 text-brand-800"
+                        : "border-transparent text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                    }`}
+                  >
+                    {item.icon}
+                    <span
+                      className={`text-[10px] leading-tight ${active ? "font-bold" : "font-medium"}`}
+                    >
+                      {item.short}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        <Account email={email} mock={mock} />
       </aside>
     </>
+  );
+}
+
+function Brand() {
+  return (
+    <Link href="/" className="flex items-center gap-2.5">
+      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-brand-600 text-sm font-bold text-white">
+        H
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[9px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+          Health Seller
+        </span>
+        <span className="block text-lg font-bold tracking-tight text-slate-900">
+          헬스셀러
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+/**
+ * 계정 칸.
+ *
+ * 종전에는 본문 위 별도 헤더(56px)에 있었다. 그 띠가 담은 것이 mock 배지와 이메일뿐이라
+ * 페이지 머리글과 머리띠가 두 겹이 됐다. 레일 아래로 옮기고 그 띠를 지웠다.
+ */
+function Account({
+  email,
+  mock,
+  wide,
+}: {
+  email: string | null;
+  mock: boolean;
+  wide?: boolean;
+}) {
+  return (
+    <div
+      className={`border-t border-slate-100 ${wide ? "space-y-2 px-5 py-4" : "space-y-1.5 px-1.5 py-3"}`}
+    >
+      {mock && (
+        <p
+          title="Supabase 미연결 — 시드 데이터로 동작 중입니다"
+          className={`rounded bg-accent-50 font-bold text-accent-700 ${
+            wide
+              ? "px-2.5 py-1 text-[11px]"
+              : "px-1 py-1 text-center text-[9px] leading-tight"
+          }`}
+        >
+          {wide ? "Mock 모드 — Supabase 미연결" : "MOCK"}
+        </p>
+      )}
+
+      {email ? (
+        <>
+          {wide && <p className="truncate text-[11px] text-slate-500">{email}</p>}
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              title={wide ? undefined : `${email} — 로그아웃`}
+              className={`w-full rounded-md border border-slate-200 font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 ${
+                wide ? "px-3 py-1.5 text-xs" : "px-1 py-1.5 text-[10px]"
+              }`}
+            >
+              로그아웃
+            </button>
+          </form>
+        </>
+      ) : (
+        <Link
+          href="/login"
+          className={`block rounded-md border border-slate-200 text-center font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 ${
+            wide ? "px-3 py-1.5 text-xs" : "px-1 py-1.5 text-[10px]"
+          }`}
+        >
+          로그인
+        </Link>
+      )}
+    </div>
   );
 }

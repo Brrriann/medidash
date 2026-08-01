@@ -364,7 +364,7 @@ export function ThumbnailStudio({
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[auto_1fr]">
+    <div className="grid gap-5 md:grid-cols-[auto_1fr]">
       {/* 미리보기 캔버스 */}
       <div className="card p-4">
         <canvas

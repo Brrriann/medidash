@@ -40,7 +40,7 @@ export function TitleGenerator({
   const r = state.result;
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[5fr_7fr]">
+    <div className="grid gap-5 md:grid-cols-[5fr_7fr]">
       {/* 입력 */}
       <form action={action} className="space-y-4 card p-6">
         <h2 className="text-sm font-bold text-slate-800">입력</h2>
