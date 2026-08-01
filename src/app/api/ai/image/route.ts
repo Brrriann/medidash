@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   }
 
   // 유료 호출 직전에 한도 차감 (docs/PRODUCTION-READINESS.md P0-5)
-  const quota = await consumeAiQuota();
+  const quota = await consumeAiQuota("image");
   const kind: AiKind = body.kind === "person" ? "person_cutout" : "thumbnail_bg";
   const meta = { ingredient: body.ingredient ?? null, part: body.part ?? null };
   if (!quota.allowed) {

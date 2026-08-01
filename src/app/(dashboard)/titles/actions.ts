@@ -70,7 +70,7 @@ export async function generateTitlesAction(
   try {
     // 한도를 넘으면 AI는 건너뛰고 규칙 기반 결과를 그대로 쓴다.
     // 상품명은 AI 없이도 동작하므로, 막는 대신 조용히 규칙 기반으로 내려간다.
-    const quota = await consumeAiQuota();
+    const quota = await consumeAiQuota("text");
     if (!quota.allowed) throw new Error(quota.reason);
 
     const related = input.keywordStat

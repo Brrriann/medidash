@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { THUMBNAIL_PRESETS, AI_DISCLAIMER } from "@/lib/constants";
 import { generateBackground, type GradientSpec } from "@/lib/thumbnail/backgrounds";
 import { saveThumbnailWork, loadProductImageAction } from "@/app/(dashboard)/studio/actions";
+// 타입만 가져온다 — quota.ts는 server-only라 값으로 import하면 클라이언트 번들이 깨진다.
+import type { AiQuotaView } from "@/lib/ai/quota";
 
 type PresetKey = (typeof THUMBNAIL_PRESETS)[number]["key"];
 
@@ -46,7 +48,7 @@ export function ThumbnailStudio({
   defaults: { ingredient: string; part: string; productId: number | null };
   mock: boolean;
   /** AI 일일 한도 — 안 보여주면 왜 막혔는지 셀러가 알 수 없다 */
-  quota: { used: number; limit: number; unlimited: boolean };
+  quota: AiQuotaView;
 }) {
   const [presetKey, setPresetKey] = useState<PresetKey>("coupang");
   const [bgSeed, setBgSeed] = useState(0);
@@ -403,11 +405,12 @@ export function ThumbnailStudio({
 
         {!quota.unlimited && (
           <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
-            오늘 AI 생성{" "}
+            오늘 이미지 생성{" "}
             <span className="font-semibold text-slate-700">
-              {Math.max(quota.limit - quota.used, 0)}회
+              {Math.max(quota.image.limit - quota.image.used, 0)}회
             </span>{" "}
-            남았습니다 (하루 {quota.limit}회 · 자정 초기화). 배경·인물 생성이 각 1회입니다.
+            남았습니다 (하루 {quota.image.limit}회 · 자정 초기화). 배경·인물 생성이 각
+            1회입니다.
           </p>
         )}
 
