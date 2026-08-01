@@ -84,6 +84,10 @@ export interface HookStyle {
   bulletShape: BulletShape;
   /** 불릿 크기 배율 (0.6~1.8) */
   bulletScale: number;
+  /** 규격 줄("70,000mg · 30포") 크기 배율 (0.6~2.0). 전체 scale 위에 곱해진다 */
+  specScale: number;
+  /** 규격 줄 색. 빈 값이면 톤에 맞춰 자동 */
+  specColor: string;
 }
 
 /**
@@ -95,17 +99,22 @@ export interface HookStyle {
  */
 export interface PageLayout {
   head: { x: number; y: number };
+  /** 제품 아래 규격 한 줄 ("70,000mg · 30포"). 세 덩어리 중 가장 자주 자리를 옮긴다 —
+   *  씬마다 제품이 놓이는 높이가 달라 기본 위치가 패키지에 겹치는 경우가 있다. */
+  spec: { x: number; y: number };
   panel: { x: number; y: number };
 }
 
 export const DEFAULT_PAGE_LAYOUT: PageLayout = {
   head: { x: 0.5, y: 96 / HOOK_H },
+  spec: { x: 0.5, y: (BAND_TOP + BAND_H - 42) / HOOK_H },
   panel: { x: 0.5, y: PANEL_TOP_DEFAULT / HOOK_H },
 };
 
 /** 드래그 히트 판정을 위해 렌더러가 실제로 그린 영역을 돌려준다 */
 export interface DrawnBounds {
   head: { x: number; y: number; w: number; h: number };
+  spec: { x: number; y: number; w: number; h: number } | null;
   panel: { x: number; y: number; w: number; h: number } | null;
 }
 
@@ -116,6 +125,8 @@ export const DEFAULT_HOOK_STYLE: HookStyle = {
   accentColor: "",
   bulletShape: "circle",
   bulletScale: 1,
+  specScale: 1,
+  specColor: "",
 };
 
 const fontStack = (key: HookFontKey) =>
@@ -348,11 +359,21 @@ export function renderHookPage(
     }
   }
 
-  // ── 규격 (제품 바로 아래) ──
+  // ── 규격 (제품 아래) ──
+  // 종전에는 자리도 크기도 색도 고정이라, 씬마다 제품 높이가 달라 패키지에 겹치면
+  // 손쓸 방법이 없었다. 이제 셋 다 셀러가 정한다.
+  let specBounds: DrawnBounds["spec"] = null;
   if (input.specText) {
-    ctx.font = `700 ${px(32)}px ${FONT}`;
-    ctx.fillStyle = onDark ? "rgba(255,255,255,0.9)" : "#0f172a";
-    ctx.fillText(input.specText, HOOK_W / 2, BAND_TOP + BAND_H - 42);
+    const specPx = px(Math.round(32 * style.specScale));
+    ctx.font = `700 ${specPx}px ${FONT}`;
+    ctx.fillStyle =
+      style.specColor || (onDark ? "rgba(255,255,255,0.9)" : "#0f172a");
+    const sx = layout.spec.x * HOOK_W;
+    const sy = layout.spec.y * HOOK_H;
+    ctx.fillText(input.specText, sx, sy);
+    const sw = ctx.measureText(input.specText).width;
+    // textAlign이 center라 x는 가운데다 — 히트 영역은 좌상단 기준으로 되돌린다.
+    specBounds = { x: sx - sw / 2, y: sy - specPx * 0.2, w: sw, h: specPx * 1.4 };
   }
 
   // ── 하단 카드 패널 (points) ──
@@ -398,6 +419,7 @@ export function renderHookPage(
   // 드래그 히트 판정용. 머리 덩어리는 실제로 그린 높이(y - headTop)를 쓴다.
   return {
     head: { x: headX - INNER / 2, y: headTop, w: INNER, h: Math.max(y - headTop, 60) },
+    spec: specBounds,
     panel: pts.length ? { x: panelX, y: PANEL_TOP, w: INNER, h: PANEL_H } : null,
   };
 }

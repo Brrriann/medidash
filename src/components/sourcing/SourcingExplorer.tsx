@@ -6,6 +6,7 @@ import type { WholesaleProduct, BroadcastStat, KeywordStat } from "@/lib/data";
 import { calcMargin, defaultRecommendedPrice } from "@/lib/margin";
 import { WHOLESALE_SOURCES } from "@/lib/constants";
 import { FilterChip } from "@/components/ui/FilterChip";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { MALL_LINKS, mallSearchKeyword } from "@/lib/products/mall-search";
 
 /**
@@ -279,14 +280,11 @@ function ProductCard({
         <div className="flex items-center justify-between gap-2">
           <dt className="text-slate-600">추천 판매가 (기본 ×2)</dt>
           <dd>
-            <input
-              type="number"
+            <MoneyInput
               value={price}
-              step={100}
-              min={0}
-              onChange={(e) => setPrice(Number(e.target.value))}
-              className="w-28 rounded-md border border-slate-300 px-2 py-2 text-right text-sm font-semibold outline-none focus:border-brand-500"
+              onChange={setPrice}
               aria-label="추천 판매가 조정"
+              className="w-28 rounded-md border border-slate-300 px-2 py-2 text-right text-sm font-semibold tabular-nums outline-none focus:border-brand-500"
             />
           </dd>
         </div>

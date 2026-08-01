@@ -10,6 +10,7 @@ import {
   type MarginPlatform,
 } from "@/lib/margin";
 import { saveMarginCalc } from "@/app/(dashboard)/margin/actions";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 
 const won = (n: number) =>
   Number.isFinite(n) ? `${Math.round(n).toLocaleString("ko-KR")}원` : "—";
@@ -88,19 +89,39 @@ export function MarginCalculator({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="판매가" suffix="원">
-            <input {...numAttrs(price, setPrice)} />
+            <MoneyInput
+              value={price}
+              onChange={setPrice}
+              className={MONEY_CLS}
+            />
           </Field>
           <Field label="상품원가 (도매가)" suffix="원">
-            <input {...numAttrs(cost, setCost)} />
+            <MoneyInput
+              value={cost}
+              onChange={setCost}
+              className={MONEY_CLS}
+            />
           </Field>
           <Field label="고객배송비 (수취)" suffix="원">
-            <input {...numAttrs(customerShipping, setCustomerShipping)} />
+            <MoneyInput
+              value={customerShipping}
+              onChange={setCustomerShipping}
+              className={MONEY_CLS}
+            />
           </Field>
           <Field label="지불배송비" suffix="원">
-            <input {...numAttrs(paidShipping, setPaidShipping)} />
+            <MoneyInput
+              value={paidShipping}
+              onChange={setPaidShipping}
+              className={MONEY_CLS}
+            />
           </Field>
           <Field label="포장비용" suffix="원">
-            <input {...numAttrs(packaging, setPackaging)} />
+            <MoneyInput
+              value={packaging}
+              onChange={setPackaging}
+              className={MONEY_CLS}
+            />
           </Field>
           <Field label="수수료율" suffix="%">
             <input {...numAttrs(feePct, setFeePct, 0.1)} />
@@ -210,6 +231,10 @@ function Row({ k, v, sub }: { k: string; v: string; sub?: string }) {
   );
 }
 
+/** 금액 칸과 수수료율 칸이 같은 모양이어야 해서 클래스를 한 곳에 둔다 */
+const MONEY_CLS =
+  "w-full rounded-md border border-slate-300 px-3 py-2 pr-9 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 tabular-nums";
+
 function numAttrs(value: number, set: (n: number) => void, step = 100): React.InputHTMLAttributes<HTMLInputElement> {
   return {
     type: "number",
@@ -217,7 +242,6 @@ function numAttrs(value: number, set: (n: number) => void, step = 100): React.In
     step,
     min: 0,
     onChange: (e) => set(Number(e.currentTarget.value)),
-    className:
-      "w-full rounded-lg border border-slate-300 px-3 py-2 pr-9 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100",
+    className: MONEY_CLS,
   };
 }

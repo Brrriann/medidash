@@ -114,7 +114,7 @@ export function HookStudio({
   const boundsRef = useRef<(DrawnBounds | null)[]>([null, null]);
   const dragRef = useRef<{
     page: 0 | 1;
-    block: "head" | "panel";
+    block: "head" | "spec" | "panel";
     dx: number;
     dy: number;
   } | null>(null);
@@ -224,8 +224,15 @@ export function HookStudio({
     const hit = (r: { x: number; y: number; w: number; h: number } | null) =>
       !!r && p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 
-    // 패널을 먼저 본다 — 머리 덩어리와 겹칠 때 아래 것을 잡는 게 자연스럽다.
-    const block = hit(b.panel) ? "panel" : hit(b.head) ? "head" : null;
+    // 작은 것부터 본다 — 규격 한 줄은 머리 덩어리 영역 안에 들어올 수 있어서,
+    // 큰 것을 먼저 판정하면 규격은 영영 못 잡는다.
+    const block = hit(b.spec)
+      ? "spec"
+      : hit(b.panel)
+        ? "panel"
+        : hit(b.head)
+          ? "head"
+          : null;
     if (!block) return;
     const cur = layouts[i][block];
     dragRef.current = {
@@ -463,10 +470,29 @@ export function HookStudio({
             value={style.accentColor}
             onChange={(v) => set({ accentColor: v })}
           />
+
+          {/* 규격 줄은 따로 뗀다 — 제품 사진 위에 얹히는 유일한 글자라
+              본문과 같은 크기·색이면 패키지에 묻히거나 반대로 튄다. */}
+          <Field label={`규격 크기 ${Math.round(style.specScale * 100)}%`}>
+            <input
+              type="range"
+              min={0.6}
+              max={2}
+              step={0.1}
+              value={style.specScale}
+              onChange={(e) => set({ specScale: Number(e.target.value) })}
+              className="w-full accent-brand-600"
+            />
+          </Field>
+          <ColorField
+            label="규격 색 (70,000mg · 30포)"
+            value={style.specColor}
+            onChange={(v) => set({ specColor: v })}
+          />
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
           <span className="text-xs text-slate-500">
-            미리보기에서 <strong>문구 덩어리를 끌어</strong> 위치를 옮길 수 있습니다.
+            미리보기에서 <strong>헤드라인 · 규격 · 하단 카드</strong>를 끌어 위치를 옮길 수 있습니다.
           </span>
           <button
             type="button"
