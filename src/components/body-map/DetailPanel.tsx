@@ -293,7 +293,7 @@ function BroadcastBand({
               {upcoming.map((u, i) => (
                 <li key={i} className="flex items-baseline gap-2 text-xs">
                   <span
-                    className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold tabular-nums ${u.lead.tone}`}
+                    className={`shrink-0 whitespace-nowrap rounded px-2 py-1 text-xs font-semibold tabular-nums ${u.lead.tone}`}
                   >
                     {u.lead.label}
                   </span>

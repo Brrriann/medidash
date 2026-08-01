@@ -141,7 +141,7 @@ export function BroadcastSchedule({ rows }: { rows: UpcomingRow[] }) {
                   >
                     <td className="px-3 py-2.5">
                       <span
-                        className={`inline-block rounded px-1.5 py-0.5 text-xs font-semibold tabular-nums ${r.lead.tone}`}
+                        className={`inline-block whitespace-nowrap rounded px-2 py-1 text-xs font-semibold tabular-nums ${r.lead.tone}`}
                       >
                         {r.lead.label}
                       </span>

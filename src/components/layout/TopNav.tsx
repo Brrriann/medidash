@@ -227,14 +227,16 @@ export function TopNav({
     <>
       {/* 화면에 붙여 둔다 — 긴 화면에서 스크롤을 내려도 길잡이가 남아야 한다 */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-        {/* 1행 — 브랜드 · 계정 */}
-        <div className="flex h-14 items-center gap-3 px-4 md:px-6">
+        {/* 1행 — 브랜드 · 계정.
+            본문과 **같은 폭(max-w-7xl)으로 가운데 정렬**한다. 종전에는 머리띠만 화면
+            끝까지 늘어나서, 가운데 정렬된 본문과 좌우가 어긋나 보였다. */}
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 md:px-6">
           <button
             type="button"
             onClick={() => setOpen(true)}
             aria-label="메뉴 열기"
             aria-expanded={open}
-            className="-ml-1 rounded-md border border-slate-200 p-2 text-slate-600 md:hidden"
+            className="-ml-1 rounded-md border border-slate-300 p-3 text-slate-700 md:hidden"
           >
             <svg {...iconProps} width={18} height={18} aria-hidden>
               <path d="M4 7h16M4 12h16M4 17h16" />
@@ -263,7 +265,9 @@ export function TopNav({
           되고, 줄바꿈시키면 머리띠 높이가 화면마다 달라져 본문 시작점이 흔들린다.
         */}
         <nav className="hidden overflow-x-auto border-t border-slate-100 md:block">
-          <div className="flex w-max items-stretch px-4 md:px-6">
+          {/* mx-auto + w-max — 들어가면 가운데로 모이고, 넘치면 자동으로 왼쪽부터
+              시작한다. justify-center를 쓰면 넘칠 때 앞쪽이 잘려 첫 메뉴를 못 본다. */}
+          <div className="mx-auto flex w-max max-w-7xl items-stretch px-4 md:px-6">
             {groups.map((group, gi) => (
               <div
                 key={group.title}
@@ -323,7 +327,8 @@ export function TopNav({
             type="button"
             onClick={() => setOpen(false)}
             aria-label="메뉴 닫기"
-            className="-mr-1 rounded-md p-1 text-slate-600 hover:text-slate-700"
+            /* min-h/w-11 = 44px. p-3만으로는 아이콘(18px)과 합쳐 42px라 2px 모자랐다 */
+            className="-mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-md text-slate-600 hover:text-slate-900"
           >
             <svg {...iconProps} width={18} height={18} aria-hidden>
               <path d="M6 6l12 12M18 6L6 18" />

@@ -22,7 +22,7 @@ export function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       /* py-3 = 44px. 주 사용자가 50~60대라 표적이 작으면 빗나간다 */
-      className={`rounded-md border px-4 py-3 text-sm font-semibold transition ${
+      className={`whitespace-nowrap rounded-md border px-4 py-3 text-sm font-semibold transition ${
         active
           ? "border-slate-900 bg-slate-900 text-white"
           : "border-slate-300 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-700"
