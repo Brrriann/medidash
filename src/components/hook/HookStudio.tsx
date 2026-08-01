@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AI_DISCLAIMER } from "@/lib/constants";
-import { HOOK_H, HOOK_W, renderHookPage } from "@/lib/hook/render";
+import {
+  BULLET_SHAPES,
+  DEFAULT_HOOK_STYLE,
+  HOOK_FONTS,
+  HOOK_H,
+  HOOK_W,
+  renderHookPage,
+  type BulletShape,
+  type HookFontKey,
+  type HookStyle,
+} from "@/lib/hook/render";
 import { generateHookAction, type HookProduct } from "@/app/(dashboard)/hook/actions";
 import type { HookPage } from "@/lib/ai/hook";
 import type { AiQuotaView } from "@/lib/ai/quota";
@@ -22,6 +32,54 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block text-sm">
+      <span className="mb-1 block font-medium text-slate-700">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+/**
+ * 색 입력 — **비우기 버튼이 붙는다.**
+ * `<input type="color">`는 빈 값을 표현할 수 없어(항상 어떤 색을 들고 있다) 자동 모드로
+ * 되돌릴 방법이 없다. 그래서 "자동" 버튼을 따로 둔다.
+ */
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={value || "#0f172a"}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-9 w-14 shrink-0 cursor-pointer rounded border border-slate-300"
+        />
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+            value
+              ? "border-slate-200 text-slate-600 hover:bg-slate-50"
+              : "border-brand-300 bg-brand-50 text-brand-700"
+          }`}
+        >
+          {value ? "자동으로" : "자동"}
+        </button>
+      </div>
+    </Field>
+  );
+}
+
 export function HookStudio({
   product,
   specText,
@@ -37,11 +95,13 @@ export function HookStudio({
   quota: AiQuotaView;
 }) {
   const [pages, setPages] = useState<[HookPage, HookPage]>([BLANK, BLANK]);
-  const [bg, setBg] = useState<HTMLImageElement | null>(null);
-  const [cut, setCut] = useState<HTMLImageElement | null>(null);
+  // gpt-image-2가 상품 사진으로 만든 완성 씬. **제품이 이 안에 들어 있어** 따로 합성하지 않는다.
+  const [scene, setScene] = useState<HTMLImageElement | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // 두 장이 같은 스타일을 쓴다 — 연작이라 글꼴·색이 달라지면 오히려 어색하다.
+  const [style, setStyle] = useState<HookStyle>(DEFAULT_HOOK_STYLE);
   const refs = [useRef<HTMLCanvasElement>(null), useRef<HTMLCanvasElement>(null)];
 
   const draw = useCallback(() => {
@@ -50,16 +110,16 @@ export function HookStudio({
       if (c)
         renderHookPage(c, {
           page,
-          background: bg,
-          product: cut,
+          background: scene,
           specText,
           disclaimer: AI_DISCLAIMER,
           index: i as 0 | 1,
+          style,
         });
     });
     // refs는 렌더마다 같은 객체라 의존성에 넣지 않는다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pages, bg, cut, specText]);
+  }, [pages, scene, specText, style]);
 
   useEffect(draw, [draw]);
 
@@ -75,53 +135,37 @@ export function HookStudio({
       setNotice("의약품 오인 표현이 광고 안전 표현으로 자동 치환되었습니다.");
   }
 
-  /** 배경은 **한 번만** 만들어 2장이 공유한다 — 연작이라 톤이 이어지는 게 자연스럽고, 비용도 절반이다. */
-  async function makeBackground() {
-    setBusy("배경 생성 중…");
+  /**
+   * 씬 생성 — 상품 사진을 참고 이미지로 넣어 배경과 제품을 **한 번에** 만든다.
+   *
+   * 종전엔 "AI 배경"과 "상품 누끼" 두 버튼이었다. gpt-image-2가 상품 사진을 그대로 두고
+   * 씬을 만들어 주면서 둘 다 필요 없어졌고, 누끼는 Cloudflare 엣지 의존이라 로컬에서
+   * 오류만 났다. 버튼 하나로 합친다.
+   */
+  async function makeScene() {
+    setBusy("이미지 생성 중… 최대 1분");
     setError(null);
     try {
       const res = await fetch("/api/ai/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "hook_bg", ingredient, part: symptom }),
+        body: JSON.stringify({
+          kind: "hook_scene",
+          productId: product.id,
+          ingredient,
+          part: symptom,
+        }),
       });
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(j.error ?? `배경 생성 실패 (HTTP ${res.status})`);
+        throw new Error(j.error ?? `이미지 생성 실패 (HTTP ${res.status})`);
       }
-      const blob = await res.blob();
-      setBg(await loadImage(URL.createObjectURL(blob)));
+      setScene(await loadImage(URL.createObjectURL(await res.blob())));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(null);
     }
-  }
-
-  /**
-   * 상품 누끼. **브라우저가 직접** /cdn-cgi/image/를 불러야 한다 —
-   * 서버(Worker)가 자기 도메인의 그 경로를 fetch하면 엣지를 안 타고 원본이 나온다.
-   */
-  async function makeCutout() {
-    if (!product.imageUrl) return setError("상품 대표 이미지가 없습니다.");
-    setBusy("배경 제거 중…");
-    setError(null);
-    const src = product.imageUrl.startsWith("//")
-      ? `https:${product.imageUrl}`
-      : product.imageUrl;
-    for (const opt of ["segment=foreground,format=png", "format=png"]) {
-      try {
-        const res = await fetch(`/cdn-cgi/image/${opt}/${src}`);
-        if (!res.ok) continue;
-        setCut(await loadImage(URL.createObjectURL(await res.blob())));
-        setBusy(null);
-        return;
-      } catch {
-        // 다음 옵션으로 폴백 (배경제거 실패 시 원본이라도 쓴다)
-      }
-    }
-    setBusy(null);
-    setError("상품 이미지를 불러오지 못했습니다.");
   }
 
   function download(i: number) {
@@ -144,6 +188,8 @@ export function HookStudio({
     });
   }
 
+  const set = (patch: Partial<HookStyle>) => setStyle((s) => ({ ...s, ...patch }));
+
   const hasCopy = pages.some((p) => p.headline);
 
   return (
@@ -161,19 +207,11 @@ export function HookStudio({
           </button>
           <button
             type="button"
-            onClick={makeBackground}
-            disabled={!!busy}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-400 disabled:opacity-50"
-          >
-            AI 배경 (2장 공용)
-          </button>
-          <button
-            type="button"
-            onClick={makeCutout}
+            onClick={makeScene}
             disabled={!!busy || !product.imageUrl}
             className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-400 disabled:opacity-50"
           >
-            상품 누끼
+            이미지 만들기
           </button>
           {busy && <span className="text-xs text-slate-400">{busy}</span>}
         </div>
@@ -193,6 +231,80 @@ export function HookStudio({
             {notice}
           </p>
         )}
+      </section>
+
+      {/* 스타일 */}
+      <section className="card p-5">
+        <h2 className="mb-3 text-sm font-bold text-slate-800">글자·불릿 스타일</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Field label="폰트">
+            <select
+              value={style.font}
+              onChange={(e) => set({ font: e.target.value as HookFontKey })}
+              className={inputCls}
+            >
+              {HOOK_FONTS.map((f) => (
+                <option key={f.key} value={f.key}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label={`글자 크기 ${Math.round(style.scale * 100)}%`}>
+            <input
+              type="range"
+              min={0.8}
+              max={1.3}
+              step={0.05}
+              value={style.scale}
+              onChange={(e) => set({ scale: Number(e.target.value) })}
+              className="w-full accent-brand-600"
+            />
+          </Field>
+
+          <Field label="불릿 모양">
+            <select
+              value={style.bulletShape}
+              onChange={(e) => set({ bulletShape: e.target.value as BulletShape })}
+              className={inputCls}
+            >
+              {BULLET_SHAPES.map((b) => (
+                <option key={b.key} value={b.key}>
+                  {b.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label={`불릿 크기 ${Math.round(style.bulletScale * 100)}%`}>
+            <input
+              type="range"
+              min={0.6}
+              max={1.8}
+              step={0.1}
+              value={style.bulletScale}
+              onChange={(e) => set({ bulletScale: Number(e.target.value) })}
+              disabled={style.bulletShape === "none"}
+              className="w-full accent-brand-600 disabled:opacity-40"
+            />
+          </Field>
+
+          <ColorField
+            label="글자색"
+            value={style.textColor}
+            onChange={(v) => set({ textColor: v })}
+          />
+          <ColorField
+            label="강조색 (배지·불릿)"
+            value={style.accentColor}
+            onChange={(v) => set({ accentColor: v })}
+          />
+        </div>
+        <p className="mt-3 text-[11px] text-slate-400">
+          색을 비워두면 장의 톤에 맞춰 자동으로 정해집니다 — 1장(어두운 배경)은 흰 글씨,
+          2장(밝은 배경)은 검은 글씨.
+        </p>
       </section>
 
       {/* 2장 */}

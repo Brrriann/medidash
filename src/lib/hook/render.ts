@@ -29,9 +29,105 @@ import type { HookPage } from "@/lib/ai/hook";
 export const HOOK_W = 1024;
 export const HOOK_H = 1536;
 
-const FONT = `"Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", sans-serif`;
 const PAD = 72;
 const INNER = HOOK_W - PAD * 2;
+
+/**
+ * 고를 수 있는 폰트.
+ *
+ * **캔버스는 이미 로드된 폰트만 그린다.** 없는 폰트를 지정하면 조용히 기본 폰트로
+ * 떨어져서 "왜 안 바뀌지"가 된다. 그래서 웹폰트는 앱이 이미 싣는 Pretendard만 두고,
+ * 나머지는 OS에 항상 있는 것으로 스택을 짠다.
+ */
+export const HOOK_FONTS = [
+  {
+    key: "pretendard",
+    label: "프리텐다드",
+    stack: `"Pretendard Variable", Pretendard, -apple-system, sans-serif`,
+  },
+  {
+    key: "system",
+    label: "시스템 고딕",
+    stack: `-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif`,
+  },
+  { key: "serif", label: "명조", stack: `"Apple SD Gothic Neo", serif` },
+  { key: "mono", label: "고정폭", stack: `ui-monospace, Menlo, monospace` },
+] as const;
+
+export type HookFontKey = (typeof HOOK_FONTS)[number]["key"];
+export type BulletShape = "circle" | "square" | "diamond" | "check" | "none";
+
+export const BULLET_SHAPES: { key: BulletShape; label: string }[] = [
+  { key: "circle", label: "● 원" },
+  { key: "square", label: "■ 사각" },
+  { key: "diamond", label: "◆ 마름모" },
+  { key: "check", label: "✓ 체크" },
+  { key: "none", label: "없음" },
+];
+
+export interface HookStyle {
+  font: HookFontKey;
+  /** 글자 크기 배율 (0.8~1.3). 레이아웃 밴드는 고정이라 배율로만 조절한다 */
+  scale: number;
+  /** 본문 글자색. **빈 값이면 톤에 맞춰 자동**(어두운 장=흰색, 밝은 장=검정) */
+  textColor: string;
+  /** 배지·불릿 강조색. 빈 값이면 자동 */
+  accentColor: string;
+  bulletShape: BulletShape;
+  /** 불릿 크기 배율 (0.6~1.8) */
+  bulletScale: number;
+}
+
+export const DEFAULT_HOOK_STYLE: HookStyle = {
+  font: "pretendard",
+  scale: 1,
+  textColor: "",
+  accentColor: "",
+  bulletShape: "circle",
+  bulletScale: 1,
+};
+
+const fontStack = (key: HookFontKey) =>
+  HOOK_FONTS.find((f) => f.key === key)?.stack ?? HOOK_FONTS[0].stack;
+
+/** 불릿 하나를 그린다. 중심 좌표 기준 */
+function drawBullet(
+  ctx: CanvasRenderingContext2D,
+  shape: BulletShape,
+  cx: number,
+  cy: number,
+  r: number,
+  color: string,
+) {
+  if (shape === "none") return;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  if (shape === "circle") {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (shape === "square") {
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  } else if (shape === "diamond") {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r * 1.2);
+    ctx.lineTo(cx + r * 1.2, cy);
+    ctx.lineTo(cx, cy + r * 1.2);
+    ctx.lineTo(cx - r * 1.2, cy);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    // 체크 — 선으로 그려야 크기를 키워도 뭉개지지 않는다
+    ctx.lineWidth = Math.max(2, r * 0.45);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(cx - r, cy);
+    ctx.lineTo(cx - r * 0.25, cy + r * 0.7);
+    ctx.lineTo(cx + r * 1.1, cy - r * 0.8);
+    ctx.stroke();
+  }
+}
 
 /** 제품이 놓이는 가운데 밴드 — 텍스트 길이와 무관하게 고정이라 항상 같은 자리에 온다 */
 const BAND_TOP = 520;
@@ -83,11 +179,12 @@ function fitLines(
   maxLines: number,
   from: number,
   to: number,
+  font: string,
 ): { size: number; lines: string[] } {
   let size = from;
   let lines: string[] = [];
   for (; size >= to; size -= 3) {
-    ctx.font = `800 ${size}px ${FONT}`;
+    ctx.font = `800 ${size}px ${font}`;
     lines = wrap(ctx, text, maxWidth);
     if (lines.length <= maxLines) break;
   }
@@ -124,29 +221,19 @@ function drawCover(
   ctx.drawImage(img, (HOOK_W - w) / 2, (HOOK_H - h) / 2, w, h);
 }
 
-/** 밴드 안에 비율 유지하며 최대한 크게 (CSS object-fit: contain) */
-function drawContain(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  top: number,
-  height: number,
-) {
-  const s = Math.min(INNER / img.naturalWidth, height / img.naturalHeight);
-  const w = img.naturalWidth * s;
-  const h = img.naturalHeight * s;
-  ctx.drawImage(img, (HOOK_W - w) / 2, top + (height - h) / 2, w, h);
-}
-
 export interface RenderInput {
   page: HookPage;
-  /** 두 장이 공유하는 배경 (AI 1회 생성) */
+  /**
+   * 두 장이 공유하는 씬 (gpt-image-2가 상품 사진으로 만든 완성 이미지).
+   * **제품이 이 안에 이미 들어 있다** — 따로 합성하지 않는다.
+   */
   background: HTMLImageElement | null;
-  product: HTMLImageElement | null;
   /** 규격 한 줄 — 제품 아래에 붙는다 */
   specText: string;
   disclaimer: string;
   /** 0 = 문제 후킹(어두운 톤), 1 = 해결 후킹(밝은 톤) */
   index: 0 | 1;
+  style: HookStyle;
 }
 
 export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
@@ -155,8 +242,11 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
   canvas.width = HOOK_W;
   canvas.height = HOOK_H;
 
-  const { page, background, product, index } = input;
+  const { page, background, index, style } = input;
   const onDark = index === 0;
+  const FONT = fontStack(style.font);
+  // 배율은 글자에만 건다. 밴드 좌표는 고정이라 레이아웃이 흔들리지 않는다.
+  const px = (n: number) => Math.round(n * style.scale);
 
   // ── 배경 ──
   if (background?.complete && background.naturalWidth) {
@@ -185,9 +275,10 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
   ctx.fillStyle = veil;
   ctx.fillRect(0, 0, HOOK_W, HOOK_H);
 
-  const fg = onDark ? "#ffffff" : "#0f172a";
-  const dim = onDark ? "rgba(255,255,255,0.75)" : "#475569";
-  const accent = onDark ? "#34d399" : "#059669";
+  // 색을 지정하지 않으면 장의 톤에 맞춰 자동으로 고른다.
+  const fg = style.textColor || (onDark ? "#ffffff" : "#0f172a");
+  const dim = style.textColor || (onDark ? "rgba(255,255,255,0.75)" : "#475569");
+  const accent = style.accentColor || (onDark ? "#34d399" : "#059669");
 
   ctx.textBaseline = "top";
   ctx.textAlign = "center";
@@ -195,19 +286,20 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
 
   // ── 배지 ──
   if (page.badge) {
-    ctx.font = `700 30px ${FONT}`;
+    ctx.font = `700 ${px(30)}px ${FONT}`;
     const w = ctx.measureText(page.badge).width + 50;
     ctx.fillStyle = accent;
-    roundRect(ctx, (HOOK_W - w) / 2, y, w, 60, 30);
+    const badgeH = px(60);
+    roundRect(ctx, (HOOK_W - w) / 2, y, w, badgeH, badgeH / 2);
     ctx.fill();
     ctx.fillStyle = onDark ? "#06281c" : "#ffffff";
-    ctx.fillText(page.badge, HOOK_W / 2, y + 16);
-    y += 88;
+    ctx.fillText(page.badge, HOOK_W / 2, y + px(16));
+    y += badgeH + 28;
   }
 
   // ── 헤드라인 — 2줄 안에 들어가게 크기를 맞춘다 ──
   if (page.headline) {
-    const { size, lines } = fitLines(ctx, page.headline, INNER, 2, 78, 48);
+    const { size, lines } = fitLines(ctx, page.headline, INNER, 2, px(78), px(44), FONT);
     ctx.fillStyle = fg;
     for (const line of lines) {
       ctx.fillText(line, HOOK_W / 2, y);
@@ -218,35 +310,17 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
 
   // ── 보조 문구 ──
   if (page.sub) {
-    ctx.font = `500 32px ${FONT}`;
+    ctx.font = `500 ${px(32)}px ${FONT}`;
     ctx.fillStyle = dim;
     for (const line of wrap(ctx, page.sub, INNER)) {
       ctx.fillText(line, HOOK_W / 2, y);
-      y += 48;
+      y += px(48);
     }
-  }
-
-  // ── 제품 이미지 — 가운데 고정 밴드의 주인공 ──
-  const hasProduct = !!(product?.complete && product.naturalWidth);
-  if (hasProduct) {
-    // 밝은 톤에서는 제품 뒤에 옅은 원형 광을 깔아 배경과 분리한다.
-    if (!onDark) {
-      const r = Math.min(INNER, BAND_H) / 2;
-      const glow = ctx.createRadialGradient(
-        HOOK_W / 2, BAND_TOP + BAND_H / 2, 0,
-        HOOK_W / 2, BAND_TOP + BAND_H / 2, r,
-      );
-      glow.addColorStop(0, "rgba(255,255,255,0.95)");
-      glow.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, BAND_TOP, HOOK_W, BAND_H);
-    }
-    drawContain(ctx, product!, BAND_TOP, BAND_H - (input.specText ? 56 : 0));
   }
 
   // ── 규격 (제품 바로 아래) ──
   if (input.specText) {
-    ctx.font = `700 32px ${FONT}`;
+    ctx.font = `700 ${px(32)}px ${FONT}`;
     ctx.fillStyle = onDark ? "rgba(255,255,255,0.9)" : "#0f172a";
     ctx.fillText(input.specText, HOOK_W / 2, BAND_TOP + BAND_H - 42);
   }
@@ -270,18 +344,14 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
         ctx.lineTo(PAD + colW * i, PANEL_TOP + PANEL_H - 42);
         ctx.stroke();
       }
-      // 아이콘 자리 — 원료 이미지는 아직 없어 점으로 대신한다
-      ctx.fillStyle = accent;
-      ctx.beginPath();
-      ctx.arc(cx, PANEL_TOP + 64, 11, 0, Math.PI * 2);
-      ctx.fill();
+      drawBullet(ctx, style.bulletShape, cx, PANEL_TOP + 64, 11 * style.bulletScale, accent);
 
-      ctx.font = `700 31px ${FONT}`;
+      ctx.font = `700 ${px(31)}px ${FONT}`;
       ctx.fillStyle = fg;
       let ly = PANEL_TOP + 102;
       for (const line of wrap(ctx, p, colW - 32).slice(0, 3)) {
         ctx.fillText(line, cx, ly);
-        ly += 40;
+        ly += px(40);
       }
     });
   }

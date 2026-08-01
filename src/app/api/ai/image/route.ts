@@ -49,7 +49,14 @@ export async function POST(req: Request) {
       );
   }
 
-  let body: { kind?: string; ingredient?: string; part?: string; persona?: string; outfit?: string };
+  let body: {
+    kind?: string;
+    ingredient?: string;
+    part?: string;
+    persona?: string;
+    outfit?: string;
+    productId?: number;
+  };
   try {
     body = await req.json();
   } catch {
@@ -61,9 +68,11 @@ export async function POST(req: Request) {
   const kind: AiKind =
     body.kind === "person"
       ? "person_cutout"
-      : body.kind === "hook_bg"
-        ? "hook_bg"
-        : "thumbnail_bg";
+      : body.kind === "hook_scene"
+        ? "hook_scene"
+        : body.kind === "hook_bg"
+          ? "hook_bg"
+          : "thumbnail_bg";
   const meta = { ingredient: body.ingredient ?? null, part: body.part ?? null };
   if (!quota.allowed) {
     // 한도 초과도 이력에 남긴다 — 사용자가 마이페이지에서 "왜 안 됐는지"를 볼 수 있어야 한다.
@@ -79,6 +88,38 @@ export async function POST(req: Request) {
       width: 1024,
       height: body.kind === "hook_bg" ? 1536 : 1024,
     };
+    if (body.kind === "hook_scene") {
+      // **상품 id로만 받는다.** 클라이언트가 준 임의 URL을 서버가 받아오면 SSRF가 된다.
+      // DB에 적재된 도매몰 이미지로 대상을 한정한다.
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("wholesale_products")
+        .select("image_url")
+        .eq("id", body.productId ?? 0)
+        .maybeSingle();
+      if (!data?.image_url) throw new Error("상품 대표 이미지가 없습니다.");
+      const src = data.image_url.startsWith("//") ? `https:${data.image_url}` : data.image_url;
+      const imgRes = await fetch(src);
+      if (!imgRes.ok) throw new Error(`상품 이미지를 받지 못했습니다 (HTTP ${imgRes.status}).`);
+      const bytes = new Uint8Array(await imgRes.arrayBuffer());
+
+      const scene = await provider.generateHookScene({
+        image: bytes,
+        ingredient: body.ingredient ?? "",
+        symptom: body.part || undefined,
+      });
+      const b64s = scene.url.split(",")[1];
+      const out = Buffer.from(b64s, "base64");
+      await logAi(kind, true, { meta: { ...meta, bytes: out.byteLength } });
+      return new NextResponse(new Uint8Array(out), {
+        headers: {
+          "Content-Type": "image/png",
+          "Content-Length": String(out.byteLength),
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
     const { url } =
       body.kind === "person"
         ? await provider.generatePersonCutout({
