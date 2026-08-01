@@ -76,15 +76,15 @@ export default async function MyPage() {
           ) : (
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-slate-400">이메일</p>
+                <p className="text-xs text-slate-600">이메일</p>
                 <p className="text-sm font-semibold text-slate-800">
                   {email ?? "—"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">역할</p>
+                <p className="text-xs text-slate-600">역할</p>
                 <span
-                  className={`mt-0.5 inline-block rounded px-2 py-0.5 text-[10px] font-semibold ${
+                  className={`mt-0.5 inline-block rounded px-2 py-0.5 text-xs font-semibold ${
                     role === "admin"
                       ? "bg-accent-100 text-accent-700"
                       : "bg-slate-100 text-slate-500"
@@ -103,7 +103,7 @@ export default async function MyPage() {
               </form>
             </div>
           )}
-          <p className="mt-4 border-t border-slate-100 pt-3 text-[11px] text-slate-400">
+          <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-600">
             결제 내역은 W4(토스페이먼츠 연동)에서 제공됩니다.
           </p>
         </section>
@@ -113,8 +113,8 @@ export default async function MyPage() {
           <h2 className="mb-3 text-sm font-bold text-slate-800">작업 이력</h2>
           {works.length === 0 ? (
             <div className="flex h-32 flex-col items-center justify-center text-center">
-              <p className="text-sm text-slate-400">아직 작업 이력이 없습니다</p>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="text-sm text-slate-600">아직 작업 이력이 없습니다</p>
+              <p className="mt-1 text-xs text-slate-600">
                 썸네일·상품명 산출물은 W3부터 여기에 쌓입니다
               </p>
             </div>
@@ -125,7 +125,7 @@ export default async function MyPage() {
                   <span className="text-slate-700">
                     {WORK_LABELS[w.kind] ?? w.kind}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-600">
                     {new Date(w.createdAt).toLocaleString("ko-KR")}
                   </span>
                 </li>
@@ -140,16 +140,16 @@ export default async function MyPage() {
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-slate-800">운영 프로필</h2>
           {isOpsProfileReady(ops) ? (
-            <span className="rounded bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
+            <span className="rounded bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
               CS 답변 사용 가능
             </span>
           ) : (
-            <span className="rounded bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+            <span className="rounded bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
               {opsMissing.join(" · ")} 필요
             </span>
           )}
         </div>
-        <p className="mb-4 text-[11px] leading-relaxed text-slate-400">
+        <p className="mb-4 text-xs leading-relaxed text-slate-600">
           CS 답변은 이 정보를 근거로 만들어집니다. 배송·교환 정책이 비어 있으면 일반론만
           나와 그대로 쓰기 어렵습니다.
         </p>
@@ -162,16 +162,16 @@ export default async function MyPage() {
       <section className="card p-5">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">AI 생성 이력</h2>
-          <span className="text-[11px] text-slate-400">최근 {aiLogs.length}건</span>
+          <span className="text-xs text-slate-600">최근 {aiLogs.length}건</span>
         </div>
         {/* 실패도 함께 보여주는 이유를 화면에서 설명한다 — 안 그러면 "왜 실패가 목록에
             있지?"가 되고, 반대로 안 보여주면 "왜 횟수가 줄었지?"가 된다. */}
-        <p className="mb-3 text-[11px] leading-relaxed text-slate-400">
+        <p className="mb-3 text-xs leading-relaxed text-slate-600">
           생성이 실패해도 AI 호출 횟수는 차감됩니다. 오늘 남은 횟수가 맞지 않을 때 여기서
           확인하실 수 있습니다.
         </p>
         {aiLogs.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">
+          <p className="py-6 text-center text-sm text-slate-600">
             아직 AI 생성 이력이 없습니다
             {mock && " (mock 모드 — Supabase 연결 후 활성화)"}
           </p>
@@ -183,7 +183,7 @@ export default async function MyPage() {
               return (
                 <li key={log.id} className="flex items-start gap-3 py-2.5 text-sm">
                   <span
-                    className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                    className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold ${
                       log.ok
                         ? "bg-brand-50 text-brand-700"
                         : "bg-red-50 text-red-600"
@@ -195,7 +195,7 @@ export default async function MyPage() {
                     <span className="block text-slate-700">
                       {AI_LABELS[log.kind] ?? log.kind}
                       {ingredient && (
-                        <span className="ml-1.5 text-xs text-slate-400">{ingredient}</span>
+                        <span className="ml-1.5 text-xs text-slate-600">{ingredient}</span>
                       )}
                     </span>
                     {!log.ok && log.error && (
@@ -204,7 +204,7 @@ export default async function MyPage() {
                       </span>
                     )}
                   </span>
-                  <span className="shrink-0 text-xs text-slate-400">
+                  <span className="shrink-0 text-xs text-slate-600">
                     {new Date(log.createdAt).toLocaleString("ko-KR")}
                   </span>
                 </li>
@@ -226,7 +226,7 @@ export default async function MyPage() {
           </Link>
         </div>
         {margins.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">
+          <p className="py-6 text-center text-sm text-slate-600">
             저장된 계산이 없습니다
             {mock && " (mock 모드 — Supabase 연결 후 활성화)"}
           </p>
@@ -234,7 +234,7 @@ export default async function MyPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
+                <tr className="border-b border-slate-100 text-left text-xs text-slate-600">
                   <th className="py-2 pr-4 font-medium">일시</th>
                   <th className="py-2 pr-4 font-medium">플랫폼</th>
                   <th className="py-2 pr-4 font-medium">판매가</th>
@@ -245,7 +245,7 @@ export default async function MyPage() {
               <tbody className="divide-y divide-slate-50">
                 {margins.map((m) => (
                   <tr key={m.id}>
-                    <td className="py-2 pr-4 text-xs text-slate-400">
+                    <td className="py-2 pr-4 text-xs text-slate-600">
                       {new Date(m.createdAt).toLocaleString("ko-KR")}
                     </td>
                     <td className="py-2 pr-4">{m.platform === "coupang" ? "쿠팡" : m.platform === "naver" ? "네이버" : m.platform}</td>

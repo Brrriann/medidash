@@ -39,6 +39,27 @@
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+
+  /* 글자 스케일을 한 단씩 올린다 — **주 사용자가 50~60대다.**
+   *
+   * 노안은 40대 중반에 시작해 이 연령대면 대부분 돋보기를 쓴다. 기본 스케일 그대로
+   * 쓰면 text-xs가 12px인데, 세어 보니 12px 이하가 234곳이었다. 화면의 대부분이
+   * 읽기 힘든 크기였다는 뜻이다.
+   *
+   * 쓰는 쪽(text-xs·text-sm)을 고치지 않고 **토큰만 올린다.** 클래스가 수백 곳이라
+   * 일일이 바꾸면 빠뜨리는 데가 생기고, 나중에 새로 쓰는 코드도 옛 크기로 돌아간다.
+   * 여기서 막으면 그 두 가지가 같이 해결된다.
+   *
+   *   xs  12 → 14   라벨·보조
+   *   sm  14 → 16   본문 기본
+   *   base 16 → 18  강조 본문
+   */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.6;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.65;
 }
 
 /* 지면은 흰색. 감청·주황이 둘 다 대비가 세서 지면이 조용해야 한다 —

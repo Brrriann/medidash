@@ -55,7 +55,7 @@ export function BodyMapExplorer({
       <div className="card p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">인체 지도</h2>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-xs text-slate-600">
             드래그로 회전 · 핫스팟 클릭
           </span>
         </div>
@@ -70,7 +70,7 @@ export function BodyMapExplorer({
 
         {/* 계통 바로가기 칩 — 위치가 애매한 계통 포함 전체 (접근성 대안 겸용) */}
         <div className="mt-4 border-t border-slate-100 pt-3">
-          <p className="mb-2 text-[11px] font-medium text-slate-400">
+          <p className="mb-2 text-xs font-medium text-slate-600">
             계통 바로가기
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -83,7 +83,7 @@ export function BodyMapExplorer({
                   type="button"
                   onClick={() => selectCategory(cat.slug)}
                   aria-pressed={selected}
-                  className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition ${
+                  className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
                     selected
                       ? "border-brand-600 bg-brand-600 text-white"
                       : isChipOnly
@@ -106,7 +106,7 @@ export function BodyMapExplorer({
             <p className="text-sm font-semibold text-slate-500">
               지도에서 계통을 선택하세요
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-600">
               대분류 → 부위/기능 → 증상 키워드 순서로 좁혀 들어갑니다
             </p>
           </div>
@@ -117,9 +117,9 @@ export function BodyMapExplorer({
             <div className="mb-3 flex items-baseline justify-between">
               <h2 className="text-sm font-bold text-slate-800">
                 {category.name}{" "}
-                <span className="font-normal text-slate-400">부위/기능 선택</span>
+                <span className="font-normal text-slate-600">부위/기능 선택</span>
               </h2>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-xs text-slate-600">
                 {category.subcategories.length}개
               </span>
             </div>
@@ -133,7 +133,7 @@ export function BodyMapExplorer({
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <p className="mb-2 text-xs font-medium text-slate-500">
                   증상 키워드 —{" "}
-                  <span className="text-slate-400">
+                  <span className="text-slate-600">
                     클릭하면 상세 패널이 열립니다
                   </span>
                 </p>

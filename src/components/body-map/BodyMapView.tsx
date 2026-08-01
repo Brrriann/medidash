@@ -49,7 +49,7 @@ export function BodyMapView(props: ViewProps) {
         <div className="min-h-0 flex-1">
           <BodyMapSvg {...props} />
         </div>
-        <p className="mt-2 text-center text-[10px] text-slate-300">
+        <p className="mt-2 text-center text-xs text-slate-500">
           3D 모델 준비 중 — public/models/body.glb 추가 시 회전 뷰어로 전환됩니다
         </p>
       </div>

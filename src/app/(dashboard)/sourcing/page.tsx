@@ -33,7 +33,7 @@ export default async function SourcingPage({
         }
         aside={
           isSample ? (
-            <span className="inline-flex rounded-md border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
+            <span className="inline-flex rounded-md border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
               샘플 데이터 — 크롤러 연결 시 실데이터로 대체
             </span>
           ) : undefined

@@ -42,7 +42,7 @@ export default async function OnboardingPage() {
       <OnboardingForm />
 
       <div className="mt-5 border-t border-slate-100 pt-4 text-center">
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-600">
           코드가 없으신가요? 운영자에게 문의해 주세요.
         </p>
         <form action={signOutAction}>

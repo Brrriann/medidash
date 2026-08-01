@@ -47,25 +47,25 @@ export default async function HookPage({
             <h2 className="mb-3 text-sm font-bold text-slate-800">이 상품 정보로 만듭니다</h2>
             <dl className="grid gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
               <div>
-                <dt className="text-xs text-slate-400">상품</dt>
+                <dt className="text-xs text-slate-600">상품</dt>
                 <dd className="font-semibold text-slate-800">{loaded.ctx.spec.core}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">규격</dt>
-                <dd className={loaded.ctx.specText ? "text-slate-700" : "text-slate-400"}>
+                <dt className="text-xs text-slate-600">규격</dt>
+                <dd className={loaded.ctx.specText ? "text-slate-700" : "text-slate-600"}>
                   {loaded.ctx.specText || "상품명에 규격 없음"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">원료</dt>
+                <dt className="text-xs text-slate-600">원료</dt>
                 <dd className="text-slate-700">
                   {loaded.ctx.ingredients.join(", ") || (
-                    <span className="text-slate-400">매칭된 원료 없음</span>
+                    <span className="text-slate-600">매칭된 원료 없음</span>
                   )}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">구매자 고민</dt>
+                <dt className="text-xs text-slate-600">구매자 고민</dt>
                 <dd className="text-slate-700">
                   {loaded.ctx.symptoms.join(", ") || (
                     <span className="text-amber-600">

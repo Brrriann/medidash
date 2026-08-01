@@ -39,7 +39,7 @@ export default async function AdminPage() {
         description="수강생 코드 발급·회원 관리·데이터 갱신을 수행합니다."
         aside={
           mock ? (
-            <span className="inline-flex rounded bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
+            <span className="inline-flex rounded bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
               Mock 모드 — 샘플 데이터 표시 중
             </span>
           ) : undefined
@@ -58,17 +58,17 @@ export default async function AdminPage() {
         {/* 코드 목록 */}
         <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">
-            발급된 코드 <span className="font-normal text-slate-400">({codes.length})</span>
+            발급된 코드 <span className="font-normal text-slate-600">({codes.length})</span>
           </h2>
           {codes.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">
+            <p className="py-8 text-center text-sm text-slate-600">
               발급된 코드가 없습니다
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
+                  <tr className="border-b border-slate-100 text-left text-xs text-slate-600">
                     <th className="py-2 pr-3 font-medium">코드</th>
                     <th className="py-2 pr-3 font-medium">메모</th>
                     <th className="py-2 pr-3 font-medium">사용</th>
@@ -100,9 +100,9 @@ export default async function AdminPage() {
                         <td className="py-2">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                              className={`rounded px-2 py-0.5 text-xs font-semibold ${
                                 expired || exhausted
-                                  ? "bg-slate-100 text-slate-400"
+                                  ? "bg-slate-100 text-slate-600"
                                   : "bg-brand-100 text-brand-700"
                               }`}
                             >
@@ -114,7 +114,7 @@ export default async function AdminPage() {
                                 <button
                                   type="submit"
                                   aria-label={`${c.code} 삭제`}
-                                  className="rounded p-0.5 text-slate-300 transition hover:text-red-500"
+                                  className="rounded p-0.5 text-slate-500 transition hover:text-red-500"
                                 >
                                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
                                     <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -137,15 +137,15 @@ export default async function AdminPage() {
       {/* 회원 목록 */}
       <section className="card p-5">
         <h2 className="mb-3 text-sm font-bold text-slate-800">
-          회원 목록 <span className="font-normal text-slate-400">({members.length})</span>
+          회원 목록 <span className="font-normal text-slate-600">({members.length})</span>
         </h2>
         {members.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">회원이 없습니다</p>
+          <p className="py-8 text-center text-sm text-slate-600">회원이 없습니다</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
+                <tr className="border-b border-slate-100 text-left text-xs text-slate-600">
                   <th className="py-2 pr-4 font-medium">이메일</th>
                   <th className="py-2 pr-4 font-medium">역할</th>
                   <th className="py-2 pr-4 font-medium">가입 코드</th>
@@ -158,7 +158,7 @@ export default async function AdminPage() {
                     <td className="py-2 pr-4">{m.email ?? "—"}</td>
                     <td className="py-2 pr-4">
                       <span
-                        className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                        className={`rounded px-2 py-0.5 text-xs font-semibold ${
                           m.role === "admin"
                             ? "bg-accent-100 text-accent-700"
                             : "bg-slate-100 text-slate-500"
@@ -170,7 +170,7 @@ export default async function AdminPage() {
                     <td className="py-2 pr-4 font-mono text-xs text-slate-500">
                       {m.inviteCode ?? "—"}
                     </td>
-                    <td className="py-2 text-xs text-slate-400">
+                    <td className="py-2 text-xs text-slate-600">
                       {new Date(m.createdAt).toLocaleDateString("ko-KR")}
                     </td>
                   </tr>
@@ -187,7 +187,7 @@ export default async function AdminPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-md border border-slate-200 p-4">
             <p className="text-sm font-semibold text-slate-700">도매몰 상품 캐시</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-600">
               최근 갱신:{" "}
               {crawledAt ? new Date(crawledAt).toLocaleDateString("ko-KR") : "이력 없음"}
               {isSample && " (샘플)"}
@@ -196,19 +196,19 @@ export default async function AdminPage() {
               type="button"
               disabled
               title="W2에서 구현"
-              className="mt-3 w-full cursor-not-allowed rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-300"
+              className="mt-3 w-full cursor-not-allowed rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-500"
             >
               크롤러 실행 (W2)
             </button>
           </div>
           <div className="rounded-md border border-slate-200 p-4">
             <p className="text-sm font-semibold text-slate-700">홈쇼핑모아 방송 지표</p>
-            <p className="mt-1 text-xs text-slate-400">최근 갱신: 이력 없음</p>
+            <p className="mt-1 text-xs text-slate-600">최근 갱신: 이력 없음</p>
             <button
               type="button"
               disabled
               title="W2에서 구현"
-              className="mt-3 w-full cursor-not-allowed rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-300"
+              className="mt-3 w-full cursor-not-allowed rounded-lg border border-slate-200 py-2 text-xs font-semibold text-slate-500"
             >
               지표 크롤러 실행 (W2)
             </button>

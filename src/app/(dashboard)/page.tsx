@@ -142,7 +142,7 @@ export default async function HomePage() {
                 <span className="block text-sm font-semibold text-slate-800">
                   {item.title}
                 </span>
-                <span className="mt-0.5 block text-xs text-slate-400">
+                <span className="mt-0.5 block text-xs text-slate-600">
                   {item.desc}
                 </span>
               </span>
@@ -151,7 +151,7 @@ export default async function HomePage() {
                 width={15}
                 height={15}
                 aria-hidden
-                className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5"
+                className="shrink-0 text-slate-600 transition group-hover:translate-x-0.5"
               >
                 <path d="M4 12h15M13 6l6 6-6 6" />
               </svg>
@@ -166,8 +166,8 @@ export default async function HomePage() {
         <h2 className="mb-3 text-sm font-bold text-slate-800">최근 작업</h2>
         {recentWorks.length === 0 ? (
           <div className="flex h-28 flex-col items-center justify-center text-center">
-            <p className="text-sm text-slate-400">아직 작업 이력이 없습니다</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="text-sm text-slate-600">아직 작업 이력이 없습니다</p>
+            <p className="mt-1 text-xs text-slate-600">
               썸네일·상품명·마진 계산 결과가 여기에 쌓입니다
             </p>
           </div>
@@ -178,7 +178,7 @@ export default async function HomePage() {
                 <span className="text-slate-700">
                   {WORK_LABELS[w.kind] ?? w.kind}
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-600">
                   {new Date(w.createdAt).toLocaleString("ko-KR")}
                 </span>
               </li>

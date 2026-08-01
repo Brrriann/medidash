@@ -68,7 +68,7 @@ function HotspotMarker({
             : "border-white bg-brand-400/80 shadow-[0_0_0_3px_rgba(58,96,137,0.2)] hover:scale-110 hover:bg-brand-500"
         }`}
       >
-        <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800/90 px-1.5 py-0.5 text-[10px] font-medium text-white opacity-0 transition group-hover:opacity-100">
+        <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800/90 px-1.5 py-0.5 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100">
           {category.name}
         </span>
       </button>

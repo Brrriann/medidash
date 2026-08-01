@@ -25,7 +25,7 @@ function Field({
     <label className="block text-sm">
       <span className="mb-1 block font-medium text-slate-700">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-[11px] text-slate-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-slate-600">{hint}</span>}
     </label>
   );
 }
@@ -59,7 +59,7 @@ export function OpsProfileForm({ profile }: { profile: OpsProfile }) {
             + 몰 추가
           </button>
         </div>
-        <p className="mb-2 text-[11px] text-slate-400">
+        <p className="mb-2 text-xs text-slate-600">
           고객이 어느 몰에서 샀는지에 따라 안내가 달라집니다. 쓰시는 몰을 모두 넣어주세요.
         </p>
         <datalist id="platforms">
@@ -100,7 +100,7 @@ export function OpsProfileForm({ profile }: { profile: OpsProfile }) {
                 type="button"
                 onClick={() => setChannels((x) => x.filter((_, j) => j !== i))}
                 aria-label={`${i + 1}번째 몰 삭제`}
-                className="rounded-lg px-2 text-slate-300 transition hover:text-red-500"
+                className="rounded-lg px-2 text-slate-500 transition hover:text-red-500"
               >
                 ✕
               </button>

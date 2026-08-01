@@ -109,7 +109,7 @@ export function MarginCalculator({
 
         {/* 수수료 프리셋 */}
         <div>
-          <p className="mb-1.5 text-[11px] font-medium text-slate-400">
+          <p className="mb-1.5 text-xs font-medium text-slate-600">
             {platform === "coupang" ? "쿠팡 카테고리 (VAT 별도 → ×1.1 자동)" : "네이버 등급 (VAT 포함)"}
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -118,7 +118,7 @@ export function MarginCalculator({
                 key={p.label}
                 type="button"
                 onClick={() => setFeePct(Number((p.rate * 100).toFixed(3)))}
-                className="rounded-md border border-slate-300 px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-brand-400 hover:text-brand-700"
+                className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-500 transition hover:border-brand-400 hover:text-brand-700"
               >
                 {p.label} {(p.rate * 100).toFixed(1)}%
               </button>
@@ -149,7 +149,7 @@ export function MarginCalculator({
           {saving ? "저장 중…" : "계산 결과 저장"}
         </button>
         {mock && (
-          <p className="text-center text-[11px] text-slate-400">
+          <p className="text-center text-xs text-slate-600">
             Mock 모드 — Supabase 연결 후 저장·히스토리가 활성화됩니다
           </p>
         )}
@@ -175,7 +175,7 @@ export function MarginCalculator({
           </div>
         </dl>
 
-        <p className="px-1 text-[11px] leading-relaxed text-slate-400">
+        <p className="px-1 text-xs leading-relaxed text-slate-600">
           고객 제공 엑셀 &ldquo;세금 제외 실패없는 마진계산기&rdquo; 수식을 그대로 이식했습니다 (동일 입력 → 동일 출력).
           쿠팡은 카테고리 수수료율에 부가세(×1.1)가 자동 반영됩니다.
         </p>
@@ -192,7 +192,7 @@ function Field({ label, suffix, children }: { label: string; suffix: string; chi
       <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
       <div className="relative">
         {children}
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">{suffix}</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-600">{suffix}</span>
       </div>
     </label>
   );
@@ -204,7 +204,7 @@ function Row({ k, v, sub }: { k: string; v: string; sub?: string }) {
       <dt className="text-xs text-slate-500">{k}</dt>
       <dd className="font-semibold text-slate-800">
         {v}
-        {sub && <span className="ml-1.5 text-xs font-normal text-slate-400">{sub}</span>}
+        {sub && <span className="ml-1.5 text-xs font-normal text-slate-600">{sub}</span>}
       </dd>
     </div>
   );

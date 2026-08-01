@@ -22,11 +22,11 @@ export function StatTiles({ items }: { items: Stat[] }) {
     <div className="ruled-grid grid grid-cols-2 md:grid-cols-4">
       {items.map((s) => (
         <div key={s.label} className="bg-white px-4 py-3">
-          <p className="text-[11px] font-medium text-slate-500">{s.label}</p>
+          <p className="text-xs font-medium text-slate-500">{s.label}</p>
           <p className="mt-1 text-xl font-bold tracking-tight text-slate-900 tabular-nums">
             {s.value}
           </p>
-          {s.hint && <p className="mt-0.5 text-[11px] text-slate-400">{s.hint}</p>}
+          {s.hint && <p className="mt-0.5 text-xs text-slate-600">{s.hint}</p>}
         </div>
       ))}
     </div>

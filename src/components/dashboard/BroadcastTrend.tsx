@@ -63,7 +63,7 @@ export function BroadcastTrend({
             "얼마나 자주 긁는가"가 아니라 "얼마나 앞을 볼 수 있는가"다. */}
         <Link
           href="/broadcast"
-          className="text-[11px] font-medium text-slate-400 transition hover:text-brand-700"
+          className="text-xs font-medium text-slate-600 transition hover:text-brand-700"
         >
           홈쇼핑모아 · 편성표 열흘치 · 전체 {all.length}건 →
         </Link>
@@ -72,9 +72,9 @@ export function BroadcastTrend({
       <div className="grid gap-5 md:grid-cols-2">
         {hot.length > 0 && (
           <div>
-            <p className="mb-2 text-[11px] text-slate-500">
+            <p className="mb-2 text-xs text-slate-500">
               방송이 활발한 원료 —{" "}
-              <span className="text-slate-400">클릭하면 그 원료로 소싱합니다</span>
+              <span className="text-slate-600">클릭하면 그 원료로 소싱합니다</span>
             </p>
             <div className="flex flex-wrap gap-1.5">
               {hot.map(([name, s]) => (
@@ -86,7 +86,7 @@ export function BroadcastTrend({
                 >
                   {name}
                   {s.upcoming.length > 0 && (
-                    <span className="ml-1 text-[10px] text-rose-500/70">
+                    <span className="ml-1 text-xs text-rose-500/70">
                       예정 {s.upcoming.length}
                       {s.upcoming.length >= 10 ? "+" : ""}
                     </span>
@@ -99,20 +99,20 @@ export function BroadcastTrend({
 
         {upcoming.length > 0 && (
           <div>
-            <p className="mb-2 text-[11px] text-slate-500">
+            <p className="mb-2 text-xs text-slate-500">
               방송 예정 · 준비 기간 긴 순 —{" "}
-              <span className="text-slate-400">지금 소싱하면 수요 상승기에 맞출 수 있습니다</span>
+              <span className="text-slate-600">지금 소싱하면 수요 상승기에 맞출 수 있습니다</span>
             </p>
             <ul className="space-y-1.5">
               {upcoming.map((u, i) => (
                 <li key={`${u.ingredient}-${i}`} className="flex items-baseline gap-2 text-xs">
                   <span
-                    className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${u.lead.tone}`}
+                    className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold tabular-nums ${u.lead.tone}`}
                   >
                     {u.lead.label}
                   </span>
-                  <span className="shrink-0 tabular-nums text-slate-400">{when(u.at)}</span>
-                  <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                  <span className="shrink-0 tabular-nums text-slate-600">{when(u.at)}</span>
+                  <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">
                     {channelName(u.channel)}
                   </span>
                   <span className="truncate text-slate-700" title={u.name}>
@@ -125,7 +125,7 @@ export function BroadcastTrend({
         )}
       </div>
 
-      <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+      <p className="mt-3 text-xs leading-relaxed text-slate-600">
         홈쇼핑모아가 원료당 상위 10건만 제공해 방송 횟수의 정확한 순위는 알 수 없습니다.
         위 목록은 &ldquo;방송이 도는 원료&rdquo;와 &ldquo;확정된 예정 방송&rdquo;만 보여줍니다.
         편성표는 열흘치까지만 공개되므로 그보다 먼 방송은 아직 잡히지 않습니다.
