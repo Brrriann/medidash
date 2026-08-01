@@ -24,7 +24,6 @@ export default async function HookPage({
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <PageHeader
-        overline="Hook Pages"
         title="후킹페이지"
         description="상세페이지 최상단에 넣을 후킹 이미지 2장을 만듭니다. 1장은 고객의 고민을 지목하고, 2장은 제품으로 답합니다. 의약품 오인 표현은 광고 안전 표현으로 자동 치환됩니다."
       />

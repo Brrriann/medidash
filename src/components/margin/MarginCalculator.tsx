@@ -158,7 +158,7 @@ export function MarginCalculator({
 
       {/* ── 결과 ── */}
       <div className="space-y-3">
-        <div className={`rounded-2xl border p-6 shadow-sm ${positive ? "border-brand-200 bg-brand-50" : "border-red-200 bg-red-50"}`}>
+        <div className={`rounded-lg border p-6 ${positive ? "border-brand-200 bg-brand-50" : "border-red-200 bg-red-50"}`}>
           <p className="text-xs font-medium text-slate-500">최종마진 (종소세 제외) / 최종마진율</p>
           <p className={`mt-1 text-2xl font-extrabold ${positive ? "text-brand-700" : "text-red-600"}`}>
             {won(r.finalMargin)} <span className="text-base font-bold">({pct(r.finalMarginRate)})</span>
@@ -166,7 +166,7 @@ export function MarginCalculator({
           {!positive && <p className="mt-1 text-xs text-red-500">손해 구간입니다 — 판매가/원가를 조정하세요.</p>}
         </div>
 
-        <dl className="space-y-2 rounded-2xl border border-slate-200 bg-white p-6 text-sm shadow-sm">
+        <dl className="card space-y-2 p-6 text-sm">
           <Row k="판매마진 (종소세 전)" v={won(r.salesMargin)} sub={pct(r.salesMarginRate)} />
           <div className="border-t border-slate-100 pt-2">
             <Row k={`수수료 (${platform === "coupang" ? "쿠팡 ×1.1" : "네이버"})`} v={won(r.fee)} />

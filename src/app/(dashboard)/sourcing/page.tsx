@@ -24,7 +24,6 @@ export default async function SourcingPage({
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <PageHeader
-        overline="Wholesale Sourcing"
         title="상품 소싱"
         description={
           <>

@@ -21,7 +21,6 @@ export default async function MarginPage({
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
-        overline="Margin Calculator"
         title="마진 계산"
         description="고객 제공 엑셀 수식(플랫폼별 수수료·부가세·종합소득세)을 그대로 적용해 판매마진과 세금 제외 최종마진을 계산합니다."
         aside={

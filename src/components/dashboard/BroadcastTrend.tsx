@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { BroadcastStat } from "@/lib/data";
-import { leadTime } from "@/lib/broadcast";
+import { channelName, upcomingRows } from "@/lib/broadcast";
 
 /**
  * 홈쇼핑 방송 트렌드 (docs/SPEC.md §6.3)
@@ -13,16 +13,6 @@ import { leadTime } from "@/lib/broadcast";
  * 방송 예정(upcoming)을 앞에 둔다 — 이미 나간 방송보다 앞으로 나갈 방송이 쓸모 있다.
  * 지금 소싱하면 수요가 오르는 구간에 올라탈 수 있기 때문이다.
  */
-
-/** 채널 코드 → 사람이 읽는 이름. 모르는 코드는 그대로 보여준다. */
-const CHANNEL: Record<string, string> = {
-  cjmall: "CJ온스타일", cjmallplus: "CJ온스타일+", gsshop: "GS샵", gsmyshop: "GS마이샵",
-  lotteimall: "롯데홈쇼핑", lotteonetv: "롯데원티비", hmall: "현대홈쇼핑", hmallplus: "현대+",
-  nsmall: "NS홈쇼핑", nsmallplus: "NS+", kshop: "K쇼핑", kshopplus: "K쇼핑+",
-  shopnt: "SK스토아", bshop: "신세계쇼핑", ssgshop: "SSG", wshop: "W쇼핑",
-  hnsmall: "홈앤쇼핑", immall: "공영쇼핑",
-};
-const channelName = (c: string) => CHANNEL[c] ?? c;
 
 function when(at: string): string {
   if (!at) return "";
@@ -58,23 +48,10 @@ export function BroadcastTrend({
     )
     .slice(0, 10);
 
-  // 예정 방송을 원료 구분 없이 모아 **남은 시간이 긴 순**으로. 이미 지난 건 빠진다.
-  // 같은 상품이 여러 원료에 걸리므로(복합 영양제 하나가 비타민A·C·E에 다 잡힌다)
-  // 상품명+시각으로 중복을 걷어낸다. 안 하면 목록이 같은 상품으로 도배된다.
-  const seen = new Set<string>();
-  const upcoming = entries
-    .flatMap(([name, s]) =>
-      s.upcoming.map((u) => ({ ...u, ingredient: name, lead: leadTime(u.at, now) })),
-    )
-    .filter((u): u is typeof u & { lead: NonNullable<typeof u.lead> } => u.lead !== null)
-    .sort((a, b) => b.lead.days - a.lead.days)
-    .filter((u) => {
-      const k = `${u.name}|${u.at}`;
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    })
-    .slice(0, 6);
+  // 예정 방송은 전용 화면(/broadcast)과 같은 규칙으로 펼친다 — 중복 제거·준비 기간 긴 순.
+  // 여기는 맛보기라 6건만 두고, 나머지는 전체 보기로 넘긴다.
+  const all = upcomingRows(broadcast, now);
+  const upcoming = all.slice(0, 6);
 
   if (!hot.length && !upcoming.length) return null;
 
@@ -84,7 +61,12 @@ export function BroadcastTrend({
         <h2 className="text-sm font-bold text-slate-800">📺 홈쇼핑 방송 트렌드</h2>
         {/* 갱신 주기가 아니라 **데이터가 덮는 창**을 적는다 — 셀러의 판단을 바꾸는 건
             "얼마나 자주 긁는가"가 아니라 "얼마나 앞을 볼 수 있는가"다. */}
-        <span className="text-[11px] text-slate-400">홈쇼핑모아 · 편성표 열흘치</span>
+        <Link
+          href="/broadcast"
+          className="text-[11px] font-medium text-slate-400 transition hover:text-brand-700"
+        >
+          홈쇼핑모아 · 편성표 열흘치 · 전체 {all.length}건 →
+        </Link>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

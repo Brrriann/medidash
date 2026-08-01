@@ -18,7 +18,6 @@ export default async function TitlesPage({
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
-        overline="Title & Tags"
         title="상품명·태그"
         description="원료·부위·플랫폼을 입력하면 노출도 등급이 붙은 상품명 3~5안과 태그 20개를 만들어 드립니다. 의약품 오인 표현은 광고 안전 표현으로 자동 치환됩니다."
       />

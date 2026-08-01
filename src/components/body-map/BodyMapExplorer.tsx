@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { BodyCategory, SubcategoryDetail } from "@/lib/taxonomy/types";
+import type { BroadcastStat } from "@/lib/data";
 import { MAPPED_REGIONS } from "./BodyMapSvg";
 import { BodyMapView } from "./BodyMapView";
 import { SubcategoryCards } from "./SubcategoryCards";
@@ -15,9 +16,15 @@ import { DetailPanel } from "./DetailPanel";
 export function BodyMapExplorer({
   categories,
   details,
+  broadcast,
+  now,
 }: {
   categories: BodyCategory[];
   details: Record<string, SubcategoryDetail>;
+  /** 원료별 홈쇼핑 방송 지표 — 상세 패널 ⑥번 항목에 쓴다 */
+  broadcast: Record<string, BroadcastStat>;
+  /** 서버 기준 시각 (리드타임 계산) */
+  now: number;
 }) {
   const [catSlug, setCatSlug] = useState<string | null>(null);
   const [subSlug, setSubSlug] = useState<string | null>(null);
@@ -95,7 +102,7 @@ export function BodyMapExplorer({
       {/* ── 우: 중분류 → 증상 칩 → 4-Tab 패널 ── */}
       <div className="space-y-4">
         {!category && (
-          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 text-center">
+          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/60 text-center">
             <p className="text-sm font-semibold text-slate-500">
               지도에서 계통을 선택하세요
             </p>
@@ -147,6 +154,8 @@ export function BodyMapExplorer({
             subcategory={subcategory}
             symptom={symptom}
             detail={details[subcategory.slug]}
+            broadcast={broadcast}
+            now={now}
             onClose={() => setSymptom(null)}
           />
         )}

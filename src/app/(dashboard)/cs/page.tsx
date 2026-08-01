@@ -16,7 +16,6 @@ export default async function CsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
-        overline="CS Assistant"
         title="CS 답변"
         description="고객 문의를 붙여넣으면 내 운영 정책에 맞는 답변 초안을 만들어 드립니다. 의약품 오인 표현은 광고 안전 표현으로 자동 치환됩니다."
         aside={

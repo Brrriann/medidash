@@ -7,23 +7,30 @@ import type {
   BodySubcategory,
   SubcategoryDetail,
 } from "@/lib/taxonomy/types";
+import type { BroadcastStat } from "@/lib/data";
+import { channelName, leadTime } from "@/lib/broadcast";
 import { COMPLIANCE_NOTICE, DETAIL_TABS, type DetailTabKey } from "@/lib/constants";
 
 /**
- * 4-Tab 상세 패널 — ①특징 ②추천원료 ③기전원리 ④셀링포인트 (docs/UI-PLAN.md §5)
- * 하단 CTA: "이 원료로 상품 소싱" → 도매몰 통합 검색 (W2 연결)
+ * 부위 상세 패널 (docs/SPEC.md §5-3 — 7종)
+ * ①특징 ②추천원료 ③기전원리 ④셀링포인트를 4-Tab으로, ⑤증상은 헤더의 #키워드,
+ * ⑥홈쇼핑모아 방송 지표는 탭 아래 띠, ⑦소싱 CTA는 하단.
  */
 export function DetailPanel({
   category,
   subcategory,
   symptom,
   detail,
+  broadcast,
+  now,
   onClose,
 }: {
   category: BodyCategory;
   subcategory: BodySubcategory;
   symptom: string;
   detail: SubcategoryDetail | undefined;
+  broadcast: Record<string, BroadcastStat>;
+  now: number;
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<DetailTabKey>("feature");
@@ -173,6 +180,12 @@ export function DetailPanel({
           ))}
       </div>
 
+      <BroadcastBand
+        ingredients={ingredients.map((i) => i.name)}
+        broadcast={broadcast}
+        now={now}
+      />
+
       {/* CTA + 고지 */}
       <footer className="border-t border-slate-100 px-5 py-4">
         <Link
@@ -195,6 +208,105 @@ export function DetailPanel({
           {COMPLIANCE_NOTICE}
         </p>
       </footer>
+    </section>
+  );
+}
+
+/**
+ * ⑥ 홈쇼핑모아 방송 지표 — 이 증상에 추천된 원료가 지금 홈쇼핑에서 도는가.
+ *
+ * **지표가 없으면 띠를 통째로 숨기지 않고 한 줄로 알린다.** 87종 중 방송이 잡히는 원료가
+ * 제한적이라, 그냥 사라지면 셀러는 "이 화면엔 원래 없는 것"으로 읽는다. 없다는 사실
+ * 자체가 신호다 — 홈쇼핑이 안 미는 원료라는 뜻이라서 경쟁이 덜할 수도, 수요가 없을 수도 있다.
+ *
+ * 방송 **횟수로 순위를 매기지 않는다**: 홈쇼핑모아가 원료당 상위 10건만 주므로
+ * 여러 원료가 나란히 10에 걸린다. 이 데이터로는 누가 더 많이 방송되는지 말할 수 없다.
+ */
+function BroadcastBand({
+  ingredients,
+  broadcast,
+  now,
+}: {
+  ingredients: string[];
+  broadcast: Record<string, BroadcastStat>;
+  now: number;
+}) {
+  const hit = ingredients
+    .map((name) => ({ name, stat: broadcast[name] }))
+    .filter((x): x is { name: string; stat: BroadcastStat } => Boolean(x.stat))
+    .filter((x) => x.stat.count > 0 || x.stat.upcoming.length > 0);
+
+  // 추천 원료에 걸린 예정 방송을 준비 기간 긴 순으로 2건만
+  const seen = new Set<string>();
+  const upcoming = hit
+    .flatMap(({ name, stat }) =>
+      stat.upcoming.map((u) => ({ ...u, ingredient: name, lead: leadTime(u.at, now) })),
+    )
+    .filter((u): u is typeof u & { lead: NonNullable<typeof u.lead> } => u.lead !== null)
+    .sort((a, b) => b.lead.days - a.lead.days)
+    .filter((u) => {
+      const k = `${u.name}|${u.at}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .slice(0, 2);
+
+  return (
+    <section className="border-t border-slate-100 px-5 py-4">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h4 className="text-xs font-bold text-slate-700">📺 홈쇼핑 방송 지표</h4>
+        <Link
+          href="/broadcast"
+          className="text-[11px] text-slate-400 transition hover:text-brand-700"
+        >
+          편성 전체 →
+        </Link>
+      </div>
+
+      {hit.length === 0 ? (
+        <p className="text-[11px] leading-relaxed text-slate-400">
+          이 증상에 추천된 원료는 최근 홈쇼핑 편성에 잡히지 않았습니다.
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-1.5">
+            {hit.slice(0, 6).map(({ name, stat }) => (
+              <span
+                key={name}
+                title={stat.titles.slice(0, 5).join("\n")}
+                className="rounded border border-rose-100 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700"
+              >
+                {name}
+                {stat.upcoming.length > 0 && (
+                  <span className="ml-1 text-[10px] tabular-nums text-rose-500/70">
+                    예정 {stat.upcoming.length}
+                    {stat.upcoming.length >= 10 ? "+" : ""}
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
+
+          {upcoming.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {upcoming.map((u, i) => (
+                <li key={i} className="flex items-baseline gap-2 text-[11px]">
+                  <span
+                    className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${u.lead.tone}`}
+                  >
+                    {u.lead.label}
+                  </span>
+                  <span className="shrink-0 text-slate-400">{channelName(u.channel)}</span>
+                  <span className="truncate text-slate-600" title={u.name}>
+                    {u.name}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
     </section>
   );
 }
