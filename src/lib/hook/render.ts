@@ -169,17 +169,19 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
     ctx.fillRect(0, 0, HOOK_W, HOOK_H);
   }
 
-  // 문구 가독성을 위한 베일. 제품이 놓이는 가운데는 덜 눌러 사진이 살아 있게 한다.
+  // 문구 가독성을 위한 베일.
+  //
+  // **글자가 놓이는 위·아래만 누른다.** 전체에 균일하게 깔았더니 AI 씬의 원물 소재가
+  // 뿌옇게 씻겨 레퍼런스 같은 선명함이 사라졌다. 씬 프롬프트가 이미 위 1/3·아래 1/4을
+  // 비우게 돼 있어(image.ts buildScenePrompt) 가운데는 거의 손대지 않아도 된다.
   const veil = ctx.createLinearGradient(0, 0, 0, HOOK_H);
-  if (onDark) {
-    veil.addColorStop(0, "rgba(15,23,42,0.88)");
-    veil.addColorStop(0.42, "rgba(15,23,42,0.62)");
-    veil.addColorStop(1, "rgba(15,23,42,0.9)");
-  } else {
-    veil.addColorStop(0, "rgba(255,255,255,0.93)");
-    veil.addColorStop(0.42, "rgba(255,255,255,0.62)");
-    veil.addColorStop(1, "rgba(255,255,255,0.95)");
-  }
+  const top = onDark ? "rgba(15,23,42," : "rgba(255,255,255,";
+  veil.addColorStop(0, `${top}${onDark ? 0.9 : 0.88})`);
+  veil.addColorStop(0.26, `${top}${onDark ? 0.5 : 0.3})`);
+  veil.addColorStop(0.4, `${top}0)`);
+  veil.addColorStop(0.72, `${top}0)`);
+  veil.addColorStop(0.82, `${top}${onDark ? 0.55 : 0.45})`);
+  veil.addColorStop(1, `${top}${onDark ? 0.9 : 0.85})`);
   ctx.fillStyle = veil;
   ctx.fillRect(0, 0, HOOK_W, HOOK_H);
 
