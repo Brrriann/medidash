@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MOCK_CONTENTS } from "./mock-contents";
 import { SAMPLE_INGREDIENTS } from "./sample-ingredients";
 import { SAMPLE_PRODUCTS, type SampleProduct } from "./sample-products";
+import { EMPTY_OPS_PROFILE, toOpsProfile, type OpsProfile } from "@/lib/ops-profile";
 
 /**
  * 데이터 저장소 (서버 전용).
@@ -122,6 +123,25 @@ export async function getRecentWorks(): Promise<
     .order("created_at", { ascending: false })
     .limit(5);
   return (data ?? []).map((w) => ({ kind: w.kind, createdAt: w.created_at }));
+}
+
+/**
+ * 내 운영 프로필 (profiles.ops_profile).
+ * RLS로 본인 행만 읽히므로 별도 필터가 필요 없다. 미로그인·mock이면 빈 프로필.
+ */
+export async function getOpsProfile(): Promise<OpsProfile> {
+  if (isMockMode()) return EMPTY_OPS_PROFILE;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return EMPTY_OPS_PROFILE;
+  const { data } = await supabase
+    .from("profiles")
+    .select("ops_profile")
+    .eq("id", user.id)
+    .maybeSingle();
+  return toOpsProfile(data?.ops_profile);
 }
 
 export interface AiLogItem {

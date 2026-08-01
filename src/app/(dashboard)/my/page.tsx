@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { isMockMode } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
-import { getAiLogs, getMarginHistory, getRecentWorks } from "@/lib/data";
+import { getAiLogs, getMarginHistory, getOpsProfile, getRecentWorks } from "@/lib/data";
+import { OpsProfileForm } from "@/components/my/OpsProfileForm";
+import { isOpsProfileReady, missingOpsFields } from "@/lib/ops-profile";
 import { signOutAction } from "@/app/(auth)/actions";
 import { PageHeader } from "@/components/ui/PageHeader";
 
@@ -22,6 +24,7 @@ const AI_LABELS: Record<string, string> = {
   hook_bg: "후킹페이지 배경 생성",
   hook_copy: "후킹 문구 생성",
   title_tags: "상품명·태그 제안",
+  cs_answer: "CS 답변 생성",
 };
 
 const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
@@ -47,11 +50,13 @@ export default async function MyPage() {
     }
   }
 
-  const [works, margins, aiLogs] = await Promise.all([
+  const [works, margins, aiLogs, ops] = await Promise.all([
     getRecentWorks(),
     getMarginHistory(),
     getAiLogs(),
+    getOpsProfile(),
   ]);
+  const opsMissing = missingOpsFields(ops);
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -130,6 +135,29 @@ export default async function MyPage() {
           )}
         </section>
       </div>
+
+      {/* 운영 프로필 — CS 답변 생성의 입력 */}
+      <section className="card p-5" id="ops-profile">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-bold text-slate-800">운영 프로필</h2>
+          {isOpsProfileReady(ops) ? (
+            <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
+              CS 답변 사용 가능
+            </span>
+          ) : (
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+              {opsMissing.join(" · ")} 필요
+            </span>
+          )}
+        </div>
+        <p className="mb-4 text-[11px] leading-relaxed text-slate-400">
+          CS 답변은 이 정보를 근거로 만들어집니다. 배송·교환 정책이 비어 있으면 일반론만
+          나와 그대로 쓰기 어렵습니다.
+        </p>
+        {/* mock에서도 폼을 그린다 — 화면 구조 확인이 mock의 목적인데 여기만 빠지면
+            검증이 안 된다. 저장을 누르면 액션이 mock 안내를 돌려준다. */}
+        <OpsProfileForm profile={ops} />
+      </section>
 
       {/* AI 생성 이력 */}
       <section className="card p-5">

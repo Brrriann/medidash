@@ -20,7 +20,8 @@ export type AiKind =
   | "person_cutout"
   | "hook_copy"
   | "hook_bg"
-  | "title_tags";
+  | "title_tags"
+  | "cs_answer";
 
 export async function logAi(
   kind: AiKind,
