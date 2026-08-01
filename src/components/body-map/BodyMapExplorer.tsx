@@ -83,7 +83,7 @@ export function BodyMapExplorer({
                   type="button"
                   onClick={() => selectCategory(cat.slug)}
                   aria-pressed={selected}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                  className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition ${
                     selected
                       ? "border-brand-600 bg-brand-600 text-white"
                       : isChipOnly

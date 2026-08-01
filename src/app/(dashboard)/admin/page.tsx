@@ -39,7 +39,7 @@ export default async function AdminPage() {
         description="수강생 코드 발급·회원 관리·데이터 갱신을 수행합니다."
         aside={
           mock ? (
-            <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
+            <span className="inline-flex rounded bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700">
               Mock 모드 — 샘플 데이터 표시 중
             </span>
           ) : undefined
@@ -100,7 +100,7 @@ export default async function AdminPage() {
                         <td className="py-2">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
                                 expired || exhausted
                                   ? "bg-slate-100 text-slate-400"
                                   : "bg-brand-100 text-brand-700"
@@ -158,7 +158,7 @@ export default async function AdminPage() {
                     <td className="py-2 pr-4">{m.email ?? "—"}</td>
                     <td className="py-2 pr-4">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
                           m.role === "admin"
                             ? "bg-accent-100 text-accent-700"
                             : "bg-slate-100 text-slate-500"
@@ -185,7 +185,7 @@ export default async function AdminPage() {
       <section className="card p-5">
         <h2 className="mb-3 text-sm font-bold text-slate-800">데이터 갱신 (월 1회 배치)</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 p-4">
+          <div className="rounded-md border border-slate-200 p-4">
             <p className="text-sm font-semibold text-slate-700">도매몰 상품 캐시</p>
             <p className="mt-1 text-xs text-slate-400">
               최근 갱신:{" "}
@@ -201,7 +201,7 @@ export default async function AdminPage() {
               크롤러 실행 (W2)
             </button>
           </div>
-          <div className="rounded-xl border border-slate-200 p-4">
+          <div className="rounded-md border border-slate-200 p-4">
             <p className="text-sm font-semibold text-slate-700">홈쇼핑모아 방송 지표</p>
             <p className="mt-1 text-xs text-slate-400">최근 갱신: 이력 없음</p>
             <button

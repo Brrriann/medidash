@@ -328,8 +328,10 @@ export function Sidebar({
         <Account email={email} mock={mock} wide />
       </aside>
 
-      {/* ── 데스크톱 레일 ── */}
-      <aside className="hidden w-16 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white md:flex">
+      {/* ── 데스크톱 레일 ──
+          sticky + h-screen으로 화면에 붙여 둔다. 종전에는 본문과 함께 위로 밀려 올라가
+          스튜디오처럼 긴 화면에서 스크롤을 내리면 메뉴가 통째로 사라졌다. */}
+      <aside className="sticky top-0 hidden h-screen w-16 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white md:flex">
         <Link
           href="/"
           className="flex h-14 items-center justify-center border-b border-slate-100"

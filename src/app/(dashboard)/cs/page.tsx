@@ -20,7 +20,7 @@ export default async function CsPage() {
         description="고객 문의를 붙여넣으면 내 운영 정책에 맞는 답변 초안을 만들어 드립니다. 의약품 오인 표현은 광고 안전 표현으로 자동 치환됩니다."
         aside={
           !quota.unlimited ? (
-            <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
+            <span className="inline-flex rounded bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
               오늘 {Math.max(quota.text.limit - quota.text.used, 0)}회 남음
             </span>
           ) : undefined
@@ -55,7 +55,7 @@ export default async function CsPage() {
                     {ops.channels.map((c, i) => (
                       <span
                         key={i}
-                        className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600"
+                        className="rounded bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600"
                       >
                         {c.platform}
                         {c.storeName && ` · ${c.storeName}`}

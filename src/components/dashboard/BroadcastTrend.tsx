@@ -82,7 +82,7 @@ export function BroadcastTrend({
                   key={name}
                   href={`/sourcing?q=${encodeURIComponent(name)}`}
                   title={s.titles.slice(0, 5).join("\n")}
-                  className="rounded-full border border-rose-100 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 transition hover:border-rose-300"
+                  className="rounded-md border border-rose-100 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 transition hover:border-rose-300"
                 >
                   {name}
                   {s.upcoming.length > 0 && (

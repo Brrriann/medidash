@@ -25,7 +25,7 @@ export default async function MarginPage({
         description="고객 제공 엑셀 수식(플랫폼별 수수료·부가세·종합소득세)을 그대로 적용해 판매마진과 세금 제외 최종마진을 계산합니다."
         aside={
           initialCost ? (
-            <span className="inline-flex rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold text-brand-700">
+            <span className="inline-flex rounded bg-brand-50 px-3 py-1 text-[11px] font-semibold text-brand-700">
               도매몰 카드에서 원가 {won(initialCost)} 자동 입력됨
             </span>
           ) : undefined

@@ -305,7 +305,8 @@ export function renderHookPage(
   // 색을 지정하지 않으면 장의 톤에 맞춰 자동으로 고른다.
   const fg = style.textColor || (onDark ? "#ffffff" : "#0f172a");
   const dim = style.textColor || (onDark ? "rgba(255,255,255,0.75)" : "#475569");
-  const accent = style.accentColor || (onDark ? "#34d399" : "#059669");
+  // brand-300 / brand-600 — 팔레트를 바꾸면 여기도 같이 고쳐야 한다(캔버스라 토큰이 안 닿는다)
+  const accent = style.accentColor || (onDark ? "#74b0a6" : "#1f5d53");
 
   ctx.textBaseline = "top";
   ctx.textAlign = "center";

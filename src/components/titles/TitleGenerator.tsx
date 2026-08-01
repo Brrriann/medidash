@@ -112,7 +112,7 @@ export function TitleGenerator({
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700 disabled:opacity-50"
+          className="w-full rounded-md bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700 disabled:opacity-50"
         >
           {pending ? "생성 중…" : "상품명·태그 생성"}
         </button>
@@ -133,7 +133,7 @@ export function TitleGenerator({
         ) : (
           <>
             {r.sanitized && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
                 ⚠️ 의약품 오인 우려 표현(치료·예방 등)이 광고 안전 표현으로 자동 치환되었습니다.
               </div>
             )}
@@ -150,10 +150,10 @@ export function TitleGenerator({
                 {r.titles.map((t, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5"
+                    className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2.5"
                   >
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${EXPOSURE_STYLE[t.exposure]}`}
+                      className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold ${EXPOSURE_STYLE[t.exposure]}`}
                     >
                       {t.exposure}
                     </span>
@@ -183,7 +183,7 @@ export function TitleGenerator({
                     type="button"
                     onClick={() => copy(tag, `tag${i}`)}
                     title="클릭하여 복사"
-                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                    className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
                       copied === `tag${i}`
                         ? "border-brand-600 bg-brand-600 text-white"
                         : "border-slate-200 bg-slate-50 text-slate-600 hover:border-brand-400"
@@ -224,7 +224,7 @@ function MarketSignal({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+        <div className="rounded-md border border-slate-100 bg-slate-50/60 px-3 py-2.5">
           <p className="text-[11px] text-slate-400">검색 수요</p>
           <p className="mt-0.5 text-sm font-bold text-slate-800">
             {demand == null ? "—" : `${demand.toFixed(2)}×`}
@@ -233,7 +233,7 @@ function MarketSignal({
             콜라겐 대비 12개월 평균
           </p>
         </div>
-        <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+        <div className="rounded-md border border-slate-100 bg-slate-50/60 px-3 py-2.5">
           <p className="text-[11px] text-slate-400">경쟁 상품수</p>
           <p className="mt-0.5 text-sm font-bold text-slate-800">
             {stat.competition == null ? "—" : stat.competition.toLocaleString("ko-KR")}
@@ -254,7 +254,7 @@ function MarketSignal({
             {usable.slice(0, 12).map((r) => (
               <span
                 key={r.term}
-                className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+                className="rounded bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
               >
                 {r.term}
                 <span className="ml-1 text-[10px] text-brand-500/70">{r.count}</span>
