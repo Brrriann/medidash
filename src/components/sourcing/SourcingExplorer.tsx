@@ -282,6 +282,17 @@ function ProductCard({
         >
           상품명 만들기
         </Link>
+        {/*
+          샘플에서도 보여준다. 종전엔 숨겼는데 mock은 전부 샘플이라 **진입로가 통째로
+          사라져** "이미지 생성을 어디서 시작하느냐"가 됐다. 샘플로 들어가도 화면은 뜨고,
+          생성이 안 되는 이유는 그 화면에서 안내한다.
+        */}
+        <Link
+          href={`/hook?ref=${product.id}`}
+          className="col-span-2 rounded-lg bg-slate-900 py-1.5 text-center text-xs font-bold text-white transition hover:bg-slate-700"
+        >
+          후킹페이지 만들기
+        </Link>
       </div>
     </article>
   );

@@ -98,6 +98,17 @@ const GROUPS: NavGroup[] = [
           </svg>
         ),
       },
+      {
+        href: "/hook",
+        label: "후킹페이지",
+        desc: "상세페이지 상단 2장",
+        icon: (
+          <svg {...iconProps} aria-hidden>
+            <rect x="4" y="3" width="16" height="8" rx="1.5" />
+            <rect x="4" y="13" width="16" height="8" rx="1.5" />
+          </svg>
+        ),
+      },
     ],
   },
   {

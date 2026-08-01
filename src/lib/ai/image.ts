@@ -21,6 +21,15 @@ export interface ThumbnailBgInput {
   height: number;
 }
 
+export interface HookSceneInput {
+  /** 도매몰 대표 이미지 원본 바이트 (서버가 상품 id로 받아온 것) */
+  image: Uint8Array;
+  ingredient: string;
+  symptom?: string;
+  /** "1,000mg · 120정" — 화면에 글자로 넣지 않고 분위기 참고용으로만 쓴다 */
+  spec?: string;
+}
+
 export interface PersonCutoutInput {
   /** 예: "40대 남성" */
   persona: string;
@@ -31,6 +40,20 @@ export interface PersonCutoutInput {
 export interface ImageProvider {
   /** url은 `data:image/jpeg;base64,...` 형태의 data URL이다 (위 주석 참고) */
   generateThumbnailBackground(input: ThumbnailBgInput): Promise<{ url: string }>;
+  /** 후킹페이지 배경 — 가운데를 비워 제품이 들어갈 자리를 남긴다 (합성 방식) */
+  generateHookBackground(input: ThumbnailBgInput): Promise<{ url: string }>;
+  /**
+   * 상품 사진을 **참고 이미지로 넣어** 후킹페이지 씬을 통째로 만든다.
+   *
+   * **gpt-image-1에서는 못 하던 것이다.** 편집이 아니라 재생성이라 패키지 한글이
+   * 깨졌다(실측: 종근당 → 증근당). gpt-image-2로 같은 상품을 다시 재봤더니
+   * 정면 표시사항이 한 글자도 안 틀렸다 — 브랜드·기능성 문구·함량·인증마크 전부.
+   *
+   * 남은 한계: **원본 사진에 안 보이는 면은 모델이 지어낸다.** 병 측면 세로 글자가
+   * 판독 불가한 뭉치로 나왔다. 프롬프트로 정면 각도를 고정해 줄이되 완전히는 못 막으므로,
+   * 화면에서 "업로드 전 표시사항 확인"을 안내한다.
+   */
+  generateHookScene(input: HookSceneInput): Promise<{ url: string }>;
   /**
    * 배경이 투명한 인물 컷아웃 (data:image/png).
    *
@@ -71,6 +94,62 @@ function buildPrompt(input: ThumbnailBgInput): string {
     .join("\n");
 }
 
+/**
+ * 후킹페이지 배경 프롬프트 — **상품의 특성을 반영한다.**
+ *
+ * 썸네일용 `buildPrompt`와 다른 점:
+ *  - 세로 구도(1024×1536). 캔버스와 같은 크기라 리샘플링이 없다.
+ *  - **가운데 가로 띠를 비운다.** 그 자리에 실제 상품 사진이 합성된다(render.ts BAND_TOP).
+ *    비워두라고 말하지 않으면 소재가 화면 전체에 깔려 제품이 묻힌다.
+ *  - 원료의 원물을 상·하단 모서리에 배치해 레퍼런스 상세페이지의 구성을 따른다.
+ *
+ * 규칙은 썸네일과 같다 — **부정문을 나열하지 않는다.** 이미지 모델은 "캡슐을 그리지
+ * 마세요"를 잘 못 지키고 오히려 그 단어에 반응한다. 원하는 것만 적으면 제형은 알아서 빠진다.
+ * 글자 금지만 예외로 남긴다(실측에서 잘 지켜졌고 타협할 수 없는 조건).
+ */
+function buildHookPrompt(input: ThumbnailBgInput): string {
+  const material = input.ingredient || "건강 원물";
+  return [
+    "건강기능식품 상세페이지 상단용 세로 배경 이미지.",
+    `${material}의 원물 — 신선한 열매·잎·씨앗·결정 — 을 화면 위쪽 모서리와 아래쪽 모서리에 나눠 배치한 광고 사진.`,
+    "화면 한가운데 가로로 넓은 띠는 부드러운 단색으로 비워 둡니다. 그 자리에 제품이 놓입니다.",
+    input.symptom ? `${input.symptom}을 떠올리게 하는 맑고 정돈된 분위기.` : "",
+    "은은한 파스텔 그라디언트 배경, 부드러운 확산광, 미세한 빛번짐, 고급스러운 제품 광고 톤.",
+    "글자·숫자·로고·워터마크는 넣지 않습니다.",
+    input.extraPrompt,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * 씬 생성 프롬프트 — 상품 사진을 참고 이미지로 넣고 부르는 쪽.
+ *
+ * **표시사항 보존을 최우선으로 적는다.** 실측에서 정면 한글은 전부 살아남았지만,
+ * **원본에 안 보이는 면은 모델이 지어내면서 판독 불가한 글자를 만든다**(병 측면 세로 글자).
+ * 그래서 "원본에 보이는 각도 그대로"를 명시해 새 면을 만들 여지를 줄인다.
+ *
+ * 새 글자를 넣지 말라고 하는 이유도 같다 — 모델이 카피를 그려 넣으면 우리가 캔버스에
+ * 얹는 한글 문구와 겹치고, 그 글자는 광고법 검수를 안 거친 문구가 된다.
+ */
+function buildScenePrompt(input: HookSceneInput): string {
+  return [
+    "이 제품 사진을 건강기능식품 상세페이지 상단용 세로 이미지로 만들어 주세요.",
+    "**제품은 원본 사진에 보이는 각도와 디자인 그대로** 두고, 패키지의 한글 문구·숫자·인증마크를 원본과 동일하게 유지합니다.",
+    // 캔버스 레이아웃(render.ts)의 밴드와 맞춘다 — 위 1/3은 헤드라인, 아래 1/4은 카드 패널이
+    // 올라가므로 그 자리를 비워야 글자가 소재 위에 겹치지 않는다.
+    "제품은 화면 세로 가운데 절반 안에 크게 놓고, 위쪽 3분의 1과 아래쪽 4분의 1은 소재 없이 부드러운 배경만 남깁니다.",
+    input.ingredient
+      ? `제품 좌우 옆자리에 ${input.ingredient}의 원물 — 신선한 잎·열매·씨앗·결정 — 을 크고 또렷하게 띄워 배치합니다. 제품을 가리지 않게 좌우로 벌립니다.`
+      : "제품 좌우 옆자리에 신선한 식물 소재를 크고 또렷하게 띄워 배치합니다.",
+    input.symptom ? `${input.symptom}을 떠올리게 하는 맑고 정돈된 분위기.` : "",
+    "부드러운 파스텔 그라디언트, 확산광, 미세한 빛번짐, 고급스러운 제품 광고 사진 톤.",
+    "제품 패키지에 이미 있는 글자 외에 새로운 글자·문구·로고는 넣지 않습니다.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 class OpenAIImageProvider implements ImageProvider {
   constructor(
     private key: string,
@@ -80,7 +159,7 @@ class OpenAIImageProvider implements ImageProvider {
   /** images/generations 공통 호출 — b64를 data URL로 돌려준다 */
   private async generate(
     prompt: string,
-    opts: { transparent?: boolean } = {},
+    opts: { transparent?: boolean; size?: string } = {},
   ): Promise<{ url: string }> {
     const png = opts.transparent === true;
     const res = await openaiFetch("https://api.openai.com/v1/images/generations", {
@@ -92,7 +171,7 @@ class OpenAIImageProvider implements ImageProvider {
       body: JSON.stringify({
         model: this.model,
         prompt,
-        size: "1024x1024",
+        size: opts.size ?? "1024x1024",
         quality: process.env.AI_IMAGE_QUALITY ?? "medium",
         n: 1,
         // 투명은 png만 지원. 배경은 무손실이 필요 없어 jpeg로 받아 응답 크기를 줄인다
@@ -128,6 +207,41 @@ class OpenAIImageProvider implements ImageProvider {
   async generateThumbnailBackground(input: ThumbnailBgInput): Promise<{ url: string }> {
     // 프리셋이 전부 정사각형(1000·1080)이라 1024 정사각으로 받아 캔버스에서 늘린다.
     return this.generate(buildPrompt(input));
+  }
+
+  async generateHookBackground(input: ThumbnailBgInput): Promise<{ url: string }> {
+    // 캔버스가 1024×1536이라 같은 크기로 받는다 — 리샘플링 없이 1:1로 들어간다.
+    return this.generate(buildHookPrompt(input), { size: "1024x1536" });
+  }
+
+  async generateHookScene(input: HookSceneInput): Promise<{ url: string }> {
+    // 씬 생성은 **모델을 따로 지정한다.** 한글 보존이 확인된 건 gpt-image-2뿐이고,
+    // AI_IMAGE_MODEL이 gpt-image-1로 남아 있으면 표시사항이 깨진 결과가 나간다.
+    const model = process.env.AI_SCENE_MODEL ?? "gpt-image-2";
+
+    const form = new FormData();
+    form.append("model", model);
+    form.append(
+      "image",
+      new Blob([new Uint8Array(input.image)], { type: "image/png" }),
+      "product.png",
+    );
+    form.append("prompt", buildScenePrompt(input));
+    form.append("size", "1024x1536");
+
+    const res = await openaiFetch("https://api.openai.com/v1/images/edits", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${this.key}` },
+      body: form,
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`씬 생성 실패 (HTTP ${res.status}): ${body.slice(0, 300)}`);
+    }
+    const json = (await res.json()) as { data?: { b64_json?: string }[] };
+    const b64 = json.data?.[0]?.b64_json;
+    if (!b64) throw new Error("씬 생성 응답에 b64_json이 없습니다.");
+    return { url: `data:image/png;base64,${b64}` };
   }
 }
 

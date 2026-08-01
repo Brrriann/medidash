@@ -20,6 +20,7 @@ export type AiKind =
   | "person_cutout"
   | "hook_copy"
   | "hook_bg"
+  | "hook_scene"
   | "title_tags"
   | "cs_answer";
 
