@@ -18,7 +18,7 @@ export default async function BroadcastPage() {
   const wide = rows.filter((r) => r.lead.days >= 5).length;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto max-w-7xl space-y-5">
       <PageHeader
         title="홈쇼핑 편성"
         description={

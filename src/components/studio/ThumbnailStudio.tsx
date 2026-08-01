@@ -386,7 +386,11 @@ export function ThumbnailStudio({
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
-          className="touch-none rounded-md border border-slate-200"
+          /* max-w-full이 없으면 460px 캔버스가 좁은 화면(375px)을 밀어내 문서가
+             510px가 된다 — 페이지 전체가 가로로 스크롤됐다. CSS로 줄여도 그리기
+             버퍼(width 속성)는 460 그대로라 해상도는 안 떨어지고, 드래그 좌표는
+             getBoundingClientRect 기준이라 줄어든 크기를 그대로 따라간다. */
+          className="h-auto max-w-full touch-none rounded-md border border-slate-200"
           style={{ width: DISPLAY, height: DISPLAY, cursor: dragRef.current ? "grabbing" : "grab" }}
         />
         <p className="mt-2 text-center text-[11px] text-slate-400">
@@ -677,9 +681,9 @@ function drawText(ctx: CanvasRenderingContext2D, b: TextBlock, W: number, H: num
  * "건강기능식품" 배지의 글자·테두리 색 — brand-600.
  *
  * 캔버스에 직접 그리는 값이라 Tailwind 토큰이 닿지 않는다. **팔레트를 바꾸면 여기도
- * 같이 고쳐야 한다** — 종전 에메랄드(#059669)가 그대로 남아 배지만 초록으로 튀었다.
+ * 같이 고쳐야 한다** — 실제로 에메랄드 시절 값이 남아 배지만 초록으로 튄 적이 있다.
  */
-const BADGE_INK = "#1f5d53";
+const BADGE_INK = "#2a4c70";
 
 function drawBadge(ctx: CanvasRenderingContext2D, b: BadgeBlock, W: number, H: number): Box {
   const bw = b.size * W;

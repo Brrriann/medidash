@@ -22,7 +22,7 @@ export default async function SourcingPage({
   const initialQuery = q ?? ingredients?.split(",")[0]?.trim() ?? "";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto max-w-7xl space-y-5">
       <PageHeader
         title="상품 소싱"
         description={

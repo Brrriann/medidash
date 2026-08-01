@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { TopNav } from "@/components/layout/TopNav";
 import { isMockMode } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,16 +40,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* mock 모드에선 admin 메뉴도 노출해 전체 화면 구조를 확인할 수 있게 한다.
-          계정·mock 표시는 레일 아래로 들어갔다 — 종전 상단 헤더(56px)가 그것만 담고
-          있어서 페이지 머리글과 머리띠가 두 겹이 됐다. */}
-      <Sidebar showAdmin={mock || isAdmin} email={email} mock={mock} />
+    // 좌우 기둥이 없어 본문이 창 전체 폭을 쓴다. 세로로 쌓기만 하면 된다.
+    <div className="flex min-h-screen flex-col">
+      {/* mock 모드에선 admin 메뉴도 노출해 전체 화면 구조를 확인할 수 있게 한다 */}
+      <TopNav showAdmin={mock || isAdmin} email={email} mock={mock} />
 
-      {/* pt-16 md:pt-0 — 모바일에선 좌상단 햄버거가 본문 위에 떠 있으므로 그만큼 비운다 */}
-      <main className="grid-surface min-w-0 flex-1 px-4 pt-16 pb-6 md:px-6 md:pt-6">
-        {children}
-      </main>
+      <main className="grid-surface min-w-0 flex-1 px-4 py-6 md:px-6">{children}</main>
     </div>
   );
 }
