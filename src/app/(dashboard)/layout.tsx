@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { isMockMode } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
-import { signOutAction } from "@/app/(auth)/actions";
 
 export default async function DashboardLayout({
   children,
@@ -43,45 +41,15 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
-      {/* mock 모드에선 admin 메뉴도 노출해 전체 화면 구조를 확인할 수 있게 한다 */}
-      <Sidebar showAdmin={mock || isAdmin} />
+      {/* mock 모드에선 admin 메뉴도 노출해 전체 화면 구조를 확인할 수 있게 한다.
+          계정·mock 표시는 레일 아래로 들어갔다 — 종전 상단 헤더(56px)가 그것만 담고
+          있어서 페이지 머리글과 머리띠가 두 겹이 됐다. */}
+      <Sidebar showAdmin={mock || isAdmin} email={email} mock={mock} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* pl-16: 모바일 햄버거(Sidebar 내 fixed 버튼) 자리 확보 */}
-        <header className="flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white pl-16 pr-6 md:px-6">
-          <div className="flex items-center gap-2">
-            {mock && (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                Mock 모드 — Supabase 미연결
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            {email ? (
-              <>
-                <span className="text-slate-500">{email}</span>
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                  >
-                    로그아웃
-                  </button>
-                </form>
-              </>
-            ) : (
-              <Link
-                href="/login"
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-              >
-                로그인
-              </Link>
-            )}
-          </div>
-        </header>
-
-        <main className="grid-surface min-w-0 flex-1 px-6 py-6">{children}</main>
-      </div>
+      {/* pt-16 md:pt-0 — 모바일에선 좌상단 햄버거가 본문 위에 떠 있으므로 그만큼 비운다 */}
+      <main className="grid-surface min-w-0 flex-1 px-4 pt-16 pb-6 md:px-6 md:pt-6">
+        {children}
+      </main>
     </div>
   );
 }

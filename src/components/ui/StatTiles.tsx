@@ -19,7 +19,7 @@ export interface Stat {
  */
 export function StatTiles({ items }: { items: Stat[] }) {
   return (
-    <div className="ruled-grid grid grid-cols-2 lg:grid-cols-4">
+    <div className="ruled-grid grid grid-cols-2 md:grid-cols-4">
       {items.map((s) => (
         <div key={s.label} className="bg-white px-4 py-3">
           <p className="text-[11px] font-medium text-slate-500">{s.label}</p>

@@ -1,35 +1,48 @@
 @import "tailwindcss";
 
 @theme {
-  /* MediDash 브랜드 — 화이트 베이스 + 그린/블루 포인트 (SaaS 대시보드 톤) */
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-200: #a7f3d0;
-  --color-brand-300: #6ee7b7;
-  --color-brand-400: #34d399;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
-  --color-brand-900: #064e3b;
+  /* 헬스셀러 팔레트 — 깊은 틸 + 오커.
+   *
+   * 종전 값은 에메랄드(#10b981) + 스카이(#0ea5e9)였다. 사양서에 "화이트 베이스 +
+   * 그린/블루 포인트, SaaS 대시보드 톤"으로 적혀 있던 그대로였는데, **벤치마킹 사이트도
+   * 같은 계열이라** 비슷해 보이는 데 한몫했다. 밝은 형광 계열이라 수치와 표 위에서
+   * 눈에 먼저 들어오는 것도 문제였다 — 이 화면들의 주인공은 숫자다.
+   *
+   * 이름(brand/accent)과 단계(50~900)는 그대로 두고 값만 바꾼다. 쓰는 쪽을 고칠 필요가
+   * 없어 토큰 한 곳으로 전 화면 톤이 교체된다.
+   */
+  --color-brand-50: #ecf4f2;
+  --color-brand-100: #d3e7e3;
+  --color-brand-200: #a9cfc8;
+  --color-brand-300: #74b0a6;
+  --color-brand-400: #459085;
+  --color-brand-500: #2a7367;
+  --color-brand-600: #1f5d53;
+  --color-brand-700: #174f4a;
+  --color-brand-800: #123e3a;
+  --color-brand-900: #0d2b29;
 
-  --color-accent-50: #f0f9ff;
-  --color-accent-100: #e0f2fe;
-  --color-accent-200: #bae6fd;
-  --color-accent-300: #7dd3fc;
-  --color-accent-400: #38bdf8;
-  --color-accent-500: #0ea5e9;
-  --color-accent-600: #0284c7;
-  --color-accent-700: #0369a1;
-  --color-accent-800: #075985;
-  --color-accent-900: #0c4a6e;
+  /* 보조는 따뜻한 오커 — 틸의 보색 쪽이라 배지가 브랜드색과 안 섞인다 */
+  --color-accent-50: #fbf5e9;
+  --color-accent-100: #f5e9ce;
+  --color-accent-200: #ebd4a2;
+  --color-accent-300: #ddb868;
+  --color-accent-400: #cb9c3c;
+  --color-accent-500: #b0821f;
+  --color-accent-600: #8f6212;
+  --color-accent-700: #74500f;
+  --color-accent-800: #5c400e;
+  --color-accent-900: #3d2b0a;
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
 }
 
+/* 지면은 순백도 슬레이트도 아닌 아주 옅은 온기 — 틸·오커와 같이 놓았을 때
+ * 차가운 회색 지면이 두 색을 다 밀어낸다. */
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply text-slate-900 antialiased;
+  background-color: #f6f7f5;
 }
 
 /* 카드 표면. 화면마다 rounded-lg border …를 반복하지 않으려고 한 곳에 둔다.
@@ -49,7 +62,7 @@ body {
 
 /* 본문에 깔리는 24px 그리드. 카드가 떠 보이게 하는 용도라 거의 안 보일 만큼 흐리게 한다. */
 @utility grid-surface {
-  background-color: #f8fafc;
+  background-color: #f6f7f5;
   background-image:
     linear-gradient(to right, rgb(15 23 42 / 0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(15 23 42 / 0.04) 1px, transparent 1px);

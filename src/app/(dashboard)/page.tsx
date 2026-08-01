@@ -98,7 +98,7 @@ export default async function HomePage() {
         description="원료를 찾고, 상품을 고르고, 썸네일과 상품명까지 한 자리에서 이어서 만듭니다."
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         {PRIMARY.map((item) => (
           <Link
             key={item.href}

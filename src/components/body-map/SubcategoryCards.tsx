@@ -22,7 +22,7 @@ export function SubcategoryCards({
             type="button"
             onClick={() => onSelect(sub.slug)}
             aria-pressed={selected}
-            className={`rounded-xl border px-3 py-2.5 text-left transition ${
+            className={`rounded-md border px-3 py-2.5 text-left transition ${
               selected
                 ? "border-brand-500 bg-brand-50 ring-2 ring-brand-200"
                 : "border-slate-200 bg-white hover:border-brand-300 hover:bg-brand-50/50"

@@ -5,7 +5,7 @@ export default function AuthLayout({
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-brand-50 to-slate-50 px-4">
       <div className="mb-8 text-center">
         <div className="mb-2 flex items-center justify-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-lg font-bold text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-brand-500 text-lg font-bold text-white">
             H
           </span>
           <span className="text-2xl font-bold tracking-tight text-slate-900">

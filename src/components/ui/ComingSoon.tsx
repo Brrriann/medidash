@@ -15,14 +15,14 @@ export function ComingSoon({
   return (
     <div className="mx-auto max-w-2xl">
       <div className="card p-8">
-        <span className="rounded-full bg-accent-100 px-2.5 py-1 text-[11px] font-bold text-accent-700">
+        <span className="rounded bg-accent-100 px-2.5 py-1 text-[11px] font-bold text-accent-700">
           {week} 구현 예정
         </span>
         <h1 className="mt-3 text-xl font-bold text-slate-900">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-500">{description}</p>
 
         {context && (
-          <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800">
+          <div className="mt-4 rounded-md border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800">
             {context}
           </div>
         )}

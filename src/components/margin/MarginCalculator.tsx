@@ -62,7 +62,7 @@ export function MarginCalculator({
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[5fr_4fr]">
+    <div className="grid gap-5 md:grid-cols-[5fr_4fr]">
       {/* ── 입력 ── */}
       <div className="space-y-4 card p-6">
         <div className="flex items-center justify-between">
@@ -74,7 +74,7 @@ export function MarginCalculator({
                 key={p}
                 type="button"
                 onClick={() => switchPlatform(p)}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                className={`rounded-md border px-3 py-1 text-xs font-semibold transition ${
                   platform === p
                     ? "border-brand-600 bg-brand-600 text-white"
                     : "border-slate-300 text-slate-500 hover:border-brand-400"
@@ -118,7 +118,7 @@ export function MarginCalculator({
                 key={p.label}
                 type="button"
                 onClick={() => setFeePct(Number((p.rate * 100).toFixed(3)))}
-                className="rounded-full border border-slate-300 px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-brand-400 hover:text-brand-700"
+                className="rounded-md border border-slate-300 px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-brand-400 hover:text-brand-700"
               >
                 {p.label} {(p.rate * 100).toFixed(1)}%
               </button>
@@ -144,7 +144,7 @@ export function MarginCalculator({
           type="button"
           onClick={save}
           disabled={mock || saving}
-          className="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-md bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? "저장 중…" : "계산 결과 저장"}
         </button>

@@ -179,7 +179,7 @@ export function SourcingExplorer({
             {filtered.length > visible.length &&
               ` 중 ${visible.length.toLocaleString("ko-KR")}개 표시`}
           </p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((p) => (
               <ProductCard
                 key={p.id}
@@ -194,7 +194,7 @@ export function SourcingExplorer({
               <button
                 type="button"
                 onClick={() => setShown((n) => n + PAGE_STEP)}
-                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+                className="rounded-md border border-slate-300 bg-white px-5 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
               >
                 더 보기 ({(filtered.length - visible.length).toLocaleString("ko-KR")}개 남음)
               </button>
@@ -378,7 +378,7 @@ function MarketSignals({
     d == null
       ? "text-slate-300"
       : d >= 0.8
-        ? "text-emerald-700"
+        ? "text-brand-700"
         : d >= 0.25
           ? "text-slate-700"
           : "text-slate-400";
@@ -473,7 +473,7 @@ function ProductThumb({ src, alt }: { src?: string | null; alt: string }) {
   const url = src?.startsWith("//") ? `https:${src}` : src;
   const [broken, setBroken] = useState(false);
   return (
-    <div className="mb-3 aspect-square overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+    <div className="mb-3 aspect-square overflow-hidden rounded-md border border-slate-100 bg-slate-50">
       {url && !broken ? (
         // 외부 도매몰/CDN 이미지 — next/image 도메인 설정 없이 단순 표시
         // eslint-disable-next-line @next/next/no-img-element

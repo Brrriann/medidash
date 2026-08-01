@@ -69,7 +69,7 @@ export function CsChat({ ready, missing }: { ready: boolean; missing: string[] }
                   type="button"
                   disabled={!ready}
                   onClick={() => send(e)}
-                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition hover:border-brand-300 hover:bg-brand-50/50 disabled:opacity-40"
+                  className="rounded-md border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition hover:border-brand-300 hover:bg-brand-50/50 disabled:opacity-40"
                 >
                   {e}
                 </button>
@@ -119,7 +119,7 @@ export function CsChat({ ready, missing }: { ready: boolean; missing: string[] }
       {/* 입력 영역 */}
       <div className="border-t border-slate-100 p-4">
         {!ready && (
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
             <span>
               <strong>{missing.join(" · ")}</strong>이(가) 설정되어야 답변을 만들 수 있습니다.
             </span>

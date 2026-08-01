@@ -65,12 +65,12 @@ export default async function MyPage() {
         description="내 작업 이력과 계정을 관리합니다."
       />
 
-      <div className="grid gap-5 lg:grid-cols-[2fr_3fr]">
+      <div className="grid gap-5 md:grid-cols-[2fr_3fr]">
         {/* 계정 */}
         <section className="card p-5">
           <h2 className="mb-3 text-sm font-bold text-slate-800">계정</h2>
           {mock ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800">
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800">
               Mock 모드 — Supabase 연결 후 로그인하면 계정 정보가 표시됩니다.
             </div>
           ) : (
@@ -84,7 +84,7 @@ export default async function MyPage() {
               <div>
                 <p className="text-xs text-slate-400">역할</p>
                 <span
-                  className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  className={`mt-0.5 inline-block rounded px-2 py-0.5 text-[10px] font-semibold ${
                     role === "admin"
                       ? "bg-accent-100 text-accent-700"
                       : "bg-slate-100 text-slate-500"
@@ -140,11 +140,11 @@ export default async function MyPage() {
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-slate-800">운영 프로필</h2>
           {isOpsProfileReady(ops) ? (
-            <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
+            <span className="rounded bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
               CS 답변 사용 가능
             </span>
           ) : (
-            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+            <span className="rounded bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
               {opsMissing.join(" · ")} 필요
             </span>
           )}

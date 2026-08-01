@@ -363,10 +363,22 @@ export function ThumbnailStudio({
     }
   };
 
+  // 2단은 lg에서만 편다. 캔버스(460px)와 컨트롤(최소 330px)이 나란히 서려면 810px가
+  // 필요해서, 다른 화면처럼 md(본문 656px)로 당기면 넘친다.
+  // minmax(0,…)은 안전장치 — 컨트롤이 더 길어져도 본문 밖으로 밀려나지 않는다.
   return (
-    <div className="grid gap-5 lg:grid-cols-[auto_1fr]">
-      {/* 미리보기 캔버스 */}
-      <div className="card p-4">
+    <div className="grid items-start gap-5 lg:grid-cols-[auto_minmax(0,1fr)]">
+      {/*
+        미리보기 캔버스.
+
+        **화면에 붙여 둔다(sticky).** 컨트롤 더미가 캔버스보다 훨씬 길어서, 아래쪽
+        "선택 요소"까지 내려가면 캔버스가 화면 밖으로 나갔다 — 무엇을 편집하는지 안 보이는
+        채로 색과 크기를 만지게 된다. 값을 바꿀 때마다 위로 되돌아가야 했다.
+
+        items-start가 같이 필요하다. 격자 항목은 기본이 stretch라 높이가 늘어나 버리면
+        붙일 자리가 없어져 sticky가 동작하지 않는다.
+      */}
+      <div className="card p-4 lg:sticky lg:top-6">
         <canvas
           ref={canvasRef}
           width={DISPLAY}
@@ -374,7 +386,7 @@ export function ThumbnailStudio({
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
-          className="touch-none rounded-xl border border-slate-200"
+          className="touch-none rounded-md border border-slate-200"
           style={{ width: DISPLAY, height: DISPLAY, cursor: dragRef.current ? "grabbing" : "grab" }}
         />
         <p className="mt-2 text-center text-[11px] text-slate-400">
@@ -404,7 +416,7 @@ export function ThumbnailStudio({
         </Section>
 
         {!quota.unlimited && (
-          <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+          <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
             오늘 이미지 생성{" "}
             <span className="font-semibold text-slate-700">
               {Math.max(quota.image.limit - quota.image.used, 0)}회
@@ -622,14 +634,14 @@ export function ThumbnailStudio({
         </Section>
 
         {note && (
-          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
             {note}
           </p>
         )}
 
         {/* 다운로드 */}
         <div className="card p-4">
-          <button type="button" onClick={download} className="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700">
+          <button type="button" onClick={download} className="w-full rounded-md bg-brand-600 py-2.5 text-sm font-bold text-white transition hover:bg-brand-700">
             {preset.label} PNG 다운로드 ({preset.width}×{preset.height})
           </button>
           {savedNote && <p className="mt-2 text-center text-xs text-brand-700">{savedNote}</p>}
@@ -661,6 +673,14 @@ function drawText(ctx: CanvasRenderingContext2D, b: TextBlock, W: number, H: num
   return { x0: b.x - halfW, y0: b.y - halfH, x1: b.x + halfW, y1: b.y + halfH };
 }
 
+/**
+ * "건강기능식품" 배지의 글자·테두리 색 — brand-600.
+ *
+ * 캔버스에 직접 그리는 값이라 Tailwind 토큰이 닿지 않는다. **팔레트를 바꾸면 여기도
+ * 같이 고쳐야 한다** — 종전 에메랄드(#059669)가 그대로 남아 배지만 초록으로 튀었다.
+ */
+const BADGE_INK = "#1f5d53";
+
 function drawBadge(ctx: CanvasRenderingContext2D, b: BadgeBlock, W: number, H: number): Box {
   const bw = b.size * W;
   const bh = bw * 0.34;
@@ -670,9 +690,9 @@ function drawBadge(ctx: CanvasRenderingContext2D, b: BadgeBlock, W: number, H: n
   ctx.fillStyle = "#ffffff";
   ctx.fill();
   ctx.lineWidth = Math.max(1, bw * 0.02);
-  ctx.strokeStyle = "#059669";
+  ctx.strokeStyle = BADGE_INK;
   ctx.stroke();
-  ctx.fillStyle = "#059669";
+  ctx.fillStyle = BADGE_INK;
   ctx.font = `bold ${bh * 0.44}px "Pretendard Variable", Pretendard, system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -723,7 +743,7 @@ const btn = "rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibol
 const btnPrimary = "rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-brand-700";
 const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
 function pill(active: boolean) {
-  return `rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+  return `rounded-md border px-3 py-1.5 text-xs font-semibold transition ${
     active ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 text-slate-500 hover:border-brand-400"
   }`;
 }

@@ -64,7 +64,7 @@ export function DetailPanel({
         </div>
         <div className="flex items-center gap-2">
           {detail?.source === "mock" && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
               개발용 샘플
             </span>
           )}
@@ -119,7 +119,7 @@ export function DetailPanel({
                 return (
                   <li
                     key={ing.name}
-                    className={`rounded-xl border p-3 ${
+                    className={`rounded-md border p-3 ${
                       matched ? "border-brand-200 bg-brand-50/60" : "border-slate-200"
                     }`}
                   >
@@ -129,7 +129,7 @@ export function DetailPanel({
                       </span>
                       {ing.certificationType && (
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
                             ing.certificationType === "고시형"
                               ? "bg-brand-100 text-brand-700"
                               : "bg-accent-100 text-accent-700"
@@ -139,7 +139,7 @@ export function DetailPanel({
                         </span>
                       )}
                       {matched && (
-                        <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        <span className="rounded bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">
                           #{symptom} 매핑
                         </span>
                       )}
@@ -192,14 +192,14 @@ export function DetailPanel({
           href={`/sourcing?symptom=${encodeURIComponent(symptom)}${
             sourcingQuery ? `&ingredients=${encodeURIComponent(sourcingQuery)}` : ""
           }`}
-          className="block w-full rounded-xl bg-brand-600 py-2.5 text-center text-sm font-bold text-white transition hover:bg-brand-700"
+          className="block w-full rounded-md bg-brand-600 py-2.5 text-center text-sm font-bold text-white transition hover:bg-brand-700"
         >
           이 원료로 상품 소싱 →
         </Link>
         {firstIngredient && (
           <Link
             href={`/titles?ingredient=${encodeURIComponent(firstIngredient)}&part=${encodeURIComponent(subcategory.name)}`}
-            className="mt-2 block w-full rounded-xl border border-slate-200 py-2 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+            className="mt-2 block w-full rounded-md border border-slate-200 py-2 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
           >
             상품명·태그 만들기 →
           </Link>

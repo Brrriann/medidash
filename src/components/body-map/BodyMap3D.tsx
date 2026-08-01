@@ -59,10 +59,13 @@ function HotspotMarker({
           e.stopPropagation();
           onSelect(category.slug);
         }}
+        /* 링 색은 brand-500(#2a7367)에서 뽑은 값이다. 임의 값 문법(shadow-[…])이라
+           토큰을 못 쓰므로 팔레트를 바꾸면 여기도 같이 고쳐야 한다 — 종전 에메랄드
+           rgba(16,185,129)가 그대로 남아 지도의 점만 초록으로 튀었다. */
         className={`group relative flex h-5 w-5 -translate-y-0 items-center justify-center rounded-full border-2 transition ${
           selected
-            ? "scale-125 border-white bg-brand-500 shadow-[0_0_0_4px_rgba(16,185,129,0.35)]"
-            : "border-white bg-brand-400/80 shadow-[0_0_0_3px_rgba(16,185,129,0.2)] hover:scale-110 hover:bg-brand-500"
+            ? "scale-125 border-white bg-brand-500 shadow-[0_0_0_4px_rgba(42,115,103,0.35)]"
+            : "border-white bg-brand-400/80 shadow-[0_0_0_3px_rgba(42,115,103,0.2)] hover:scale-110 hover:bg-brand-500"
         }`}
       >
         <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800/90 px-1.5 py-0.5 text-[10px] font-medium text-white opacity-0 transition group-hover:opacity-100">

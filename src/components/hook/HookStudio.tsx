@@ -317,10 +317,89 @@ export function HookStudio({
         )}
       </section>
 
-      {/* 스타일 */}
+      {/* 2장 */}
+      <div className="grid gap-5 md:grid-cols-2">
+        {([0, 1] as const).map((i) => (
+          <section key={i} className="card overflow-hidden">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <span className="text-sm font-bold text-slate-800">
+                {i === 0 ? "1장 · 문제 후킹" : "2장 · 해결 후킹"}
+              </span>
+              <button
+                type="button"
+                onClick={() => download(i)}
+                disabled={!hasCopy}
+                title={hasCopy ? "" : "문구를 먼저 만들어 주세요"}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-brand-400 disabled:opacity-40"
+              >
+                PNG 저장
+              </button>
+            </div>
+
+            <div className="relative">
+              <canvas
+                ref={refs[i]}
+                onPointerDown={(e) => onPointerDown(i, e)}
+                onPointerMove={(e) => onPointerMove(i, e)}
+                onPointerUp={endDrag}
+                onPointerCancel={endDrag}
+                className="block w-full touch-none bg-slate-100"
+                style={{ aspectRatio: `${HOOK_W} / ${HOOK_H}`, cursor: hasCopy ? "grab" : "default" }}
+              />
+              {!hasCopy && !scene && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <p className="rounded-md bg-white/90 px-4 py-3 text-center text-xs leading-relaxed text-slate-500">
+                    위에서 <strong>이미지 만들기</strong> → <strong>문구 만들기</strong>
+                    <br />
+                    순서로 눌러 주세요
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 p-4">
+              <input
+                value={pages[i].badge}
+                onChange={(e) => edit(i, { badge: e.target.value })}
+                placeholder="배지 (예: 이런 분들께)"
+                className={inputCls}
+              />
+              <input
+                value={pages[i].headline}
+                onChange={(e) => edit(i, { headline: e.target.value })}
+                placeholder="큰 문구"
+                className={`${inputCls} font-semibold`}
+              />
+              <input
+                value={pages[i].sub}
+                onChange={(e) => edit(i, { sub: e.target.value })}
+                placeholder="보조 문구"
+                className={inputCls}
+              />
+              <input
+                value={pages[i].points.join(" / ")}
+                onChange={(e) =>
+                  edit(i, {
+                    points: e.target.value
+                      .split("/")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  })
+                }
+                placeholder="불릿 — / 로 구분"
+                className={inputCls}
+              />
+            </div>
+          </section>
+        ))}
+      </div>
+
+      {/* 스타일 — 결과를 먼저 보여준 뒤 조정하게 캔버스 아래로 내렸다.
+          종전에는 생성 → 스타일(85줄) → 캔버스 순이라, 색이나 크기를 만지는 동안
+          정작 바뀌는 그림이 한참 아래 있어 매번 스크롤해 확인해야 했다. */}
       <section className="card p-5">
         <h2 className="mb-3 text-sm font-bold text-slate-800">글자·불릿 스타일</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           <Field label="폰트">
             <select
               value={style.font}
@@ -402,83 +481,6 @@ export function HookStudio({
           2장(밝은 배경)은 검은 글씨.
         </p>
       </section>
-
-      {/* 2장 */}
-      <div className="grid gap-5 lg:grid-cols-2">
-        {([0, 1] as const).map((i) => (
-          <section key={i} className="card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-              <span className="text-sm font-bold text-slate-800">
-                {i === 0 ? "1장 · 문제 후킹" : "2장 · 해결 후킹"}
-              </span>
-              <button
-                type="button"
-                onClick={() => download(i)}
-                disabled={!hasCopy}
-                title={hasCopy ? "" : "문구를 먼저 만들어 주세요"}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-brand-400 disabled:opacity-40"
-              >
-                PNG 저장
-              </button>
-            </div>
-
-            <div className="relative">
-              <canvas
-                ref={refs[i]}
-                onPointerDown={(e) => onPointerDown(i, e)}
-                onPointerMove={(e) => onPointerMove(i, e)}
-                onPointerUp={endDrag}
-                onPointerCancel={endDrag}
-                className="block w-full touch-none bg-slate-100"
-                style={{ aspectRatio: `${HOOK_W} / ${HOOK_H}`, cursor: hasCopy ? "grab" : "default" }}
-              />
-              {!hasCopy && !scene && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <p className="rounded-xl bg-white/90 px-4 py-3 text-center text-xs leading-relaxed text-slate-500">
-                    위에서 <strong>이미지 만들기</strong> → <strong>문구 만들기</strong>
-                    <br />
-                    순서로 눌러 주세요
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2 p-4">
-              <input
-                value={pages[i].badge}
-                onChange={(e) => edit(i, { badge: e.target.value })}
-                placeholder="배지 (예: 이런 분들께)"
-                className={inputCls}
-              />
-              <input
-                value={pages[i].headline}
-                onChange={(e) => edit(i, { headline: e.target.value })}
-                placeholder="큰 문구"
-                className={`${inputCls} font-semibold`}
-              />
-              <input
-                value={pages[i].sub}
-                onChange={(e) => edit(i, { sub: e.target.value })}
-                placeholder="보조 문구"
-                className={inputCls}
-              />
-              <input
-                value={pages[i].points.join(" / ")}
-                onChange={(e) =>
-                  edit(i, {
-                    points: e.target.value
-                      .split("/")
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  })
-                }
-                placeholder="불릿 — / 로 구분"
-                className={inputCls}
-              />
-            </div>
-          </section>
-        ))}
-      </div>
     </div>
   );
 }

@@ -22,7 +22,7 @@ export function SymptomChips({
             type="button"
             onClick={() => onSelect(keyword)}
             aria-pressed={selected}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+            className={`rounded-md border px-3 py-1 text-xs font-medium transition ${
               selected
                 ? "border-brand-600 bg-brand-600 text-white"
                 : "border-slate-300 bg-white text-slate-600 hover:border-brand-400 hover:text-brand-700"
