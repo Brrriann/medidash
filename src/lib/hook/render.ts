@@ -32,6 +32,14 @@ export const HOOK_H = 1536;
 const PAD = 72;
 const INNER = HOOK_W - PAD * 2;
 
+/** 제품이 놓이는 가운데 밴드 — 텍스트 길이와 무관하게 고정이라 항상 같은 자리에 온다 */
+const BAND_TOP = 520;
+const BAND_H = 620;
+
+/** 하단 카드 패널의 기본 위치 (사용자가 드래그하면 layout이 이긴다) */
+const PANEL_TOP_DEFAULT = 1200;
+const PANEL_H = 250;
+
 /**
  * 고를 수 있는 폰트.
  *
@@ -76,6 +84,29 @@ export interface HookStyle {
   bulletShape: BulletShape;
   /** 불릿 크기 배율 (0.6~1.8) */
   bulletScale: number;
+}
+
+/**
+ * 문구 덩어리의 위치. 정규화 좌표(0~1)라 캔버스 크기가 바뀌어도 그대로 쓴다.
+ * `x`는 중심, `y`는 윗변 기준이다.
+ *
+ * 배지·헤드라인·서브는 **한 덩어리로 움직인다** — 셋의 간격은 디자인이고,
+ * 따로 흩어놓게 하면 매번 정렬을 다시 맞춰야 한다.
+ */
+export interface PageLayout {
+  head: { x: number; y: number };
+  panel: { x: number; y: number };
+}
+
+export const DEFAULT_PAGE_LAYOUT: PageLayout = {
+  head: { x: 0.5, y: 96 / HOOK_H },
+  panel: { x: 0.5, y: PANEL_TOP_DEFAULT / HOOK_H },
+};
+
+/** 드래그 히트 판정을 위해 렌더러가 실제로 그린 영역을 돌려준다 */
+export interface DrawnBounds {
+  head: { x: number; y: number; w: number; h: number };
+  panel: { x: number; y: number; w: number; h: number } | null;
 }
 
 export const DEFAULT_HOOK_STYLE: HookStyle = {
@@ -128,14 +159,6 @@ function drawBullet(
     ctx.stroke();
   }
 }
-
-/** 제품이 놓이는 가운데 밴드 — 텍스트 길이와 무관하게 고정이라 항상 같은 자리에 온다 */
-const BAND_TOP = 520;
-const BAND_H = 620;
-
-/** 하단 카드 패널 */
-const PANEL_TOP = 1200;
-const PANEL_H = 250;
 
 /**
  * 글자를 폭에 맞춰 줄바꿈. 한글은 띄어쓰기 없이도 이어져 단어 경계로 자를 수 없어
@@ -234,15 +257,19 @@ export interface RenderInput {
   /** 0 = 문제 후킹(어두운 톤), 1 = 해결 후킹(밝은 톤) */
   index: 0 | 1;
   style: HookStyle;
+  layout: PageLayout;
 }
 
-export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
+export function renderHookPage(
+  canvas: HTMLCanvasElement,
+  input: RenderInput,
+): DrawnBounds | null {
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) return null;
   canvas.width = HOOK_W;
   canvas.height = HOOK_H;
 
-  const { page, background, index, style } = input;
+  const { page, background, index, style, layout } = input;
   const onDark = index === 0;
   const FONT = fontStack(style.font);
   // 배율은 글자에만 건다. 밴드 좌표는 고정이라 레이아웃이 흔들리지 않는다.
@@ -282,7 +309,9 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
 
   ctx.textBaseline = "top";
   ctx.textAlign = "center";
-  let y = 96;
+  const headX = layout.head.x * HOOK_W;
+  const headTop = layout.head.y * HOOK_H;
+  let y = headTop;
 
   // ── 배지 ──
   if (page.badge) {
@@ -290,10 +319,10 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
     const w = ctx.measureText(page.badge).width + 50;
     ctx.fillStyle = accent;
     const badgeH = px(60);
-    roundRect(ctx, (HOOK_W - w) / 2, y, w, badgeH, badgeH / 2);
+    roundRect(ctx, headX - w / 2, y, w, badgeH, badgeH / 2);
     ctx.fill();
     ctx.fillStyle = onDark ? "#06281c" : "#ffffff";
-    ctx.fillText(page.badge, HOOK_W / 2, y + px(16));
+    ctx.fillText(page.badge, headX, y + px(16));
     y += badgeH + 28;
   }
 
@@ -302,7 +331,7 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
     const { size, lines } = fitLines(ctx, page.headline, INNER, 2, px(78), px(44), FONT);
     ctx.fillStyle = fg;
     for (const line of lines) {
-      ctx.fillText(line, HOOK_W / 2, y);
+      ctx.fillText(line, headX, y);
       y += size * 1.28;
     }
     y += 10;
@@ -313,7 +342,7 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
     ctx.font = `500 ${px(32)}px ${FONT}`;
     ctx.fillStyle = dim;
     for (const line of wrap(ctx, page.sub, INNER)) {
-      ctx.fillText(line, HOOK_W / 2, y);
+      ctx.fillText(line, headX, y);
       y += px(48);
     }
   }
@@ -327,21 +356,23 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
 
   // ── 하단 카드 패널 (points) ──
   const pts = page.points.slice(0, 3);
+  const PANEL_TOP = layout.panel.y * HOOK_H;
+  const panelX = layout.panel.x * HOOK_W - INNER / 2;
   if (pts.length) {
     ctx.fillStyle = onDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.05)";
-    roundRect(ctx, PAD, PANEL_TOP, INNER, PANEL_H, 28);
+    roundRect(ctx, panelX, PANEL_TOP, INNER, PANEL_H, 28);
     ctx.fill();
 
     const colW = INNER / pts.length;
     pts.forEach((p, i) => {
-      const cx = PAD + colW * i + colW / 2;
+      const cx = panelX + colW * i + colW / 2;
       // 칸 구분선
       if (i > 0) {
         ctx.strokeStyle = onDark ? "rgba(255,255,255,0.15)" : "rgba(15,23,42,0.1)";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(PAD + colW * i, PANEL_TOP + 42);
-        ctx.lineTo(PAD + colW * i, PANEL_TOP + PANEL_H - 42);
+        ctx.moveTo(panelX + colW * i, PANEL_TOP + 42);
+        ctx.lineTo(panelX + colW * i, PANEL_TOP + PANEL_H - 42);
         ctx.stroke();
       }
       drawBullet(ctx, style.bulletShape, cx, PANEL_TOP + 64, 11 * style.bulletScale, accent);
@@ -362,4 +393,10 @@ export function renderHookPage(canvas: HTMLCanvasElement, input: RenderInput) {
   ctx.fillText(input.disclaimer, HOOK_W / 2, HOOK_H - 56);
 
   ctx.textAlign = "left";
+
+  // 드래그 히트 판정용. 머리 덩어리는 실제로 그린 높이(y - headTop)를 쓴다.
+  return {
+    head: { x: headX - INNER / 2, y: headTop, w: INNER, h: Math.max(y - headTop, 60) },
+    panel: pts.length ? { x: panelX, y: PANEL_TOP, w: INNER, h: PANEL_H } : null,
+  };
 }
