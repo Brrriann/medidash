@@ -22,7 +22,7 @@ export default async function HookPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto max-w-7xl space-y-5">
       <PageHeader
         title="후킹페이지"
         description="상세페이지 최상단에 넣을 후킹 이미지 2장을 만듭니다. 1장은 고객의 고민을 지목하고, 2장은 제품으로 답합니다. 의약품 오인 표현은 광고 안전 표현으로 자동 치환됩니다."
@@ -47,25 +47,25 @@ export default async function HookPage({
             <h2 className="mb-3 text-sm font-bold text-slate-800">이 상품 정보로 만듭니다</h2>
             <dl className="grid gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
               <div>
-                <dt className="text-xs text-slate-400">상품</dt>
+                <dt className="text-xs text-slate-600">상품</dt>
                 <dd className="font-semibold text-slate-800">{loaded.ctx.spec.core}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">규격</dt>
-                <dd className={loaded.ctx.specText ? "text-slate-700" : "text-slate-400"}>
+                <dt className="text-xs text-slate-600">규격</dt>
+                <dd className={loaded.ctx.specText ? "text-slate-700" : "text-slate-600"}>
                   {loaded.ctx.specText || "상품명에 규격 없음"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">원료</dt>
+                <dt className="text-xs text-slate-600">원료</dt>
                 <dd className="text-slate-700">
                   {loaded.ctx.ingredients.join(", ") || (
-                    <span className="text-slate-400">매칭된 원료 없음</span>
+                    <span className="text-slate-600">매칭된 원료 없음</span>
                   )}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">구매자 고민</dt>
+                <dt className="text-xs text-slate-600">구매자 고민</dt>
                 <dd className="text-slate-700">
                   {loaded.ctx.symptoms.join(", ") || (
                     <span className="text-amber-600">

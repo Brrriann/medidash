@@ -270,7 +270,7 @@ export function HookStudio({
       {/* 생성 도구 */}
       <section className="card p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-400">1단계</span>
+          <span className="text-xs font-bold text-slate-600">1단계</span>
           <button
             type="button"
             onClick={makeScene}
@@ -279,8 +279,8 @@ export function HookStudio({
           >
             이미지 만들기
           </button>
-          <span className="text-slate-300">→</span>
-          <span className="text-[11px] font-bold text-slate-400">2단계</span>
+          <span className="text-slate-500">→</span>
+          <span className="text-xs font-bold text-slate-600">2단계</span>
           <button
             type="button"
             onClick={makeCopy}
@@ -289,7 +289,7 @@ export function HookStudio({
           >
             문구 만들기
           </button>
-          {busy && <span className="text-xs text-slate-400">{busy}</span>}
+          {busy && <span className="text-xs text-slate-600">{busy}</span>}
         </div>
 
         {/* **비활성 이유를 반드시 적는다.** 회색 버튼만 있으면 "버튼이 없다"로 읽힌다. */}
@@ -301,7 +301,7 @@ export function HookStudio({
         )}
 
         {!quota.unlimited && (
-          <p className="mt-3 text-[11px] text-slate-400">
+          <p className="mt-3 text-xs text-slate-600">
             오늘 문구 {Math.max(quota.text.limit - quota.text.used, 0)}회 · 이미지{" "}
             {Math.max(quota.image.limit - quota.image.used, 0)}회 남았습니다. 배경은 2장이
             공유해 1회만 씁니다.
@@ -465,18 +465,18 @@ export function HookStudio({
           />
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-[11px] text-slate-500">
+          <span className="text-xs text-slate-500">
             미리보기에서 <strong>문구 덩어리를 끌어</strong> 위치를 옮길 수 있습니다.
           </span>
           <button
             type="button"
             onClick={resetLayout}
-            className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50"
+            className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
           >
             위치 초기화
           </button>
         </div>
-        <p className="mt-2 text-[11px] text-slate-400">
+        <p className="mt-2 text-xs text-slate-600">
           색을 비워두면 장의 톤에 맞춰 자동으로 정해집니다 — 1장(어두운 배경)은 흰 글씨,
           2장(밝은 배경)은 검은 글씨.
         </p>

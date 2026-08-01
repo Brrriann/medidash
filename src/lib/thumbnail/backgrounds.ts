@@ -29,7 +29,7 @@ const PALETTES: { keys: string[]; c1: string; c2: string; label: string }[] = [
 
 /* 부위가 안 잡힐 때 쓰는 기본값이라 브랜드색을 따라간다(brand-500 → brand-800).
    위의 부위별 팔레트는 브랜드가 아니라 부위의 뜻을 담은 색이라 그대로 둔다. */
-const DEFAULT_PALETTE = { c1: "#2a7367", c2: "#123e3a", label: "브랜드" };
+const DEFAULT_PALETTE = { c1: "#3a6089", c2: "#152d48", label: "브랜드" };
 
 const ANGLES = [135, 115, 160, 95, 180];
 

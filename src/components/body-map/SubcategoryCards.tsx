@@ -31,7 +31,7 @@ export function SubcategoryCards({
             <span className="block text-sm font-semibold text-slate-800">
               {sub.name}
             </span>
-            <span className="mt-0.5 block text-xs text-slate-400">
+            <span className="mt-0.5 block text-xs text-slate-600">
               증상 키워드 {sub.symptoms.length}개
             </span>
           </button>

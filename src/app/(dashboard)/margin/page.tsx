@@ -25,7 +25,7 @@ export default async function MarginPage({
         description="고객 제공 엑셀 수식(플랫폼별 수수료·부가세·종합소득세)을 그대로 적용해 판매마진과 세금 제외 최종마진을 계산합니다."
         aside={
           initialCost ? (
-            <span className="inline-flex rounded bg-brand-50 px-3 py-1 text-[11px] font-semibold text-brand-700">
+            <span className="inline-flex rounded bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
               도매몰 카드에서 원가 {won(initialCost)} 자동 입력됨
             </span>
           ) : undefined
@@ -41,7 +41,7 @@ export default async function MarginPage({
       <section className="card p-6">
         <h2 className="mb-3 text-sm font-bold text-slate-800">계산 히스토리</h2>
         {history.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">
+          <p className="py-6 text-center text-sm text-slate-600">
             저장된 계산이 없습니다
             {isMockMode() && " (mock 모드 — Supabase 연결 후 활성화)"}
           </p>
@@ -49,7 +49,7 @@ export default async function MarginPage({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
+                <tr className="border-b border-slate-100 text-left text-xs text-slate-600">
                   <th className="py-2 pr-4 font-medium">일시</th>
                   <th className="py-2 pr-4 font-medium">플랫폼</th>
                   <th className="py-2 pr-4 font-medium">원가</th>
@@ -61,7 +61,7 @@ export default async function MarginPage({
               <tbody className="divide-y divide-slate-50">
                 {history.map((h) => (
                   <tr key={h.id}>
-                    <td className="py-2 pr-4 text-xs text-slate-400">
+                    <td className="py-2 pr-4 text-xs text-slate-600">
                       {new Date(h.createdAt).toLocaleString("ko-KR")}
                     </td>
                     <td className="py-2 pr-4">{h.platform === "coupang" ? "쿠팡" : h.platform === "naver" ? "네이버" : h.platform}</td>

@@ -55,7 +55,7 @@ export function DetailPanel({
       {/* 헤더 */}
       <header className="flex items-start justify-between gap-2 border-b border-slate-100 px-5 pb-3 pt-4">
         <div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600">
             {category.name} · {subcategory.name}
           </p>
           <h3 className="mt-0.5 text-base font-bold text-slate-900">
@@ -64,7 +64,7 @@ export function DetailPanel({
         </div>
         <div className="flex items-center gap-2">
           {detail?.source === "mock" && (
-            <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
               개발용 샘플
             </span>
           )}
@@ -72,7 +72,7 @@ export function DetailPanel({
             type="button"
             onClick={onClose}
             aria-label="패널 닫기"
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-lg p-1 text-slate-600 transition hover:bg-slate-100 hover:text-slate-600"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
               <path
@@ -129,7 +129,7 @@ export function DetailPanel({
                       </span>
                       {ing.certificationType && (
                         <span
-                          className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                          className={`rounded px-2 py-0.5 text-xs font-semibold ${
                             ing.certificationType === "고시형"
                               ? "bg-brand-100 text-brand-700"
                               : "bg-accent-100 text-accent-700"
@@ -139,7 +139,7 @@ export function DetailPanel({
                         </span>
                       )}
                       {matched && (
-                        <span className="rounded bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        <span className="rounded bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">
                           #{symptom} 매핑
                         </span>
                       )}
@@ -150,7 +150,7 @@ export function DetailPanel({
                       </p>
                     )}
                     {ing.note && (
-                      <p className="mt-0.5 text-xs text-slate-400">{ing.note}</p>
+                      <p className="mt-0.5 text-xs text-slate-600">{ing.note}</p>
                     )}
                   </li>
                 );
@@ -168,7 +168,7 @@ export function DetailPanel({
             <ul className="space-y-2">
               {detail.sellingPoints.map((point, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-700">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">
                     {i + 1}
                   </span>
                   <span>{point}</span>
@@ -204,7 +204,7 @@ export function DetailPanel({
             상품명·태그 만들기 →
           </Link>
         )}
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+        <p className="mt-3 text-xs leading-relaxed text-slate-600">
           {COMPLIANCE_NOTICE}
         </p>
       </footer>
@@ -258,14 +258,14 @@ function BroadcastBand({
         <h4 className="text-xs font-bold text-slate-700">📺 홈쇼핑 방송 지표</h4>
         <Link
           href="/broadcast"
-          className="text-[11px] text-slate-400 transition hover:text-brand-700"
+          className="text-xs text-slate-600 transition hover:text-brand-700"
         >
           편성 전체 →
         </Link>
       </div>
 
       {hit.length === 0 ? (
-        <p className="text-[11px] leading-relaxed text-slate-400">
+        <p className="text-xs leading-relaxed text-slate-600">
           이 증상에 추천된 원료는 최근 홈쇼핑 편성에 잡히지 않았습니다.
         </p>
       ) : (
@@ -275,11 +275,11 @@ function BroadcastBand({
               <span
                 key={name}
                 title={stat.titles.slice(0, 5).join("\n")}
-                className="rounded border border-rose-100 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700"
+                className="rounded border border-rose-100 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700"
               >
                 {name}
                 {stat.upcoming.length > 0 && (
-                  <span className="ml-1 text-[10px] tabular-nums text-rose-500/70">
+                  <span className="ml-1 text-xs tabular-nums text-rose-500/70">
                     예정 {stat.upcoming.length}
                     {stat.upcoming.length >= 10 ? "+" : ""}
                   </span>
@@ -291,13 +291,13 @@ function BroadcastBand({
           {upcoming.length > 0 && (
             <ul className="mt-2 space-y-1">
               {upcoming.map((u, i) => (
-                <li key={i} className="flex items-baseline gap-2 text-[11px]">
+                <li key={i} className="flex items-baseline gap-2 text-xs">
                   <span
-                    className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${u.lead.tone}`}
+                    className={`shrink-0 whitespace-nowrap rounded px-2 py-1 text-xs font-semibold tabular-nums ${u.lead.tone}`}
                   >
                     {u.lead.label}
                   </span>
-                  <span className="shrink-0 text-slate-400">{channelName(u.channel)}</span>
+                  <span className="shrink-0 text-slate-600">{channelName(u.channel)}</span>
                   <span className="truncate text-slate-600" title={u.name}>
                     {u.name}
                   </span>
@@ -314,8 +314,8 @@ function BroadcastBand({
 function EmptyContent() {
   return (
     <div className="flex h-[160px] flex-col items-center justify-center gap-1 text-center">
-      <p className="text-sm font-medium text-slate-400">콘텐츠 준비 중</p>
-      <p className="text-xs text-slate-400">
+      <p className="text-sm font-medium text-slate-600">콘텐츠 준비 중</p>
+      <p className="text-xs text-slate-600">
         고객 제공 데이터 시드(<code className="text-slate-500">npm run seed:contents</code>)
         후 표시됩니다.
       </p>

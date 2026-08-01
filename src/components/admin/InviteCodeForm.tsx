@@ -59,7 +59,7 @@ export function InviteCodeForm({ mock }: { mock: boolean }) {
       </button>
 
       {mock && (
-        <p className="text-center text-[11px] text-slate-400">
+        <p className="text-center text-xs text-slate-600">
           Mock 모드 — Supabase 연결 후 발급이 활성화됩니다
         </p>
       )}

@@ -386,10 +386,14 @@ export function ThumbnailStudio({
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
-          className="touch-none rounded-md border border-slate-200"
+          /* max-w-full이 없으면 460px 캔버스가 좁은 화면(375px)을 밀어내 문서가
+             510px가 된다 — 페이지 전체가 가로로 스크롤됐다. CSS로 줄여도 그리기
+             버퍼(width 속성)는 460 그대로라 해상도는 안 떨어지고, 드래그 좌표는
+             getBoundingClientRect 기준이라 줄어든 크기를 그대로 따라간다. */
+          className="h-auto max-w-full touch-none rounded-md border border-slate-200"
           style={{ width: DISPLAY, height: DISPLAY, cursor: dragRef.current ? "grabbing" : "grab" }}
         />
-        <p className="mt-2 text-center text-[11px] text-slate-400">
+        <p className="mt-2 text-center text-xs text-slate-600">
           블록을 드래그해 배치 · 배경 {bg.label} 테마
         </p>
       </div>
@@ -407,7 +411,7 @@ export function ThumbnailStudio({
                 className={pill(presetKey === p.key)}
               >
                 {p.label}
-                <span className="ml-1 text-[10px] opacity-70">
+                <span className="ml-1 text-xs opacity-70">
                   {p.width}×{p.height}
                 </span>
               </button>
@@ -416,7 +420,7 @@ export function ThumbnailStudio({
         </Section>
 
         {!quota.unlimited && (
-          <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+          <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
             오늘 이미지 생성{" "}
             <span className="font-semibold text-slate-700">
               {Math.max(quota.image.limit - quota.image.used, 0)}회
@@ -443,7 +447,7 @@ export function ThumbnailStudio({
               테마 배경 ({bg.label})
             </button>
           </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
             {defaults.ingredient || "원료"}의 원물 사진을 배경으로 만듭니다(약 20초). 글자는 넣지
             않으니 문구는 아래 텍스트로 올리세요. 키가 없거나 실패하면 테마 배경이 유지됩니다.
           </p>
@@ -498,7 +502,7 @@ export function ThumbnailStudio({
               {busy === "product" ? "불러오는 중…" : "+ 소싱 상품 이미지"}
             </button>
           </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
             인물은 AI가 만든 가상 인물이라 초상권 문제가 없습니다. 상품 이미지는 배경만 지우고
             원본 픽셀은 그대로 둡니다 — AI로 다시 그리면 패키지의 표시사항이 깨집니다.
             배경제거가 안 되면 원본이 그대로 올라갑니다.
@@ -520,7 +524,7 @@ export function ThumbnailStudio({
         {/* 선택 요소 편집 */}
         <Section title="선택 요소">
           {!selected ? (
-            <p className="text-xs text-slate-400">캔버스에서 요소를 클릭하면 편집할 수 있습니다.</p>
+            <p className="text-xs text-slate-600">캔버스에서 요소를 클릭하면 편집할 수 있습니다.</p>
           ) : (
             <div className="space-y-3">
               {selected.type === "text" && (
@@ -587,7 +591,7 @@ export function ThumbnailStudio({
                       onChange={(e) => patch(selected.id, { size: Number(e.target.value) })}
                       className="flex-1"
                     />
-                    <span className="w-10 shrink-0 text-right tabular-nums text-slate-400">
+                    <span className="w-10 shrink-0 text-right tabular-nums text-slate-600">
                       {Math.round(selected.size * 100)}%
                     </span>
                   </label>
@@ -603,7 +607,7 @@ export function ThumbnailStudio({
               <div>
                 <span className="mb-1 block text-xs text-slate-500">
                   레이어 순서{" "}
-                  <span className="text-slate-400">
+                  <span className="text-slate-600">
                     ({blocks.findIndex((b) => b.id === selected.id) + 1}/{blocks.length}, 클수록 위)
                   </span>
                 </span>
@@ -634,7 +638,7 @@ export function ThumbnailStudio({
         </Section>
 
         {note && (
-          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
             {note}
           </p>
         )}
@@ -645,7 +649,7 @@ export function ThumbnailStudio({
             {preset.label} PNG 다운로드 ({preset.width}×{preset.height})
           </button>
           {savedNote && <p className="mt-2 text-center text-xs text-brand-700">{savedNote}</p>}
-          <p className="mt-2 text-[11px] leading-relaxed text-slate-400">{AI_DISCLAIMER}</p>
+          <p className="mt-2 text-xs leading-relaxed text-slate-600">{AI_DISCLAIMER}</p>
         </div>
       </div>
     </div>
@@ -677,9 +681,9 @@ function drawText(ctx: CanvasRenderingContext2D, b: TextBlock, W: number, H: num
  * "건강기능식품" 배지의 글자·테두리 색 — brand-600.
  *
  * 캔버스에 직접 그리는 값이라 Tailwind 토큰이 닿지 않는다. **팔레트를 바꾸면 여기도
- * 같이 고쳐야 한다** — 종전 에메랄드(#059669)가 그대로 남아 배지만 초록으로 튀었다.
+ * 같이 고쳐야 한다** — 실제로 에메랄드 시절 값이 남아 배지만 초록으로 튄 적이 있다.
  */
-const BADGE_INK = "#1f5d53";
+const BADGE_INK = "#2a4c70";
 
 function drawBadge(ctx: CanvasRenderingContext2D, b: BadgeBlock, W: number, H: number): Box {
   const bw = b.size * W;

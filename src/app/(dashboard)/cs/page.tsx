@@ -20,7 +20,7 @@ export default async function CsPage() {
         description="고객 문의를 붙여넣으면 내 운영 정책에 맞는 답변 초안을 만들어 드립니다. 의약품 오인 표현은 광고 안전 표현으로 자동 치환됩니다."
         aside={
           !quota.unlimited ? (
-            <span className="inline-flex rounded bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
+            <span className="inline-flex rounded bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
               오늘 {Math.max(quota.text.limit - quota.text.used, 0)}회 남음
             </span>
           ) : undefined
@@ -42,20 +42,20 @@ export default async function CsPage() {
 
           <dl className="space-y-3 text-sm">
             <div>
-              <dt className="text-xs text-slate-400">브랜드/상호명</dt>
+              <dt className="text-xs text-slate-600">브랜드/상호명</dt>
               <dd className={ops.brandName ? "font-semibold text-slate-800" : "text-amber-600"}>
                 {ops.brandName || "미설정"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">판매 몰</dt>
+              <dt className="text-xs text-slate-600">판매 몰</dt>
               <dd className="text-slate-700">
                 {ops.channels.length ? (
                   <span className="flex flex-wrap gap-1 pt-0.5">
                     {ops.channels.map((c, i) => (
                       <span
                         key={i}
-                        className="rounded bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600"
+                        className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
                       >
                         {c.platform}
                         {c.storeName && ` · ${c.storeName}`}
@@ -63,12 +63,12 @@ export default async function CsPage() {
                     ))}
                   </span>
                 ) : (
-                  <span className="text-slate-400">미설정</span>
+                  <span className="text-slate-600">미설정</span>
                 )}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">배송 정책</dt>
+              <dt className="text-xs text-slate-600">배송 정책</dt>
               <dd
                 className={`whitespace-pre-wrap text-xs leading-relaxed ${
                   ops.shipping ? "text-slate-700" : "text-amber-600"
@@ -78,14 +78,14 @@ export default async function CsPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">교환·반품 정책</dt>
+              <dt className="text-xs text-slate-600">교환·반품 정책</dt>
               <dd className="whitespace-pre-wrap text-xs leading-relaxed text-slate-700">
-                {ops.returns || <span className="text-slate-400">미설정</span>}
+                {ops.returns || <span className="text-slate-600">미설정</span>}
               </dd>
             </div>
           </dl>
 
-          <p className="mt-4 border-t border-slate-100 pt-3 text-[11px] leading-relaxed text-slate-400">
+          <p className="mt-4 border-t border-slate-100 pt-3 text-xs leading-relaxed text-slate-600">
             답변은 위 정책 안에서만 만들어집니다. 정책에 없는 내용을 물으면 지어내지 않고
             &ldquo;확인 후 안내&rdquo;로 답합니다.
           </p>

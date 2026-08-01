@@ -74,13 +74,13 @@ export function BroadcastSchedule({ rows }: { rows: UpcomingRow[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="상품명 또는 원료 검색"
-          className="min-w-[200px] flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="min-w-[200px] flex-1 rounded-md border border-slate-300 px-3 py-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         />
         <select
           value={channel ?? ""}
           onChange={(e) => setChannel(e.target.value || null)}
           aria-label="채널"
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+          className="rounded-md border border-slate-300 px-3 py-3 text-sm outline-none focus:border-brand-500"
         >
           <option value="">전체 채널</option>
           {channels.map(([code, n]) => (
@@ -105,7 +105,7 @@ export function BroadcastSchedule({ rows }: { rows: UpcomingRow[] }) {
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white/60 py-16 text-center">
           <p className="text-sm font-medium text-slate-500">조건에 맞는 편성이 없습니다</p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-600">
             채널이나 여유 구간을 바꿔 보세요
           </p>
         </div>
@@ -126,11 +126,11 @@ export function BroadcastSchedule({ rows }: { rows: UpcomingRow[] }) {
             <table className="w-full min-w-[46rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left">
-                  <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400">여유</th>
-                  <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400">방송 일시</th>
-                  <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400">채널</th>
-                  <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400">상품명</th>
-                  <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400">잡힌 원료</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-slate-600">여유</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-slate-600">방송 일시</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-slate-600">채널</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-slate-600">상품명</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-slate-600">잡힌 원료</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,7 +141,7 @@ export function BroadcastSchedule({ rows }: { rows: UpcomingRow[] }) {
                   >
                     <td className="px-3 py-2.5">
                       <span
-                        className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${r.lead.tone}`}
+                        className={`inline-block whitespace-nowrap rounded px-2 py-1 text-xs font-semibold tabular-nums ${r.lead.tone}`}
                       >
                         {r.lead.label}
                       </span>
@@ -156,7 +156,7 @@ export function BroadcastSchedule({ rows }: { rows: UpcomingRow[] }) {
                     <td className="whitespace-nowrap px-3 py-2.5">
                       <Link
                         href={`/sourcing?q=${encodeURIComponent(r.ingredient)}`}
-                        className="rounded border border-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+                        className="inline-block rounded-md border border-slate-300 px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-brand-500 hover:text-brand-700"
                       >
                         {r.ingredient} 소싱 →
                       </Link>
@@ -172,7 +172,7 @@ export function BroadcastSchedule({ rows }: { rows: UpcomingRow[] }) {
               <button
                 type="button"
                 onClick={() => setShown((n) => n + PAGE_STEP)}
-                className="rounded-md border border-slate-300 bg-white px-5 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+                className="rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-brand-500 hover:text-brand-700"
               >
                 더 보기 ({(filtered.length - visible.length).toLocaleString("ko-KR")}건 남음)
               </button>

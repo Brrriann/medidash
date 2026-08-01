@@ -306,7 +306,7 @@ export function renderHookPage(
   const fg = style.textColor || (onDark ? "#ffffff" : "#0f172a");
   const dim = style.textColor || (onDark ? "rgba(255,255,255,0.75)" : "#475569");
   // brand-300 / brand-600 — 팔레트를 바꾸면 여기도 같이 고쳐야 한다(캔버스라 토큰이 안 닿는다)
-  const accent = style.accentColor || (onDark ? "#74b0a6" : "#1f5d53");
+  const accent = style.accentColor || (onDark ? "#85a3c2" : "#2a4c70");
 
   ctx.textBaseline = "top";
   ctx.textAlign = "center";

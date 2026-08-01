@@ -126,7 +126,7 @@ export function TitleGenerator({
         {!r ? (
           <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/60 text-center">
             <p className="text-sm font-semibold text-slate-500">원료를 입력하고 생성하세요</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-600">
               상품명 3~5안(노출도 상/중/하) + 태그 20개가 여기에 표시됩니다
             </p>
           </div>
@@ -144,7 +144,7 @@ export function TitleGenerator({
             <section className="card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-800">상품명 {r.titles.length}안</h2>
-                <span className="text-[11px] text-slate-400">노출도 상/중/하</span>
+                <span className="text-xs text-slate-600">노출도 상/중/하</span>
               </div>
               <ul className="space-y-2">
                 {r.titles.map((t, i) => (
@@ -153,7 +153,7 @@ export function TitleGenerator({
                     className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2.5"
                   >
                     <span
-                      className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold ${EXPOSURE_STYLE[t.exposure]}`}
+                      className={`shrink-0 rounded px-2 py-0.5 text-xs font-bold ${EXPOSURE_STYLE[t.exposure]}`}
                     >
                       {t.exposure}
                     </span>
@@ -195,7 +195,7 @@ export function TitleGenerator({
               </div>
             </section>
 
-            <p className="px-1 text-[11px] leading-relaxed text-slate-400">{AI_DISCLAIMER}</p>
+            <p className="px-1 text-xs leading-relaxed text-slate-600">{AI_DISCLAIMER}</p>
           </>
         )}
       </div>
@@ -220,25 +220,25 @@ function MarketSignal({
     <section className="card p-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-800">시장 신호</h2>
-        <span className="text-[11px] text-slate-400">네이버 검색·쇼핑 실측 · 월 1회 갱신</span>
+        <span className="text-xs text-slate-600">네이버 검색·쇼핑 실측 · 월 1회 갱신</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-md border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-          <p className="text-[11px] text-slate-400">검색 수요</p>
+          <p className="text-xs text-slate-600">검색 수요</p>
           <p className="mt-0.5 text-sm font-bold text-slate-800">
             {demand == null ? "—" : `${demand.toFixed(2)}×`}
           </p>
-          <p className="mt-0.5 text-[10px] leading-tight text-slate-400">
+          <p className="mt-0.5 text-xs leading-tight text-slate-600">
             콜라겐 대비 12개월 평균
           </p>
         </div>
         <div className="rounded-md border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-          <p className="text-[11px] text-slate-400">경쟁 상품수</p>
+          <p className="text-xs text-slate-600">경쟁 상품수</p>
           <p className="mt-0.5 text-sm font-bold text-slate-800">
             {stat.competition == null ? "—" : stat.competition.toLocaleString("ko-KR")}
           </p>
-          <p className="mt-0.5 text-[10px] leading-tight text-slate-400">
+          <p className="mt-0.5 text-xs leading-tight text-slate-600">
             네이버쇼핑 등록 기준
           </p>
         </div>
@@ -246,9 +246,9 @@ function MarketSignal({
 
       {usable.length > 0 && (
         <div className="mt-3.5">
-          <p className="mb-1.5 text-[11px] text-slate-500">
+          <p className="mb-1.5 text-xs text-slate-500">
             상위 노출 상품이 쓰는 단어 —{" "}
-            <span className="text-slate-400">상품명에 넣을수록 노출도가 올라갑니다</span>
+            <span className="text-slate-600">상품명에 넣을수록 노출도가 올라갑니다</span>
           </p>
           <div className="flex flex-wrap gap-1.5">
             {usable.slice(0, 12).map((r) => (
@@ -257,11 +257,11 @@ function MarketSignal({
                 className="rounded bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
               >
                 {r.term}
-                <span className="ml-1 text-[10px] text-brand-500/70">{r.count}</span>
+                <span className="ml-1 text-xs text-brand-500/70">{r.count}</span>
               </span>
             ))}
           </div>
-          <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+          <p className="mt-2 text-xs leading-relaxed text-slate-600">
             타사 브랜드명·제형어(캡슐·프리미엄 등)는 자동으로 제외했습니다. 경쟁 상품수는
             네이버쇼핑 전체 기준이라, 원료명이 일반 식품명과 겹치면(마카·녹차 등) 실제보다
             크게 잡힐 수 있습니다.
@@ -300,7 +300,7 @@ function CopyBtn({ onClick, copied }: { onClick: () => void; copied: boolean }) 
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] font-semibold transition ${
+      className={`shrink-0 rounded-lg border px-2 py-1 text-xs font-semibold transition ${
         copied
           ? "border-brand-600 bg-brand-50 text-brand-700"
           : "border-slate-200 text-slate-500 hover:bg-slate-50"

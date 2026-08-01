@@ -61,7 +61,7 @@ export function CsChat({ ready, missing }: { ready: boolean; missing: string[] }
       <div className="flex-1 space-y-3 overflow-y-auto p-5">
         {msgs.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <p className="text-sm text-slate-400">고객 문의를 붙여넣으면 답변을 만들어 드립니다</p>
+            <p className="text-sm text-slate-600">고객 문의를 붙여넣으면 답변을 만들어 드립니다</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               {EXAMPLES.map((e) => (
                 <button
@@ -98,7 +98,7 @@ export function CsChat({ ready, missing }: { ready: boolean; missing: string[] }
                     {copied === i ? "복사됨" : "복사"}
                   </button>
                   {m.sanitized && (
-                    <span className="text-[11px] text-amber-600">
+                    <span className="text-xs text-amber-600">
                       광고 안전 표현으로 일부 치환됨
                     </span>
                   )}
@@ -109,7 +109,7 @@ export function CsChat({ ready, missing }: { ready: boolean; missing: string[] }
         ))}
 
         {pending && (
-          <div className="max-w-[85%] rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-400">
+          <div className="max-w-[85%] rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
             답변을 만드는 중…
           </div>
         )}
@@ -159,7 +159,7 @@ export function CsChat({ ready, missing }: { ready: boolean; missing: string[] }
           </button>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400">Cmd/Ctrl + Enter로 전송</span>
+          <span className="text-xs text-slate-600">Cmd/Ctrl + Enter로 전송</span>
           {msgs.length > 0 && (
             <button
               type="button"
@@ -167,7 +167,7 @@ export function CsChat({ ready, missing }: { ready: boolean; missing: string[] }
                 setMsgs([]);
                 setError(null);
               }}
-              className="text-[11px] text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+              className="text-xs text-slate-600 underline-offset-2 hover:text-slate-600 hover:underline"
             >
               대화 초기화
             </button>

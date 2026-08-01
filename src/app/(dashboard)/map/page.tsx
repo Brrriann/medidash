@@ -13,7 +13,7 @@ export default async function BodyMapPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto max-w-7xl space-y-5">
       <PageHeader
         title="증상 지도"
         description="어떤 고민을 팔아볼까요? 인체 지도에서 계통을 클릭해 부위 → 증상 키워드 → 추천 원료 순으로 좁혀 들어가세요."

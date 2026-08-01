@@ -109,10 +109,10 @@ export function SourcingExplorer({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="키워드 또는 원료명 검색 (예: 루테인)"
-            className="w-full rounded-md border border-slate-300 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-md border border-slate-300 py-3 pl-10 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           />
           <svg
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"
             width="15"
             height="15"
             viewBox="0 0 24 24"
@@ -129,7 +129,7 @@ export function SourcingExplorer({
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
           aria-label="정렬"
-          className="rounded-md border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 outline-none focus:border-brand-500"
+          className="rounded-md border border-slate-300 px-3 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-brand-500"
         >
           {SORTS.map((s) => (
             <option key={s.key} value={s.key}>
@@ -164,7 +164,7 @@ export function SourcingExplorer({
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white/60 py-16 text-center">
           <p className="text-sm font-medium text-slate-500">검색 결과가 없습니다</p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-600">
             다른 키워드로 검색하거나 필터를 해제해 보세요
           </p>
         </div>
@@ -194,7 +194,7 @@ export function SourcingExplorer({
               <button
                 type="button"
                 onClick={() => setShown((n) => n + PAGE_STEP)}
-                className="rounded-md border border-slate-300 bg-white px-5 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+                className="rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-brand-500 hover:text-brand-700"
               >
                 더 보기 ({(filtered.length - visible.length).toLocaleString("ko-KR")}개 남음)
               </button>
@@ -242,11 +242,11 @@ function ProductCard({
     <article className="flex flex-col card p-4 transition hover:border-brand-300">
       <ProductThumb src={product.imageUrl} alt={product.name} />
       <div className="mb-2 flex items-start justify-between gap-2">
-        <span className="rounded bg-accent-100 px-2 py-0.5 text-[10px] font-bold text-accent-700">
+        <span className="rounded bg-accent-100 px-2 py-0.5 text-xs font-bold text-accent-700">
           {SOURCE_LABEL[product.source] ?? product.source}
         </span>
         {product.isSample && (
-          <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
             샘플
           </span>
         )}
@@ -261,7 +261,7 @@ function ProductCard({
           {product.ingredients.map((ing) => (
             <span
               key={ing}
-              className="rounded bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700"
+              className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700"
             >
               {ing}
             </span>
@@ -273,11 +273,11 @@ function ProductCard({
 
       <dl className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs">
         <div className="flex items-center justify-between">
-          <dt className="text-slate-400">도매가</dt>
+          <dt className="text-slate-600">도매가</dt>
           <dd className="font-bold text-slate-800">{won(product.priceWholesale)}</dd>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <dt className="text-slate-400">추천 판매가 (기본 ×2)</dt>
+          <dt className="text-slate-600">추천 판매가 (기본 ×2)</dt>
           <dd>
             <input
               type="number"
@@ -285,13 +285,13 @@ function ProductCard({
               step={100}
               min={0}
               onChange={(e) => setPrice(Number(e.target.value))}
-              className="w-24 rounded-md border border-slate-300 px-1.5 py-1 text-right text-xs font-semibold outline-none focus:border-brand-500"
+              className="w-28 rounded-md border border-slate-300 px-2 py-2 text-right text-sm font-semibold outline-none focus:border-brand-500"
               aria-label="추천 판매가 조정"
             />
           </dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-slate-400">예상 최종마진 (쿠팡 9.6%·배송 3천 가정)</dt>
+          <dt className="text-slate-600">예상 최종마진 (쿠팡 9.6%·배송 3천 가정)</dt>
           <dd
             className={`font-bold ${
               preview.finalMargin >= 0 ? "text-brand-700" : "text-red-600"
@@ -302,12 +302,21 @@ function ProductCard({
         </div>
       </dl>
 
-      <MallCompare name={product.name} ingredients={product.ingredients} />
+      {/*
+        기본으로는 **두 개만** 보인다.
 
-      <div className="mt-2 grid grid-cols-2 gap-1.5">
+        종전에는 카드 하나에 누를 것이 아홉 개(타몰 4 + 작업 5)였다. 글자를 키우자
+        그 덩어리만 179px, 카드의 26%가 됐고 한 화면에 카드 한 장이 안 들어왔다.
+        무엇보다 주 사용자가 50~60대라 **선택지가 많은 것 자체가 부담**이다.
+
+        소싱 단계에서 셀러가 하는 판단은 "이거 할 만한가"다 — 마진을 보고 원본을
+        확인하면 끝난다. 썸네일·상품명·후킹페이지는 상품을 고르고 난 다음 일이라
+        기본 화면에서 자리를 차지할 이유가 없다. 타몰 시세도 마찬가지다.
+      */}
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <Link
           href={`/margin?cost=${product.priceWholesale}${product.isSample ? "" : `&ref=${product.id}`}`}
-          className="rounded-md bg-brand-600 py-1.5 text-center text-xs font-bold text-white transition hover:bg-brand-700"
+          className="rounded-md bg-brand-700 py-3 text-center text-sm font-bold text-white transition hover:bg-brand-800"
         >
           마진 계산
         </Link>
@@ -315,34 +324,45 @@ function ProductCard({
           href={product.sourceUrl}
           target="_blank"
           rel="noreferrer noopener"
-          className="rounded-lg border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+          className="rounded-md border border-slate-300 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-500"
         >
           원본 보기 ↗
         </a>
-        <Link
-          href={`/studio?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}${product.isSample ? "" : `&ref=${product.id}`}`}
-          className="rounded-lg border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
-        >
-          썸네일 만들기
-        </Link>
-        <Link
-          href={`/titles?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}`}
-          className="rounded-lg border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
-        >
-          상품명 만들기
-        </Link>
-        {/*
-          샘플에서도 보여준다. 종전엔 숨겼는데 mock은 전부 샘플이라 **진입로가 통째로
-          사라져** "이미지 생성을 어디서 시작하느냐"가 됐다. 샘플로 들어가도 화면은 뜨고,
-          생성이 안 되는 이유는 그 화면에서 안내한다.
-        */}
-        <Link
-          href={`/hook?ref=${product.id}`}
-          className="col-span-2 rounded-lg bg-slate-900 py-1.5 text-center text-xs font-bold text-white transition hover:bg-slate-700"
-        >
-          후킹페이지 만들기
-        </Link>
       </div>
+
+      <details className="mt-2 border-t border-slate-100 pt-2">
+        <summary className="cursor-pointer list-none rounded-md py-3 text-center text-sm font-semibold text-slate-600 transition hover:text-brand-700">
+          이 상품으로 만들기 · 시세 보기 ▾
+        </summary>
+
+        <MallCompare name={product.name} ingredients={product.ingredients} />
+
+        <div className="mt-2 grid gap-2">
+          <Link
+            href={`/studio?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}${product.isSample ? "" : `&ref=${product.id}`}`}
+            className="rounded-md border border-slate-300 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-brand-500 hover:text-brand-700"
+          >
+            썸네일 만들기
+          </Link>
+          <Link
+            href={`/titles?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}`}
+            className="rounded-md border border-slate-300 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-brand-500 hover:text-brand-700"
+          >
+            상품명 만들기
+          </Link>
+          {/*
+            샘플에서도 보여준다. 종전엔 숨겼는데 mock은 전부 샘플이라 **진입로가 통째로
+            사라져** "이미지 생성을 어디서 시작하느냐"가 됐다. 샘플로 들어가도 화면은 뜨고,
+            생성이 안 되는 이유는 그 화면에서 안내한다.
+          */}
+          <Link
+            href={`/hook?ref=${product.id}`}
+            className="rounded-md bg-slate-900 py-3 text-center text-sm font-bold text-white transition hover:bg-slate-700"
+          >
+            후킹페이지 만들기
+          </Link>
+        </div>
+      </details>
     </article>
   );
 }
@@ -376,20 +396,20 @@ function MarketSignals({
   const level = d == null ? null : d >= 0.8 ? "높음" : d >= 0.25 ? "보통" : "낮음";
   const tone =
     d == null
-      ? "text-slate-300"
+      ? "text-slate-500"
       : d >= 0.8
         ? "text-brand-700"
         : d >= 0.25
           ? "text-slate-700"
-          : "text-slate-400";
+          : "text-slate-600";
   const up = broadcast?.upcoming.length ?? 0;
 
   return (
     <div className="ruled-grid mt-2.5 grid grid-cols-3 text-center">
       <div className="bg-white px-1 py-1.5">
-        <p className="text-[10px] text-slate-400">검색 수요</p>
+        <p className="text-xs text-slate-600">검색 수요</p>
         <p
-          className={`whitespace-nowrap text-[11px] font-bold tabular-nums ${tone}`}
+          className={`whitespace-nowrap text-xs font-bold tabular-nums ${tone}`}
           title={
             d == null
               ? "네이버 검색량 미수집 원료입니다"
@@ -400,9 +420,9 @@ function MarketSignals({
         </p>
       </div>
       <div className="bg-white px-1 py-1.5">
-        <p className="text-[10px] text-slate-400">경쟁 상품</p>
+        <p className="text-xs text-slate-600">경쟁 상품</p>
         <p
-          className="whitespace-nowrap text-[11px] font-bold tabular-nums text-slate-700"
+          className="whitespace-nowrap text-xs font-bold tabular-nums text-slate-700"
           title="네이버쇼핑에 등록된 같은 키워드 상품수 — 많을수록 경쟁이 심합니다"
         >
           {demand?.competition != null
@@ -411,10 +431,10 @@ function MarketSignals({
         </p>
       </div>
       <div className="bg-white px-1 py-1.5">
-        <p className="text-[10px] text-slate-400">홈쇼핑</p>
+        <p className="text-xs text-slate-600">홈쇼핑</p>
         {/* 라벨이 이미 "홈쇼핑"이라 값에서 '방송'을 뺀다 — 76px 칸에 안 접히고 들어간다 */}
         <p
-          className={`whitespace-nowrap text-[11px] font-bold tabular-nums ${up > 0 ? "text-rose-700" : "text-slate-400"}`}
+          className={`whitespace-nowrap text-xs font-bold tabular-nums ${up > 0 ? "text-rose-700" : "text-slate-600"}`}
           title={
             broadcast?.titles.length
               ? "최근 방송 상품:\n- " + broadcast.titles.slice(0, 6).join("\n- ")
@@ -447,7 +467,7 @@ function MallCompare({
   const keyword = mallSearchKeyword(name, ingredients);
   return (
     <div className="mt-3 border-t border-slate-100 pt-2.5">
-      <p className="mb-1 text-[10px] text-slate-400">
+      <p className="mb-1 text-xs text-slate-600">
         타몰 시세 —{" "}
         <span className="font-medium text-slate-500">{keyword}</span> 검색
       </p>
@@ -458,7 +478,8 @@ function MallCompare({
             href={m.url(keyword)}
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded border border-slate-200 py-1 text-center text-[10px] font-semibold text-slate-500 transition hover:border-brand-400 hover:text-brand-700"
+            /* py-2.5로 44px 표적을 만든다 — 손가락이나 노안 마우스로도 빗나가지 않게 */
+            className="rounded-md border border-slate-300 py-2.5 text-center text-sm font-semibold text-slate-700 transition hover:border-brand-500 hover:text-brand-700"
           >
             {m.label}
           </a>
@@ -468,12 +489,19 @@ function MallCompare({
   );
 }
 
-/** 상품 대표 이미지 썸네일. 프로토콜상대(//) URL은 https로, 로드 실패/없음은 플레이스홀더. */
+/**
+ * 상품 대표 이미지 썸네일. 프로토콜상대(//) URL은 https로, 로드 실패/없음은 플레이스홀더.
+ *
+ * 정사각형(aspect-square)이 아니라 **고정 높이**다. 카드 폭을 따라 커지던 탓에
+ * 1280px 화면에서 썸네일만 366px, 카드 하나가 886px가 되어 한 화면에 한 장밖에
+ * 안 들어왔다. 6,003건을 훑는 화면에서 그건 못 쓴다.
+ * 소싱 단계에서 이미지가 하는 일은 "이 제품이 맞나" 알아보는 것뿐이라 176px면 된다.
+ */
 function ProductThumb({ src, alt }: { src?: string | null; alt: string }) {
   const url = src?.startsWith("//") ? `https:${src}` : src;
   const [broken, setBroken] = useState(false);
   return (
-    <div className="mb-3 aspect-square overflow-hidden rounded-md border border-slate-100 bg-slate-50">
+    <div className="mb-3 h-44 overflow-hidden rounded-md border border-slate-100 bg-slate-50">
       {url && !broken ? (
         // 외부 도매몰/CDN 이미지 — next/image 도메인 설정 없이 단순 표시
         // eslint-disable-next-line @next/next/no-img-element
@@ -482,10 +510,12 @@ function ProductThumb({ src, alt }: { src?: string | null; alt: string }) {
           alt={alt}
           loading="lazy"
           onError={() => setBroken(true)}
-          className="h-full w-full object-cover"
+          /* contain으로 바꾼다 — cover는 상자에 맞추려고 가장자리를 잘라내는데,
+             건기식 상품 사진은 패키지 전체가 보여야 무엇인지 알아본다. */
+          className="h-full w-full object-contain"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-slate-300">
+        <div className="flex h-full w-full items-center justify-center text-slate-500">
           <svg
             width="30"
             height="30"

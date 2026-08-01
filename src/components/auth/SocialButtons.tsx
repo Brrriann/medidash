@@ -61,7 +61,7 @@ export function AuthDivider() {
   return (
     <div className="flex items-center gap-3">
       <span className="h-px flex-1 bg-slate-200" />
-      <span className="text-[11px] text-slate-400">또는 이메일로</span>
+      <span className="text-xs text-slate-600">또는 이메일로</span>
       <span className="h-px flex-1 bg-slate-200" />
     </div>
   );

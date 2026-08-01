@@ -1,48 +1,82 @@
 @import "tailwindcss";
 
 @theme {
-  /* 헬스셀러 팔레트 — 깊은 틸 + 오커.
+  /* 헬스셀러 팔레트 — 감청 + 주황.
    *
-   * 종전 값은 에메랄드(#10b981) + 스카이(#0ea5e9)였다. 사양서에 "화이트 베이스 +
+   * 원래 값은 에메랄드(#10b981) + 스카이(#0ea5e9)였다. 사양서에 "화이트 베이스 +
    * 그린/블루 포인트, SaaS 대시보드 톤"으로 적혀 있던 그대로였는데, **벤치마킹 사이트도
    * 같은 계열이라** 비슷해 보이는 데 한몫했다. 밝은 형광 계열이라 수치와 표 위에서
    * 눈에 먼저 들어오는 것도 문제였다 — 이 화면들의 주인공은 숫자다.
    *
+   * 감청은 형광 계열보다 뒤로 물러나 표와 숫자를 앞세우고, 주황은 그 보색이라
+   * 배지·경고가 브랜드색에 묻히지 않는다. 대비가 세서 초보 셀러에게도 또렷하다.
+   *
    * 이름(brand/accent)과 단계(50~900)는 그대로 두고 값만 바꾼다. 쓰는 쪽을 고칠 필요가
    * 없어 토큰 한 곳으로 전 화면 톤이 교체된다.
    */
-  --color-brand-50: #ecf4f2;
-  --color-brand-100: #d3e7e3;
-  --color-brand-200: #a9cfc8;
-  --color-brand-300: #74b0a6;
-  --color-brand-400: #459085;
-  --color-brand-500: #2a7367;
-  --color-brand-600: #1f5d53;
-  --color-brand-700: #174f4a;
-  --color-brand-800: #123e3a;
-  --color-brand-900: #0d2b29;
+  --color-brand-50: #eff3f8;
+  --color-brand-100: #dae3ef;
+  --color-brand-200: #b4c6dc;
+  --color-brand-300: #85a3c2;
+  --color-brand-400: #5a80a5;
+  --color-brand-500: #3a6089;
+  --color-brand-600: #2a4c70;
+  --color-brand-700: #1b3a5c;
+  --color-brand-800: #152d48;
+  --color-brand-900: #0f1f31;
 
-  /* 보조는 따뜻한 오커 — 틸의 보색 쪽이라 배지가 브랜드색과 안 섞인다 */
-  --color-accent-50: #fbf5e9;
-  --color-accent-100: #f5e9ce;
-  --color-accent-200: #ebd4a2;
-  --color-accent-300: #ddb868;
-  --color-accent-400: #cb9c3c;
-  --color-accent-500: #b0821f;
-  --color-accent-600: #8f6212;
-  --color-accent-700: #74500f;
-  --color-accent-800: #5c400e;
-  --color-accent-900: #3d2b0a;
+  /* 보조는 주황 — 감청의 보색이라 배지·경고가 브랜드색과 섞이지 않는다 */
+  --color-accent-50: #fef3ec;
+  --color-accent-100: #fbe0ce;
+  --color-accent-200: #f6bf9c;
+  --color-accent-300: #ef9964;
+  --color-accent-400: #e67437;
+  --color-accent-500: #d65a1b;
+  --color-accent-600: #c2410c;
+  --color-accent-700: #9c340a;
+  --color-accent-800: #7c2a0a;
+  --color-accent-900: #551d07;
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+
+  /* 글자 스케일을 한 단씩 올린다 — **주 사용자가 50~60대다.**
+   *
+   * 노안은 40대 중반에 시작해 이 연령대면 대부분 돋보기를 쓴다. 기본 스케일 그대로
+   * 쓰면 text-xs가 12px인데, 세어 보니 12px 이하가 234곳이었다. 화면의 대부분이
+   * 읽기 힘든 크기였다는 뜻이다.
+   *
+   * 쓰는 쪽(text-xs·text-sm)을 고치지 않고 **토큰만 올린다.** 클래스가 수백 곳이라
+   * 일일이 바꾸면 빠뜨리는 데가 생기고, 나중에 새로 쓰는 코드도 옛 크기로 돌아간다.
+   * 여기서 막으면 그 두 가지가 같이 해결된다.
+   *
+   *   xs  12 → 14   라벨·보조
+   *   sm  14 → 16   본문 기본
+   *   base 16 → 18  강조 본문
+   */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.6;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.65;
 }
 
-/* 지면은 순백도 슬레이트도 아닌 아주 옅은 온기 — 틸·오커와 같이 놓았을 때
- * 차가운 회색 지면이 두 색을 다 밀어낸다. */
+/* 지면은 흰색. 감청·주황이 둘 다 대비가 세서 지면이 조용해야 한다 —
+ * 색 있는 지면을 깔면 세 색이 서로 밀어낸다. 면의 구분은 괘선이 맡는다. */
 body {
-  @apply text-slate-900 antialiased;
-  background-color: #f6f7f5;
+  @apply bg-white text-slate-900 antialiased;
+
+  /* **한글은 단어 단위로 끊는다.**
+   *
+   * 브라우저 기본값(break-word)은 한글을 글자 아무 데서나 자른다 — 좁은 화면에서
+   * "건온연B2B"가 "건온연 / B2B"로, "유픽"이 "유 / 픽"으로 깨졌다. 영어는 공백이
+   * 있어 안 그러는데 한글은 조사가 붙어 한 덩어리라 그대로 잘린다.
+   *
+   * keep-all이면 띄어쓰기에서만 줄이 바뀐다. 주 사용자가 50~60대라 읽는 데
+   * 드는 품을 줄이는 게 중요하고, 글자가 커진 뒤로는 깨지는 자리도 늘었다.
+   */
+  word-break: keep-all;
 }
 
 /* 카드 표면. 화면마다 rounded-lg border …를 반복하지 않으려고 한 곳에 둔다.
@@ -62,7 +96,7 @@ body {
 
 /* 본문에 깔리는 24px 그리드. 카드가 떠 보이게 하는 용도라 거의 안 보일 만큼 흐리게 한다. */
 @utility grid-surface {
-  background-color: #f6f7f5;
+  background-color: #fbfcfd;
   background-image:
     linear-gradient(to right, rgb(15 23 42 / 0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(15 23 42 / 0.04) 1px, transparent 1px);
