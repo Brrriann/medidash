@@ -3,6 +3,7 @@ import { getImageProvider } from "@/lib/ai/image";
 import { createClient } from "@/lib/supabase/server";
 import { isMockMode } from "@/lib/supabase/env";
 import { consumeAiQuota } from "@/lib/ai/quota";
+import { logAi, type AiKind } from "@/lib/ai/log";
 
 /**
  * AI 이미지 생성 — **서버 액션이 아니라 라우트 핸들러인 이유**
@@ -57,7 +58,13 @@ export async function POST(req: Request) {
 
   // 유료 호출 직전에 한도 차감 (docs/PRODUCTION-READINESS.md P0-5)
   const quota = await consumeAiQuota();
-  if (!quota.allowed) return NextResponse.json({ error: quota.reason }, { status: 429 });
+  const kind: AiKind = body.kind === "person" ? "person_cutout" : "thumbnail_bg";
+  const meta = { ingredient: body.ingredient ?? null, part: body.part ?? null };
+  if (!quota.allowed) {
+    // 한도 초과도 이력에 남긴다 — 사용자가 마이페이지에서 "왜 안 됐는지"를 볼 수 있어야 한다.
+    await logAi(kind, false, { error: quota.reason, meta });
+    return NextResponse.json({ error: quota.reason }, { status: 429 });
+  }
 
   try {
     const provider = getImageProvider();
@@ -79,6 +86,8 @@ export async function POST(req: Request) {
     const type = head.match(/^data:([^;]+)/)?.[1] ?? "image/png";
     const bytes = Buffer.from(b64, "base64");
 
+    await logAi(kind, true, { meta: { ...meta, bytes: bytes.byteLength } });
+
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "Content-Type": type,
@@ -90,6 +99,7 @@ export async function POST(req: Request) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.warn("[api/ai/image] 생성 실패:", msg);
+    await logAi(kind, false, { error: msg, meta });
     return NextResponse.json({ error: msg }, { status: 502 });
   }
 }

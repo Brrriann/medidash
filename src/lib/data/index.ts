@@ -124,6 +124,40 @@ export async function getRecentWorks(): Promise<
   return (data ?? []).map((w) => ({ kind: w.kind, createdAt: w.created_at }));
 }
 
+export interface AiLogItem {
+  id: number;
+  kind: string;
+  ok: boolean;
+  error: string | null;
+  meta: Record<string, unknown>;
+  createdAt: string;
+}
+
+/**
+ * AI 호출 이력 (본인 것만 — RLS).
+ *
+ * 성공·실패를 모두 담는다. 할당량은 유료 호출 **직전**에 차감하므로 실패한 호출도
+ * 1회를 쓴다 — 성공만 보여주면 줄어든 횟수가 설명되지 않는다.
+ */
+export async function getAiLogs(limit = 30): Promise<AiLogItem[]> {
+  if (isMockMode()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("ai_logs")
+    .select("id, kind, ok, error, meta, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    ok: r.ok,
+    error: r.error,
+    meta: (r.meta ?? {}) as Record<string, unknown>,
+    createdAt: r.created_at,
+  }));
+}
+
 export interface MarginHistoryItem {
   id: number;
   createdAt: string;
