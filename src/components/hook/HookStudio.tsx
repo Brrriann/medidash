@@ -9,9 +9,12 @@ import {
   HOOK_H,
   HOOK_W,
   renderHookPage,
+  DEFAULT_PAGE_LAYOUT,
   type BulletShape,
+  type DrawnBounds,
   type HookFontKey,
   type HookStyle,
+  type PageLayout,
 } from "@/lib/hook/render";
 import { generateHookAction, type HookProduct } from "@/app/(dashboard)/hook/actions";
 import type { HookPage } from "@/lib/ai/hook";
@@ -102,24 +105,38 @@ export function HookStudio({
   const [notice, setNotice] = useState<string | null>(null);
   // 두 장이 같은 스타일을 쓴다 — 연작이라 글꼴·색이 달라지면 오히려 어색하다.
   const [style, setStyle] = useState<HookStyle>(DEFAULT_HOOK_STYLE);
+  // 문구 위치는 장마다 따로 잡는다 — 문구 길이가 달라 같은 자리가 안 맞는다.
+  const [layouts, setLayouts] = useState<[PageLayout, PageLayout]>([
+    structuredClone(DEFAULT_PAGE_LAYOUT),
+    structuredClone(DEFAULT_PAGE_LAYOUT),
+  ]);
+  // 렌더러가 그린 실제 영역 — 어느 덩어리를 잡았는지 판정하는 데 쓴다.
+  const boundsRef = useRef<(DrawnBounds | null)[]>([null, null]);
+  const dragRef = useRef<{
+    page: 0 | 1;
+    block: "head" | "panel";
+    dx: number;
+    dy: number;
+  } | null>(null);
   const refs = [useRef<HTMLCanvasElement>(null), useRef<HTMLCanvasElement>(null)];
 
   const draw = useCallback(() => {
     pages.forEach((page, i) => {
       const c = refs[i].current;
-      if (c)
-        renderHookPage(c, {
-          page,
-          background: scene,
-          specText,
-          disclaimer: AI_DISCLAIMER,
-          index: i as 0 | 1,
-          style,
-        });
+      if (!c) return;
+      boundsRef.current[i] = renderHookPage(c, {
+        page,
+        background: scene,
+        specText,
+        disclaimer: AI_DISCLAIMER,
+        index: i as 0 | 1,
+        style,
+        layout: layouts[i],
+      });
     });
     // refs는 렌더마다 같은 객체라 의존성에 넣지 않는다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pages, scene, specText, style]);
+  }, [pages, scene, specText, style, layouts]);
 
   useEffect(draw, [draw]);
 
@@ -189,6 +206,62 @@ export function HookStudio({
   }
 
   const set = (patch: Partial<HookStyle>) => setStyle((s) => ({ ...s, ...patch }));
+
+  /** 화면 좌표 → 캔버스 좌표. 캔버스는 CSS로 축소돼 있어 배율을 되돌려야 한다. */
+  function toCanvas(c: HTMLCanvasElement, e: React.PointerEvent) {
+    const r = c.getBoundingClientRect();
+    return {
+      x: ((e.clientX - r.left) / r.width) * HOOK_W,
+      y: ((e.clientY - r.top) / r.height) * HOOK_H,
+    };
+  }
+
+  function onPointerDown(i: 0 | 1, e: React.PointerEvent<HTMLCanvasElement>) {
+    const c = refs[i].current;
+    const b = boundsRef.current[i];
+    if (!c || !b) return;
+    const p = toCanvas(c, e);
+    const hit = (r: { x: number; y: number; w: number; h: number } | null) =>
+      !!r && p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+
+    // 패널을 먼저 본다 — 머리 덩어리와 겹칠 때 아래 것을 잡는 게 자연스럽다.
+    const block = hit(b.panel) ? "panel" : hit(b.head) ? "head" : null;
+    if (!block) return;
+    const cur = layouts[i][block];
+    dragRef.current = {
+      page: i,
+      block,
+      dx: p.x - cur.x * HOOK_W,
+      dy: p.y - cur.y * HOOK_H,
+    };
+    c.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(i: 0 | 1, e: React.PointerEvent<HTMLCanvasElement>) {
+    const d = dragRef.current;
+    const c = refs[i].current;
+    if (!d || d.page !== i || !c) return;
+    const p = toCanvas(c, e);
+    // 캔버스 밖으로 나가지 않게 가둔다.
+    const clamp = (v: number) => Math.min(0.98, Math.max(0.02, v));
+    setLayouts((ls) => {
+      const next = [...ls] as [PageLayout, PageLayout];
+      next[i] = {
+        ...next[i],
+        [d.block]: {
+          x: clamp((p.x - d.dx) / HOOK_W),
+          y: clamp((p.y - d.dy) / HOOK_H),
+        },
+      };
+      return next;
+    });
+  }
+
+  const endDrag = () => (dragRef.current = null);
+
+  function resetLayout() {
+    setLayouts([structuredClone(DEFAULT_PAGE_LAYOUT), structuredClone(DEFAULT_PAGE_LAYOUT)]);
+  }
 
   const hasCopy = pages.some((p) => p.headline);
 
@@ -312,7 +385,19 @@ export function HookStudio({
             onChange={(v) => set({ accentColor: v })}
           />
         </div>
-        <p className="mt-3 text-[11px] text-slate-400">
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          <span className="text-[11px] text-slate-500">
+            미리보기에서 <strong>문구 덩어리를 끌어</strong> 위치를 옮길 수 있습니다.
+          </span>
+          <button
+            type="button"
+            onClick={resetLayout}
+            className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            위치 초기화
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-400">
           색을 비워두면 장의 톤에 맞춰 자동으로 정해집니다 — 1장(어두운 배경)은 흰 글씨,
           2장(밝은 배경)은 검은 글씨.
         </p>
@@ -340,8 +425,12 @@ export function HookStudio({
             <div className="relative">
               <canvas
                 ref={refs[i]}
-                className="block w-full bg-slate-100"
-                style={{ aspectRatio: `${HOOK_W} / ${HOOK_H}` }}
+                onPointerDown={(e) => onPointerDown(i, e)}
+                onPointerMove={(e) => onPointerMove(i, e)}
+                onPointerUp={endDrag}
+                onPointerCancel={endDrag}
+                className="block w-full touch-none bg-slate-100"
+                style={{ aspectRatio: `${HOOK_W} / ${HOOK_H}`, cursor: hasCopy ? "grab" : "default" }}
               />
               {!hasCopy && !scene && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
