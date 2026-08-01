@@ -35,14 +35,26 @@ export default handler;
  */
 export class OpenAIProxy extends DurableObject {
   async fetch(request: Request): Promise<Response> {
-    const { url, init } = (await request.json()) as {
+    const { url, init, bodyB64 } = (await request.json()) as {
       url: string;
       init: { method: string; headers: Record<string, string>; body?: string };
+      /** multipart 등 바이너리 본문. JSON 봉투에 문자열로 못 실어 base64로 넘어온다 */
+      bodyB64?: string;
     };
     // 화이트리스트 — DO가 임의 주소를 대신 호출하는 통로가 되면 안 된다(SSRF).
     if (!url.startsWith("https://api.openai.com/")) {
       return new Response(JSON.stringify({ error: "허용되지 않은 대상" }), { status: 400 });
     }
-    return fetch(url, init);
+
+    // base64 → 원본 바이트. Content-Type(boundary 포함)은 init.headers에 이미 실려 있다.
+    let body: BodyInit | undefined = init.body;
+    if (bodyB64) {
+      const bin = atob(bodyB64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      body = bytes;
+    }
+
+    return fetch(url, { ...init, body });
   }
 }
