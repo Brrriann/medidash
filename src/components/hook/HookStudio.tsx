@@ -197,24 +197,35 @@ export function HookStudio({
       {/* 생성 도구 */}
       <section className="card p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={makeCopy}
-            disabled={!!busy}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-50"
-          >
-            문구 만들기
-          </button>
+          <span className="text-[11px] font-bold text-slate-400">1단계</span>
           <button
             type="button"
             onClick={makeScene}
             disabled={!!busy || !product.imageUrl}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-400 disabled:opacity-50"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-50"
           >
             이미지 만들기
           </button>
+          <span className="text-slate-300">→</span>
+          <span className="text-[11px] font-bold text-slate-400">2단계</span>
+          <button
+            type="button"
+            onClick={makeCopy}
+            disabled={!!busy}
+            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-400 disabled:opacity-50"
+          >
+            문구 만들기
+          </button>
           {busy && <span className="text-xs text-slate-400">{busy}</span>}
         </div>
+
+        {/* **비활성 이유를 반드시 적는다.** 회색 버튼만 있으면 "버튼이 없다"로 읽힌다. */}
+        {!product.imageUrl && (
+          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            이 상품에는 대표 이미지가 없어 이미지를 만들 수 없습니다. 문구만 만들어
+            쓰시거나, 대표 이미지가 있는 다른 상품을 골라 주세요.
+          </p>
+        )}
 
         {!quota.unlimited && (
           <p className="mt-3 text-[11px] text-slate-400">
@@ -319,17 +330,29 @@ export function HookStudio({
                 type="button"
                 onClick={() => download(i)}
                 disabled={!hasCopy}
+                title={hasCopy ? "" : "문구를 먼저 만들어 주세요"}
                 className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-brand-400 disabled:opacity-40"
               >
                 PNG 저장
               </button>
             </div>
 
-            <canvas
-              ref={refs[i]}
-              className="block w-full bg-slate-100"
-              style={{ aspectRatio: `${HOOK_W} / ${HOOK_H}` }}
-            />
+            <div className="relative">
+              <canvas
+                ref={refs[i]}
+                className="block w-full bg-slate-100"
+                style={{ aspectRatio: `${HOOK_W} / ${HOOK_H}` }}
+              />
+              {!hasCopy && !scene && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <p className="rounded-xl bg-white/90 px-4 py-3 text-center text-xs leading-relaxed text-slate-500">
+                    위에서 <strong>이미지 만들기</strong> → <strong>문구 만들기</strong>
+                    <br />
+                    순서로 눌러 주세요
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-2 p-4">
               <input
