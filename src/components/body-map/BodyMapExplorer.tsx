@@ -102,7 +102,7 @@ export function BodyMapExplorer({
       {/* ── 우: 중분류 → 증상 칩 → 4-Tab 패널 ── */}
       <div className="space-y-4">
         {!category && (
-          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 text-center">
+          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/60 text-center">
             <p className="text-sm font-semibold text-slate-500">
               지도에서 계통을 선택하세요
             </p>

@@ -103,9 +103,10 @@ export default async function HomePage() {
           <Link
             key={item.href}
             href={item.href}
-            className="card group flex flex-col p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+            /* 들어 올리는 대신 테두리를 진하게 한다 — 원장 문법에서는 면이 뜨지 않는다 */
+            className="card group flex flex-col p-5 transition hover:border-slate-400"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white">
+            <span className="flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-700">
               {item.icon}
             </span>
             <h2 className="mt-4 text-base font-bold text-slate-900">{item.title}</h2>
@@ -135,7 +136,7 @@ export default async function HomePage() {
             <Link
               key={item.href}
               href={item.href}
-              className="group flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+              className="group flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 transition hover:border-slate-400"
             >
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-slate-800">

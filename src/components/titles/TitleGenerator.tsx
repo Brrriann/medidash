@@ -124,7 +124,7 @@ export function TitleGenerator({
       {/* 결과 */}
       <div className="space-y-4">
         {!r ? (
-          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 text-center">
+          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/60 text-center">
             <p className="text-sm font-semibold text-slate-500">원료를 입력하고 생성하세요</p>
             <p className="mt-1 text-xs text-slate-400">
               상품명 3~5안(노출도 상/중/하) + 태그 20개가 여기에 표시됩니다
