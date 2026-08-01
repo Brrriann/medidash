@@ -61,7 +61,6 @@ export default async function MyPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <PageHeader
-        overline="My Page"
         title="내 계정"
         description="내 작업 이력과 계정을 관리합니다."
       />

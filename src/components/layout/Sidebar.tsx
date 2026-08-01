@@ -70,6 +70,17 @@ const GROUPS: NavGroup[] = [
           </svg>
         ),
       },
+      {
+        href: "/broadcast",
+        label: "홈쇼핑 편성",
+        desc: "예정 방송 · 준비 기간 순",
+        icon: (
+          <svg {...iconProps} aria-hidden>
+            <rect x="3" y="7" width="18" height="12" rx="2" />
+            <path d="m8 3 4 4 4-4" />
+          </svg>
+        ),
+      },
     ],
   },
   {
@@ -243,7 +254,7 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
         <nav className="flex-1 space-y-4 px-3">
           {groups.map((group) => (
             <div key={group.title}>
-              <p className="px-3 pb-1.5 text-[10px] font-bold tracking-[0.14em] text-slate-400">
+              <p className="mx-3 mb-1.5 border-b border-slate-100 pb-1 text-[10px] font-bold tracking-wide text-slate-400">
                 {group.title}
               </p>
               <div className="space-y-0.5">
@@ -257,32 +268,34 @@ export function Sidebar({ showAdmin }: { showAdmin: boolean }) {
                       key={item.href}
                       href={item.href}
                       aria-current={active ? "page" : undefined}
-                      className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition ${
+                      /* 활성 표시를 검정 알약에서 **왼쪽 괘선 표식**으로 바꿨다.
+                         알약은 메뉴를 눌린 버튼처럼 보이게 하는데, 여기 항목은 버튼이 아니라
+                         지금 펼쳐 놓은 장(章)이다. 장부 옆에 붙이는 표식이 그 뜻에 맞다. */
+                      className={`flex items-center gap-2.5 rounded-r-md border-l-2 px-3 py-2.5 transition ${
                         active
-                          ? "bg-slate-900 text-white shadow-sm"
-                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                          ? "border-brand-600 bg-brand-50/70 text-slate-900"
+                          : "border-transparent text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
                       }`}
                     >
-                      <span className={active ? "text-white" : "text-slate-400"}>
+                      <span className={active ? "text-brand-700" : "text-slate-400"}>
                         {item.icon}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold">
+                        <span
+                          className={`block truncate text-sm ${
+                            active ? "font-bold" : "font-semibold"
+                          }`}
+                        >
                           {item.label}
                         </span>
                         <span
                           className={`block truncate text-[11px] ${
-                            active ? "text-white/60" : "text-slate-400"
+                            active ? "text-slate-500" : "text-slate-400"
                           }`}
                         >
                           {item.desc}
                         </span>
                       </span>
-                      {active && (
-                        <svg {...iconProps} width={14} height={14} aria-hidden>
-                          <path d="m9 6 6 6-6 6" />
-                        </svg>
-                      )}
                     </Link>
                   );
                 })}

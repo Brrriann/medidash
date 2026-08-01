@@ -94,7 +94,6 @@ export default async function HomePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <PageHeader
-        overline="Workspace"
         title="오늘 할 작업을 선택하세요"
         description="원료를 찾고, 상품을 고르고, 썸네일과 상품명까지 한 자리에서 이어서 만듭니다."
       />

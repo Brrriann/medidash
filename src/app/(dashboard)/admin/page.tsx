@@ -35,7 +35,6 @@ export default async function AdminPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <PageHeader
-        overline="Admin"
         title="관리자"
         description="수강생 코드 발급·회원 관리·데이터 갱신을 수행합니다."
         aside={

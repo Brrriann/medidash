@@ -32,9 +32,19 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
-/* 카드 표면. 화면마다 rounded-2xl border … shadow-sm를 반복하지 않으려고 한 곳에 둔다. */
+/* 카드 표면. 화면마다 rounded-lg border …를 반복하지 않으려고 한 곳에 둔다.
+ *
+ * **그림자를 쓰지 않는다.** 면을 띄워 구분하는 대신 괘선으로 가른다(원장 문법).
+ * 이 화면들이 다루는 건 도매가·마진·검색량·방송 편성 같은 숫자라, 카드가 떠 있는 것보다
+ * 줄이 그어져 있는 편이 읽힌다. 모서리도 알약처럼 둥글리지 않는다. */
 @utility card {
-  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  @apply rounded-lg border border-slate-200 bg-white;
+}
+
+/* 괘선으로 칸을 가르는 격자. gap을 1px 두고 배경색을 비쳐 선으로 쓴다 —
+ * 칸이 몇 줄로 접히든 선이 끊기거나 겹치지 않는다. */
+@utility ruled-grid {
+  @apply gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200;
 }
 
 /* 본문에 깔리는 24px 그리드. 카드가 떠 보이게 하는 용도라 거의 안 보일 만큼 흐리게 한다. */

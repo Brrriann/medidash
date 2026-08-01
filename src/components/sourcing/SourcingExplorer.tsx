@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { WholesaleProduct, BroadcastStat, KeywordStat } from "@/lib/data";
 import { calcMargin, defaultRecommendedPrice } from "@/lib/margin";
 import { WHOLESALE_SOURCES } from "@/lib/constants";
+import { FilterChip } from "@/components/ui/FilterChip";
 
 /**
  * 도매몰 통합 검색 (docs/SPEC.md §5-4)
@@ -370,27 +371,3 @@ function ProductThumb({ src, alt }: { src?: string | null; alt: string }) {
   );
 }
 
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-        active
-          ? "border-brand-600 bg-brand-600 text-white"
-          : "border-slate-300 bg-white text-slate-500 hover:border-brand-400"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}

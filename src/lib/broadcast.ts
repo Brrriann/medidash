@@ -42,3 +42,53 @@ export function leadTime(at: string, now: number): LeadTime | null {
           : "bg-slate-100 text-slate-500",
   };
 }
+
+/** 채널 코드 → 사람이 읽는 이름. 모르는 코드는 그대로 보여준다. */
+const CHANNEL: Record<string, string> = {
+  cjmall: "CJ온스타일", cjmallplus: "CJ온스타일+", gsshop: "GS샵", gsmyshop: "GS마이샵",
+  lotteimall: "롯데홈쇼핑", lotteonetv: "롯데원티비", hmall: "현대홈쇼핑", hmallplus: "현대+",
+  nsmall: "NS홈쇼핑", nsmallplus: "NS+", kshop: "K쇼핑", kshopplus: "K쇼핑+",
+  shopnt: "SK스토아", bshop: "신세계쇼핑", ssgshop: "SSG", wshop: "W쇼핑",
+  hnsmall: "홈앤쇼핑", immall: "공영쇼핑",
+};
+export const channelName = (code: string): string => CHANNEL[code] ?? code;
+
+/** 화면에 그대로 뿌릴 수 있게 펼쳐 둔 예정 방송 한 건. */
+export interface UpcomingRow {
+  name: string;
+  channel: string;
+  at: string;
+  ingredient: string;
+  lead: LeadTime;
+}
+
+/** upcoming을 가진 최소 형태 — 호출부의 BroadcastStat을 그대로 받는다. */
+type HasUpcoming = { upcoming: { name: string; channel: string; at: string }[] };
+
+/**
+ * 원료별로 흩어져 있는 예정 방송을 한 줄짜리 목록으로 펼친다.
+ *
+ * **중복을 걷어내는 이유**: 복합 영양제 하나가 비타민A·C·E에 모두 잡히므로
+ * 그냥 펼치면 같은 상품이 목록을 도배한다. 상품명+시각으로 같은 방송을 하나로 본다.
+ * 이때 남는 원료는 처음 만난 것 하나뿐이라, 어느 원료로 잡혔는지는 참고값이다.
+ *
+ * 정렬은 **남은 시간이 긴 순** — 이유는 이 파일 첫머리에 적어 뒀다.
+ */
+export function upcomingRows(
+  broadcast: Record<string, HasUpcoming>,
+  now: number,
+): UpcomingRow[] {
+  const seen = new Set<string>();
+  return Object.entries(broadcast)
+    .flatMap(([ingredient, s]) =>
+      s.upcoming.map((u) => ({ ...u, ingredient, lead: leadTime(u.at, now) })),
+    )
+    .filter((r): r is UpcomingRow => r.lead !== null)
+    .sort((a, b) => b.lead.days - a.lead.days)
+    .filter((r) => {
+      const k = `${r.name}|${r.at}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+}

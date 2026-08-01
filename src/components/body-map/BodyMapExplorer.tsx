@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { BodyCategory, SubcategoryDetail } from "@/lib/taxonomy/types";
+import type { BroadcastStat } from "@/lib/data";
 import { MAPPED_REGIONS } from "./BodyMapSvg";
 import { BodyMapView } from "./BodyMapView";
 import { SubcategoryCards } from "./SubcategoryCards";
@@ -15,9 +16,15 @@ import { DetailPanel } from "./DetailPanel";
 export function BodyMapExplorer({
   categories,
   details,
+  broadcast,
+  now,
 }: {
   categories: BodyCategory[];
   details: Record<string, SubcategoryDetail>;
+  /** 원료별 홈쇼핑 방송 지표 — 상세 패널 ⑥번 항목에 쓴다 */
+  broadcast: Record<string, BroadcastStat>;
+  /** 서버 기준 시각 (리드타임 계산) */
+  now: number;
 }) {
   const [catSlug, setCatSlug] = useState<string | null>(null);
   const [subSlug, setSubSlug] = useState<string | null>(null);
@@ -147,6 +154,8 @@ export function BodyMapExplorer({
             subcategory={subcategory}
             symptom={symptom}
             detail={details[subcategory.slug]}
+            broadcast={broadcast}
+            now={now}
             onClose={() => setSymptom(null)}
           />
         )}
