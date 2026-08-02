@@ -180,7 +180,8 @@ export function SourcingExplorer({
             {filtered.length > visible.length &&
               ` 중 ${visible.length.toLocaleString("ko-KR")}개 표시`}
           </p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* 한 줄에 하나씩 — 카드가 가로 행이라 격자가 아니라 목록이다 */}
+          <div className="space-y-3">
             {visible.map((p) => (
               <ProductCard
                 key={p.id}
@@ -240,25 +241,31 @@ function ProductCard({
   });
 
   return (
-    <article className="flex flex-col card p-4 transition hover:border-brand-300">
-      <ProductThumb src={product.imageUrl} alt={product.name} />
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <span className="rounded bg-accent-100 px-2 py-0.5 text-xs font-bold text-accent-700">
-          {SOURCE_LABEL[product.source] ?? product.source}
-        </span>
-        {product.isSample && (
-          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
-            샘플
-          </span>
-        )}
+    /*
+      **세로 카드가 아니라 가로 행이다.**
+
+      3열 격자일 때는 한 화면에 1.4장뿐이었다 — 6,003건을 훑는 목록에서 그건 못 쓴다.
+      이미지를 왼쪽에 고정하고 나머지를 오른쪽에 눕히면 같은 높이에 훨씬 많이 들어가고,
+      이름·가격·마진이 눈높이에서 가로로 이어져 상품끼리 비교하기 쉽다.
+      쇼핑몰 목록이 대부분 이 모양인 것도 같은 이유다.
+
+      좁은 화면(sm 미만)에서는 이미지가 위로 올라가 세로로 쌓인다.
+    */
+    <article className="card flex flex-col gap-4 p-4 transition hover:border-brand-300 sm:flex-row">
+      <div className="sm:w-40 sm:shrink-0">
+        <ProductThumb src={product.imageUrl} alt={product.name} />
       </div>
 
-      <h3 className="min-h-[40px] text-sm font-semibold leading-snug text-slate-800">
-        {product.name}
-      </h3>
-
-      {product.ingredients.length > 0 && (
-        <div className="mt-1.5 flex flex-wrap gap-1">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+          <span className="rounded bg-accent-100 px-2 py-0.5 text-xs font-bold text-accent-700">
+            {SOURCE_LABEL[product.source] ?? product.source}
+          </span>
+          {product.isSample && (
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+              샘플
+            </span>
+          )}
           {product.ingredients.map((ing) => (
             <span
               key={ing}
@@ -268,64 +275,71 @@ function ProductCard({
             </span>
           ))}
         </div>
-      )}
 
-      <MarketSignals demand={kw} broadcast={bc} />
+        {/* 가로 행에서는 이름이 한 줄에 다 들어가므로 min-h로 자리를 잡아둘 필요가 없다 */}
+        <h3 className="text-base font-semibold leading-snug text-slate-900">
+          {product.name}
+        </h3>
 
-      <dl className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs">
-        <div className="flex items-center justify-between">
-          <dt className="text-slate-600">도매가</dt>
-          <dd className="font-bold text-slate-800">{won(product.priceWholesale)}</dd>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <dt className="text-slate-600">추천 판매가 (기본 ×2)</dt>
-          <dd>
-            <MoneyInput
-              value={price}
-              onChange={setPrice}
-              aria-label="추천 판매가 조정"
-              className="w-28 rounded-md border border-slate-300 px-2 py-2 text-right text-sm font-semibold tabular-nums outline-none focus:border-brand-500"
-            />
-          </dd>
-        </div>
-        <div className="flex items-center justify-between">
-          <dt className="text-slate-600">예상 최종마진 (쿠팡 9.6%·배송 3천 가정)</dt>
-          <dd
-            className={`font-bold ${
-              preview.finalMargin >= 0 ? "text-brand-700" : "text-red-600"
-            }`}
-          >
-            {won(preview.finalMargin)} ({(preview.finalMarginRate * 100).toFixed(1)}%)
-          </dd>
-        </div>
-      </dl>
+        <MarketSignals demand={kw} broadcast={bc} />
 
       {/*
-        기본으로는 **두 개만** 보인다.
+        가격과 동작을 **한 띠에** 눕힌다. 세로 카드일 때는 위아래로 쌓을 수밖에 없었지만,
+        가로 행에서는 도매가 → 판매가 → 마진이 왼쪽에서 오른쪽으로 이어져 읽히고
+        누를 것은 오른쪽 끝에 모인다.
 
-        종전에는 카드 하나에 누를 것이 아홉 개(타몰 4 + 작업 5)였다. 글자를 키우자
-        그 덩어리만 179px, 카드의 26%가 됐고 한 화면에 카드 한 장이 안 들어왔다.
-        무엇보다 주 사용자가 50~60대라 **선택지가 많은 것 자체가 부담**이다.
-
-        소싱 단계에서 셀러가 하는 판단은 "이거 할 만한가"다 — 마진을 보고 원본을
-        확인하면 끝난다. 썸네일·상품명·후킹페이지는 상품을 고르고 난 다음 일이라
-        기본 화면에서 자리를 차지할 이유가 없다. 타몰 시세도 마찬가지다.
+        기본으로는 동작이 **두 개만** 보인다. 종전에는 카드 하나에 누를 것이 아홉 개
+        (타몰 4 + 작업 5)였다. 소싱 단계에서 셀러가 하는 판단은 "이거 할 만한가"다 —
+        마진을 보고 원본을 확인하면 끝난다. 썸네일·상품명·후킹페이지는 상품을 고르고
+        난 다음 일이다. **주 사용자가 50~60대라 선택지가 많은 것 자체가 부담이다.**
       */}
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <Link
-          href={`/margin?cost=${product.priceWholesale}${product.isSample ? "" : `&ref=${product.id}`}`}
-          className="rounded-md bg-brand-700 py-3 text-center text-sm font-bold text-white transition hover:bg-brand-800"
-        >
-          마진 계산
-        </Link>
-        <a
-          href={product.sourceUrl}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="rounded-md border border-slate-300 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-500"
-        >
-          원본 보기 ↗
-        </a>
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-t border-slate-100 pt-3">
+        <dl className="flex flex-wrap items-end gap-x-6 gap-y-3 text-xs">
+          <div>
+            <dt className="text-slate-600">도매가</dt>
+            <dd className="mt-0.5 text-base font-bold tabular-nums text-slate-900">
+              {won(product.priceWholesale)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-slate-600">추천 판매가 (기본 ×2)</dt>
+            <dd className="mt-0.5">
+              <MoneyInput
+                value={price}
+                onChange={setPrice}
+                aria-label="추천 판매가 조정"
+                className="w-32 rounded-md border border-slate-300 px-2 py-2 text-right text-sm font-semibold tabular-nums outline-none focus:border-brand-500"
+              />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-slate-600">예상 최종마진 (쿠팡 9.6%·배송 3천)</dt>
+            <dd
+              className={`mt-0.5 text-base font-bold tabular-nums ${
+                preview.finalMargin >= 0 ? "text-brand-700" : "text-red-600"
+              }`}
+            >
+              {won(preview.finalMargin)} ({(preview.finalMarginRate * 100).toFixed(1)}%)
+            </dd>
+          </div>
+        </dl>
+
+        <div className="flex gap-2">
+          <Link
+            href={`/margin?cost=${product.priceWholesale}${product.isSample ? "" : `&ref=${product.id}`}`}
+            className="rounded-md bg-brand-700 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-brand-800"
+          >
+            마진 계산
+          </Link>
+          <a
+            href={product.sourceUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="rounded-md border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-500"
+          >
+            원본 보기 ↗
+          </a>
+        </div>
       </div>
 
       <details className="mt-2 border-t border-slate-100 pt-2">
@@ -335,7 +349,8 @@ function ProductCard({
 
         <MallCompare name={product.name} ingredients={product.ingredients} />
 
-        <div className="mt-2 grid gap-2">
+        {/* 가로 행이라 만들기 셋도 한 줄에 눕는다 */}
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
           <Link
             href={`/studio?ingredient=${encodeURIComponent(product.ingredients[0] ?? product.name)}${product.isSample ? "" : `&ref=${product.id}`}`}
             className="rounded-md border border-slate-300 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-brand-500 hover:text-brand-700"
@@ -360,7 +375,8 @@ function ProductCard({
             후킹페이지 만들기
           </Link>
         </div>
-      </details>
+        </details>
+      </div>
     </article>
   );
 }
